@@ -5,7 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi-Pok - Ledakan Kelezatan di Setiap Gigitan!</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-red': '#D20000',
+                        'accent-red': '#FF2E00',
+                        'primary-white': '#FFFFFF',
+                        'text-dark': '#333333',
+                        'text-grey': '#666666',
+                        'bg-light': '#F9F9F9',
+                        'mustard': '#FFC107',
+                    },
+                    fontFamily: {
+                        heading: ['Anton', 'sans-serif'],
+                        body: ['Poppins', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'menu-pattern': "url('asset/bg menu.png')",
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600;700&display=swap"
         rel="stylesheet">
@@ -13,26 +38,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<body>
+<body class="font-body bg-bg-light text-text-dark leading-relaxed overflow-x-hidden">
 
     <!-- Header -->
-    <header>
-        <div class="zigzag-decoration"></div>
-        <div class="container header-container">
-            <div class="logo">
-                <img src="asset/logo merah.png" alt="Chi-Pok Logo">
+    <header
+        class="bg-primary-white h-[90px] sticky top-0 z-[1000] shadow-md flex items-center before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-[15px] before:-translate-y-full before:bg-[linear-gradient(45deg,#D20000_33%,transparent_33%),linear-gradient(135deg,#D20000_33%,transparent_33%)] before:bg-[length:20px_20px] before:bg-repeat-x">
+        <div class="container mx-auto px-4 flex justify-between items-center h-full">
+            <div class="logo ml-5 md:ml-10 mr-auto flex items-center">
+                <img src="asset/logo merah.png" alt="Chi-Pok Logo" class="h-[150px] md:h-[200px] object-contain">
             </div>
 
             <nav>
-                <ul class="nav-links">
-                    <li><a href="#home" class="active">HOME</a></li>
-                    <li><a href="#menu">MENU</a></li>
-                    <li><a href="#contact">CONTACT</a></li>
+                <ul
+                    class="nav-links hidden md:flex gap-10 mr-[10%] [&.active]:flex [&.active]:flex-col [&.active]:absolute [&.active]:top-[90px] [&.active]:left-0 [&.active]:w-full [&.active]:bg-white [&.active]:p-8 [&.active]:text-center [&.active]:shadow-lg [&.active]:z-50 text-text-dark">
+                    <li><a href="#home"
+                            class="font-bold text-lg hover:text-primary-red transition-colors duration-300 uppercase tracking-wide active:text-primary-red">HOME</a>
+                    </li>
+                    <li><a href="#menu"
+                            class="font-bold text-lg hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">MENU</a>
+                    </li>
+                    <li><a href="#contact"
+                            class="font-bold text-lg hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">CONTACT</a>
+                    </li>
                 </ul>
-                <div class="hamburger">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div class="hamburger flex flex-col cursor-pointer mr-5 md:hidden gap-1 group">
+                    <span
+                        class="h-[3px] w-[25px] bg-text-dark rounded mb-1 group-[.toggle]:rotate-45 group-[.toggle]:translate-y-2 transition-transform"></span>
+                    <span
+                        class="h-[3px] w-[25px] bg-text-dark rounded mb-1 group-[.toggle]:opacity-0 transition-opacity"></span>
+                    <span
+                        class="h-[3px] w-[25px] bg-text-dark rounded mb-1 group-[.toggle]:-rotate-45 group-[.toggle]:-translate-y-2 transition-transform"></span>
                 </div>
             </nav>
         </div>
@@ -40,91 +75,125 @@
 
     <main>
         <!-- Hero Section -->
-        <section id="home" class="hero">
-            <div class="hero-splash">
+        <section id="home"
+            class="hero relative bg-primary-red min-h-[85vh] w-full flex justify-center items-center overflow-hidden flex-col md:flex-row pt-[100px] md:pt-0">
+            <div
+                class="hero-splash absolute -top-[360px] md:-top-[360px] top-0 left-1/2 -translate-x-1/2 z-10 w-full max-w-[800px]">
                 <!-- Splash image overlap at top -->
-                <img src="asset/bg atas.png" alt="Splash Detail">
+                <img src="asset/bg atas.png" alt="Splash Detail" class="w-full h-auto">
             </div>
 
-            <div class="hero-content">
+            <div class="hero-content relative z-30 text-center w-full mb-24 -bottom-[100px]">
                 <div class="hero-text">
-                    <h1>LEDAKAN KELEZATAN<br>DI SETIAP GIGITAN!</h1>
-                    <a href="#menu" class="btn btn-primary">PESAN SEKARANG</a>
+                    <h1
+                        class="font-heading text-primary-white text-[3rem] md:text-[5.5rem] leading-[0.9] uppercase drop-shadow-md mb-8 -rotate-3">
+                        LEDAKAN KELEZATAN<br>DI SETIAP GIGITAN!</h1>
+                    <a href="#menu"
+                        class="btn btn-primary inline-block px-12 py-4 rounded-full font-bold uppercase transition-transform shadow-lg hover:scale-110 cursor-pointer border-none font-body text-xl bg-mustard text-text-dark">PESAN
+                        SEKARANG</a>
                 </div>
             </div>
 
-            <div class="hero-chicken">
+            <div
+                class="hero-chicken absolute -bottom-[80px] left-1/2 -translate-x-1/2 z-20 w-[90%[ md:w-[900px] max-w-[95vw] md:max-w-none">
                 <!-- Chicken image at bottom center -->
-                <img src="asset/bg pinggir.png" alt="Fried Chicken">
+                <img src="asset/bg pinggir.png" alt="Fried Chicken"
+                    class="absolute -bottom-[250px] left-[60%] -translate-x-1/2 w-full rotate-[80deg]">
             </div>
 
-            <div class="hero-chicken2">
-                <img src="asset/bg pinggir.png" alt="">
+            <div
+                class="hero-chicken2 absolute -bottom-[80px] left-1/2 -translate-x-1/2 z-20 w-[90%] md:w-[900px] max-w-[95vw] md:max-w-none">
+                <img src="asset/bg pinggir.png" alt=""
+                    class="absolute -bottom-[250px] right-[60%] -translate-x-1/2 w-full rotate-[130deg]">
             </div>
-
-
         </section>
 
         <!-- Menu Section -->
-        <section id="menu" class="menu">
-            <div class="container">
-                <h2 class="section-title">MENU</h2>
-                <div class="menu-grid">
+        <section id="menu" class="menu py-20 bg-bg-light bg-menu-pattern bg-cover bg-center">
+            <div class="container mx-auto px-4">
+                <h2
+                    class="section-title font-heading text-5xl md:text-[3.5rem] text-primary-red text-center mb-12 uppercase">
+                    MENU</h2>
+                <div class="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                     <!-- Product 1: Chi'Pok Lava -->
-                    <div class="product-card">
-                        <div class="badge">BEST SELLER</div>
-                        <img src="asset/rasa lava.png" alt="Chi'Pok Lava">
+                    <div
+                        class="product-card bg-primary-white rounded-[20px] p-5 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
+                        <div
+                            class="badge absolute top-0 left-0 bg-primary-red text-white py-1 px-4 text-sm font-bold rounded-tl-[20px] rounded-br-[20px]">
+                            BEST SELLER</div>
+                        <img src="asset/rasa lava.png" alt="Chi'Pok Lava"
+                            class="w-[180px] mx-auto -mt-[70px] drop-shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
                         <div class="product-info">
-                            <h3>CHI'POK LAVA 🔥</h3>
-                            <p>Pedas & melimpah, sensasi lava cabe!</p>
-                            <div class="price-action">
-                                <span class="price">Rp 27.000,-</span>
-                                <button class="btn-cart"><i class="fas fa-shopping-cart"></i></button>
+                            <h3 class="font-heading text-2xl text-text-dark mt-5 mb-1">CHI'POK LAVA 🔥</h3>
+                            <p class="text-text-grey text-sm mb-4">Pedas & melimpah, sensasi lava cabe!</p>
+                            <div
+                                class="price-action flex justify-between items-center mt-5 pt-4 border-t border-gray-100">
+                                <span class="price font-bold text-xl text-primary-red">Rp 27.000,-</span>
+                                <button
+                                    class="btn-cart bg-transparent border-none text-text-dark text-2xl cursor-pointer transition-transform duration-200 hover:text-primary-red hover:scale-125"><i
+                                        class="fas fa-shopping-cart"></i></button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Product 2: Chi'Pok Ori -->
-                    <div class="product-card">
-                        <img src="asset/original.png" alt="Chi'Pok Ori">
+                    <div
+                        class="product-card bg-primary-white rounded-[20px] p-5 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
+                        <img src="asset/original.png" alt="Chi'Pok Ori"
+                            class="w-[180px] mx-auto -mt-[70px] drop-shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
                         <div class="product-info">
-                            <h3>CHI'POK ORI <i class="fas fa-check-circle" style="color: red;"></i></h3>
-                            <p>Gurih & renyah klasic favorit!</p>
-                            <div class="price-action">
-                                <span class="price">Rp 25.000,-</span>
-                                <button class="btn-cart"><i class="fas fa-shopping-cart"></i></button>
+                            <h3 class="font-heading text-2xl text-text-dark mt-5 mb-1">CHI'POK ORI <i
+                                    class="fas fa-check-circle text-primary-red"></i></h3>
+                            <p class="text-text-grey text-sm mb-4">Gurih & renyah klasic favorit!</p>
+                            <div
+                                class="price-action flex justify-between items-center mt-5 pt-4 border-t border-gray-100">
+                                <span class="price font-bold text-xl text-primary-red">Rp 25.000,-</span>
+                                <button
+                                    class="btn-cart bg-transparent border-none text-text-dark text-2xl cursor-pointer transition-transform duration-200 hover:text-primary-red hover:scale-125"><i
+                                        class="fas fa-shopping-cart"></i></button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Product 3: Chi'Pok Keju -->
-                    <div class="product-card">
-                        <img src="asset/rasa keju.png" alt="Chi'Pok Keju">
+                    <div
+                        class="product-card bg-primary-white rounded-[20px] p-5 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
+                        <img src="asset/rasa keju.png" alt="Chi'Pok Keju"
+                            class="w-[180px] mx-auto -mt-[70px] drop-shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
                         <div class="product-info">
-                            <h3>CHI'POK KEJU</h3>
-                            <p>Kriuk, gurih keju melimpah!</p>
-                            <div class="rating">
+                            <h3 class="font-heading text-2xl text-text-dark mt-5 mb-1">CHI'POK KEJU</h3>
+                            <p class="text-text-grey text-sm mb-4">Kriuk, gurih keju melimpah!</p>
+                            <div class="rating flex justify-center gap-1 text-mustard mb-2 text-sm">
                                 <i class="fas fa-star"></i>
                                 <i class="fas fa-star"></i>
                                 <i class="fas fa-star"></i>
-                                <span>4.5</span>
+                                <span class="font-bold text-text-dark">4.5</span>
                             </div>
-                            <div class="price-action">
-                                <span class="price">Rp 26.000,-</span> <!-- Estimated price -->
-                                <button class="btn-cart"><i class="fas fa-shopping-cart"></i></button>
+                            <div
+                                class="price-action flex justify-between items-center mt-0 pt-4 border-t border-gray-100">
+                                <span class="price font-bold text-xl text-primary-red">Rp 26.000,-</span>
+                                <!-- Estimated price -->
+                                <button
+                                    class="btn-cart bg-transparent border-none text-text-dark text-2xl cursor-pointer transition-transform duration-200 hover:text-primary-red hover:scale-125"><i
+                                        class="fas fa-shopping-cart"></i></button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Product 4: Chi'Pok Bumbu -->
-                    <div class="product-card">
-                        <img src="asset/rasa bumbu.png" alt="Chi'Pok Bumbu">
+                    <div
+                        class="product-card bg-primary-white rounded-[20px] p-5 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
+                        <img src="asset/rasa bumbu.png" alt="Chi'Pok Bumbu"
+                            class="w-[180px] mx-auto -mt-[70px] drop-shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
                         <div class="product-info">
-                            <h3>CHI'POK BUMBU</h3>
-                            <p>Rasa kaya rempah, unik!</p>
-                            <div class="price-action">
-                                <span class="price">Rp 24.000,-</span>
-                                <button class="btn-cart"><i class="fas fa-shopping-cart"></i></button>
+                            <h3 class="font-heading text-2xl text-text-dark mt-5 mb-1">CHI'POK BUMBU</h3>
+                            <p class="text-text-grey text-sm mb-4">Rasa kaya rempah, unik!</p>
+                            <div
+                                class="price-action flex justify-between items-center mt-5 pt-4 border-t border-gray-100">
+                                <span class="price font-bold text-xl text-primary-red">Rp 24.000,-</span>
+                                <button
+                                    class="btn-cart bg-transparent border-none text-text-dark text-2xl cursor-pointer transition-transform duration-200 hover:text-primary-red hover:scale-125"><i
+                                        class="fas fa-shopping-cart"></i></button>
                             </div>
                         </div>
                     </div>
@@ -133,45 +202,57 @@
         </section>
 
         <!-- Contact Section -->
-        <section id="contact" class="contact">
-            <div class="container contact-content">
-                <div class="contact-header">
+        <section id="contact" class="contact bg-[#B30000] py-20 text-white relative">
+            <div class="container mx-auto px-4 contact-content relative">
+                <div
+                    class="contact-header absolute top-0 right-0 hidden lg:block opacity-20 hover:opacity-100 transition-opacity duration-300">
                     <div class="footer-logo">
-                        <img src="asset/logo putih.png" alt="Chi-Pok Logo White">
+                        <img src="asset/logo putih.png" alt="Chi-Pok Logo White" class="h-[200px] brightness-0 invert">
                     </div>
                 </div>
 
-                <div class="contact-grid">
-                    <div class="contact-left">
-                        <div class="social-icons">
-                            <a href="#"><i class="fab fa-instagram"></i></a>
-                            <a href="#"><i class="fab fa-whatsapp"></i></a>
-                            <a href="#"><i class="fab fa-tiktok"></i></a>
+                <div class="contact-grid flex flex-col lg:flex-row justify-between gap-12 pt-10">
+                    <div class="contact-left flex-1 min-w-[300px]">
+                        <div class="social-icons flex gap-5 my-8">
+                            <a href="#"
+                                class="w-12 h-12 border-2 border-white rounded-full flex items-center justify-center text-xl transition-all duration-300 hover:bg-white hover:text-[#B30000] transform hover:scale-110"><i
+                                    class="fab fa-instagram"></i></a>
+                            <a href="#"
+                                class="w-12 h-12 border-2 border-white rounded-full flex items-center justify-center text-xl transition-all duration-300 hover:bg-white hover:text-[#B30000] transform hover:scale-110"><i
+                                    class="fab fa-whatsapp"></i></a>
+                            <a href="#"
+                                class="w-12 h-12 border-2 border-white rounded-full flex items-center justify-center text-xl transition-all duration-300 hover:bg-white hover:text-[#B30000] transform hover:scale-110"><i
+                                    class="fab fa-tiktok"></i></a>
                         </div>
 
-                        <div class="contact-details">
+                        <div class="contact-details space-y-6">
                             <div class="detail-item">
-                                <h4>IKUTI KAMI</h4>
-                                <p>Jl. Merdeka No. 123, Jakarta</p>
+                                <h4 class="font-heading text-xl tracking-wide mb-1">IKUTI KAMI</h4>
+                                <p class="text-gray-100">Jl. Merdeka No. 123, Jakarta</p>
                             </div>
                             <div class="detail-item">
-                                <h4>ALAMAT OUTLET</h4>
-                                <p><i class="fas fa-map-marker-alt"></i> Setiap Hari, 10.00 - 22.00</p>
+                                <h4 class="font-heading text-xl tracking-wide mb-1">ALAMAT OUTLET</h4>
+                                <p class="text-gray-100"><i class="fas fa-map-marker-alt mr-2"></i> Setiap Hari, 10.00 -
+                                    22.00</p>
                             </div>
                         </div>
 
-                        <p class="copyright">© 2026 Chi Pok Indonesia. All Rights Reserved!</p>
+                        <p class="copyright mt-12 text-sm opacity-80">© 2026 Chi Pok Indonesia. All Rights Reserved!</p>
                     </div>
 
-                    <div class="contact-right">
-                        <h2 class="section-title text-white">CONTACT</h2>
-                        <div class="map-container">
+                    <div class="contact-right flex-1 min-w-[300px]">
+                        <h2 class="section-title text-white font-heading text-4xl mb-6 uppercase">CONTACT</h2>
+                        <div
+                            class="map-container rounded-[20px] overflow-hidden h-[300px] bg-gray-200 shadow-lg relative group">
                             <!-- Using an iframe for Google Maps or a placeholder image if preferred -->
                             <iframe
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126932.6288647893!2d106.75628659550778!3d-6.186933566160163!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e945e34b9d%3A0x5371bf0fdad786a2!2sJakarta%2C%20Special%20Capital%20Region%20of%20Jakarta%2C%20Indonesia!5e0!3m2!1sen!2sus!4v1707505296053!5m2!1sen!2sus"
-                                width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"></iframe>
-                            <a href="https://maps.google.com" target="_blank" class="btn btn-white">BUKA DI MAPS</a>
+                                width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                class="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500"></iframe>
+                            <a href="https://maps.google.com" target="_blank"
+                                class="btn btn-white absolute bottom-4 right-4 bg-white text-[#B30000] px-6 py-2 rounded-full font-bold shadow-md hover:bg-gray-100 transition-colors z-10 text-sm">BUKA
+                                DI MAPS</a>
                         </div>
                     </div>
                 </div>
