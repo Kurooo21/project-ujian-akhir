@@ -12,5 +12,16 @@ CREATE TABLE IF NOT EXISTS pesanan (
     jumlah INT NOT NULL,
     harga_satuan DECIMAL(10, 2) NOT NULL,
     total_harga DECIMAL(10, 2) NOT NULL,
+    jenis_belanja VARCHAR(50) NOT NULL,
     tanggal_pesan TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Membuat Tabel Users
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+-- Insert dummy user for testing
+INSERT INTO users (username, password) VALUES ('admin', 'admin123');

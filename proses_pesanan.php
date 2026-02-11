@@ -8,6 +8,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $pesanan = mysqli_real_escape_string($koneksi, $_POST['pesanan_item']);
     $jumlah = (int) $_POST['jumlah'];
     
+    $jenis_belanja = mysqli_real_escape_string($koneksi, $_POST['jenis_belanja']);
+    
     // Harga satuan (bisa diambil dari database produk jika ada, tapi untuk sederhana kita ambil dari form atau set manual di sini)
     // Di sini kita asumsikan harga dikirim dari form (hidden input) atau ditentukan berdasarkan nama pesanan
     $harga_satuan = (float) $_POST['harga_satuan'];
@@ -15,8 +17,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $total_harga = $jumlah * $harga_satuan;
 
     // Query insert data
-    $query = "INSERT INTO pesanan (nama_pelanggan, no_hp, alamat, pesanan, jumlah, harga_satuan, total_harga) 
-              VALUES ('$nama_pelanggan', '$no_hp', '$alamat', '$pesanan', '$jumlah', '$harga_satuan', '$total_harga')";
+    $query = "INSERT INTO pesanan (nama_pelanggan, no_hp, alamat, pesanan, jumlah, harga_satuan, total_harga, jenis_belanja) 
+              VALUES ('$nama_pelanggan', '$no_hp', '$alamat', '$pesanan', '$jumlah', '$harga_satuan', '$total_harga', '$jenis_belanja')";
 
     if (mysqli_query($koneksi, $query)) {
         // Redirect kembali ke index.html dengan pesan sukses (bisa via alert JS)

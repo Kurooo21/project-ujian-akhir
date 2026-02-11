@@ -45,8 +45,9 @@
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
 
             <!-- Logo (Left) -->
-            <div class="logo flex items-center">
-                <img src="asset/logo merah.png" alt="Chi-Pok Logo" class="h-[100px] lg:h-[80px] object-contain">
+            <div class="logo flex items-center relative h-[100px] lg:h-[70px] w-[120px] lg:w-[150px]">
+                <img src="asset/logo merah.png" alt="Chi-Pok Logo"
+                    class="absolute left-0 h-[160px] lg:h-[200px] max-w-none object-contain z-50 transition-all duration-300 ">
             </div>
 
             <!-- Nav Links (Center) -->
@@ -66,10 +67,12 @@
 
             <!-- Action Icons (Right) -->
             <div class="flex items-center gap-4">
-                <button class="text-2xl text-primary-red hover:text-accent-red transition-colors">
+                <button id="btn-settings" class="text-2xl text-primary-red hover:text-accent-red transition-colors"
+                    title="Pengaturan">
                     <i class="fas fa-cog"></i>
                 </button>
-                <button class="text-2xl text-primary-red hover:text-accent-red transition-colors">
+                <button id="btn-login" class="text-2xl text-primary-red hover:text-accent-red transition-colors"
+                    title="Login / Logout">
                     <i class="fas fa-sign-in-alt"></i>
                 </button>
 
@@ -125,7 +128,7 @@
                 <div class="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                     <!-- Product 1: Chi'Pok Lava -->
                     <div
-                        class="product-card bg-primary-white rounded-[20px] p-5 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
+                        class="product-card bg-primary-white rounded-[20px] p-6 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
                         <div
                             class="badge absolute top-0 left-0 bg-primary-red text-white py-1 px-4 text-sm font-bold rounded-tl-[20px] rounded-br-[20px]">
                             BEST SELLER</div>
@@ -288,6 +291,18 @@
                                     <input type="hidden" id="harga_satuan" name="harga_satuan">
 
                                     <div class="mb-4">
+                                        <label for="jenis_belanja"
+                                            class="block text-sm font-medium text-gray-700 text-left">Jenis
+                                            Belanja</label>
+                                        <select name="jenis_belanja" id="jenis_belanja" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                            <option value="Dine In">Dine In (Makan di Tempat)</option>
+                                            <option value="Take Away">Take Away (Bungkus)</option>
+                                            <option value="Delivery">Delivery (Antar)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-4">
                                         <label for="nama" class="block text-sm font-medium text-gray-700 text-left">Nama
                                             Lengkap</label>
                                         <input type="text" name="nama" id="nama" required
@@ -324,6 +339,23 @@
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
                                     </div>
 
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 text-left">Harga
+                                            Satuan</label>
+                                        <div id="display_harga_satuan"
+                                            class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 p-2 sm:text-sm text-gray-900 font-bold">
+                                            Rp 0,-</div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 text-left">Total
+                                            Belanja</label>
+                                        <div id="display_total_harga"
+                                            class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 p-2 sm:text-sm text-red-600 font-bold text-lg">
+                                            Rp 0,-</div>
+                                        <input type="hidden" name="total_harga" id="total_harga">
+                                    </div>
+
                                     <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                                         <button type="submit"
                                             class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Kirim
@@ -340,6 +372,65 @@
         </div>
     </div>
 
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-[2001] hidden overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+            <div
+                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                            <h3 class="text-2xl font-semibold leading-6 text-gray-900 mb-4">Login Pelanggan</h3>
+
+                            <!-- Google Login Button Container -->
+                            <div class="flex justify-center mb-4">
+                                <div id="g_id_onload" data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                                    data-callback="handleCredentialResponse" data-auto_prompt="false">
+                                </div>
+                                <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"
+                                    data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left">
+                                </div>
+                            </div>
+
+                            <div class="relative flex py-2 items-center">
+                                <div class="flex-grow border-t border-gray-400"></div>
+                                <span class="flex-shrink mx-4 text-gray-400">Atau Manual</span>
+                                <div class="flex-grow border-t border-gray-400"></div>
+                            </div>
+
+                            <form id="loginForm" class="mt-4">
+                                <div class="mb-4">
+                                    <label for="username"
+                                        class="block text-sm font-medium text-gray-700 text-left">Username</label>
+                                    <input type="text" id="username" name="username" required
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="password"
+                                        class="block text-sm font-medium text-gray-700 text-left">Password</label>
+                                    <input type="password" id="password" name="password" required
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                </div>
+                                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                    <button type="submit"
+                                        class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Masuk</button>
+                                    <button type="button" id="closeLoginModal"
+                                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
+                                </div>
+                            </form>
+                            <p class="mt-4 text-xs text-gray-500 text-center">Belum punya akun? <a href="#"
+                                    class="text-red-600 hover:underline">Daftar disini</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Identity Services Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="script.js"></script>
 </body>
 
