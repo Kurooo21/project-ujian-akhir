@@ -1,44 +1,42 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Mobile Menu Toggle
+// Animasi sederhana saat scroll: Menu akan muncul satu per satu
+document.addEventListener("DOMContentLoaded", () => {
+    const cards = document.querySelectorAll('.menu-card');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                // Memberikan delay sedikit antar kartu agar efeknya estetik
+                setTimeout(() => {
+                    entry.target.style.opacity = "1";
+                    entry.target.style.transform = "translateY(0)";
+                }, index * 150);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    cards.forEach(card => {
+        card.style.opacity = "0";
+        card.style.transform = "translateY(20px)";
+        card.style.transition = "all 0.6s ease-out";
+        observer.observe(card);
+    });
+
+    // Responsive Navbar
     const hamburger = document.querySelector('.hamburger');
     const navLinks = document.querySelector('.nav-links');
 
-    if (hamburger) {
+    if (hamburger && navLinks) {
         hamburger.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
             hamburger.classList.toggle('toggle');
+            navLinks.classList.toggle('active');
         });
-    }
 
-    // Smooth Scroll for Anchor Links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            navLinks.classList.remove('active'); // Close menu on click
-
-            document.querySelector(this.getAttribute('href')).scrollIntoView({
-                behavior: 'smooth'
+        // Close menu when link is clicked
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('toggle');
+                navLinks.classList.remove('active');
             });
         });
-    });
-
-    // Scroll Animation (Fade In Up)
-    const observerOptions = {
-        threshold: 0.1
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-up');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-
-    const elementsToAnimate = document.querySelectorAll('.product-card, .section-title, .hero-text, .contact-left, .contact-right');
-    elementsToAnimate.forEach(el => {
-        el.classList.add('fade-start');
-        observer.observe(el);
-    });
+    }
 });
