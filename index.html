@@ -62,6 +62,9 @@
                     <li><a href="#contact"
                             class="font-heading text-lg md:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">CONTACT</a>
                     </li>
+                    <li id="nav-admin" class="hidden"><a href="#" id="btn-admin-panel"
+                            class="font-heading text-lg md:text-xl text-primary-red hover:text-text-dark transition-colors duration-300 uppercase tracking-wide border-b-2 border-primary-red">ADMIN</a>
+                    </li>
                 </ul>
             </nav>
 
@@ -214,7 +217,7 @@
 
         <!-- Contact Section -->
         <section id="contact" class="contact bg-[#B30000] py-20 text-white relative">
-            <div class="container mx-auto px-4 contact-content relative h-[90vh]">
+            <div class="container mx-auto px-4 contact-content relative h-[70vh]">
                 <div
                     class="contact-header absolute top-0 right-0 hidden lg:block opacity-20 hover:opacity-100 transition-opacity duration-300">
                     <div class="footer-logo">
@@ -424,6 +427,280 @@
                                     class="text-red-600 hover:underline">Daftar disini</a></p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign Up Modal -->
+    <div id="signupModal" class="fixed inset-0 z-[2002] hidden overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+            <div
+                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                            <h3 class="text-2xl font-semibold leading-6 text-gray-900 mb-4">Daftar Akun Baru</h3>
+                            <form id="signupForm" class="mt-4">
+                                <div class="mb-4">
+                                    <label for="signup_name"
+                                        class="block text-sm font-medium text-gray-700 text-left">Nama Lengkap</label>
+                                    <input type="text" id="signup_name" name="signup_name" required
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="signup_username"
+                                        class="block text-sm font-medium text-gray-700 text-left">Username</label>
+                                    <input type="text" id="signup_username" name="signup_username" required
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="signup_password"
+                                        class="block text-sm font-medium text-gray-700 text-left">Password</label>
+                                    <input type="password" id="signup_password" name="signup_password" required
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                </div>
+                                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                    <button type="submit"
+                                        class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Daftar</button>
+                                    <button type="button" id="closeSignupModal"
+                                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="adminModal" class="fixed inset-0 z-[2003] hidden overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+            <div
+                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start flex-col w-full">
+                        <div class="flex justify-between items-center w-full mb-6 border-b pb-4">
+                            <h3 class="text-3xl font-heading text-red-600" id="modal-title">PANEL ADMIN</h3>
+                            <button type="button" id="closeAdminModal"
+                                class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                <span class="sr-only">Close</span>
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+
+                        <!-- Tabs -->
+                        <div class="w-full mb-4">
+                            <div class="border-b border-gray-200">
+                                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                    <button id="tab-orders"
+                                        class="border-red-500 text-red-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm w-1/2 text-center hover:bg-red-50 transition-colors">
+                                        Data Pesanan
+                                    </button>
+                                </nav>
+
+
+                            </div>
+                        </div>
+
+                        <!-- Orders Content -->
+                        <div id="content-orders" class="w-full">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Waktu</th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Pelanggan</th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Menu</th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Total</th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Status</th>
+                                            <th scope="col"
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="orders-table-body" class="bg-white divide-y divide-gray-200">
+                                        <!-- Orders will be populated here -->
+                                        <tr>
+                                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Belum
+                                                ada
+                                                pesanan masuk.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+
+                        <!-- Settings Content (Layout Mode) -->
+                        <div id="content-settings" class="w-full hidden">
+                            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
+                                <h4 class="text-xl font-bold text-gray-900 mb-6">Pilih Mode Tampilan Menu</h4>
+                                <div class="flex justify-center gap-8">
+                                    <!-- Grid Option -->
+                                    <label class="cursor-pointer group">
+                                        <input type="radio" name="layout_mode" value="grid" class="hidden peer">
+                                        <div
+                                            class="w-40 h-32 border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 peer-checked:border-red-600 peer-checked:bg-red-50 hover:bg-gray-100 transition-all">
+                                            <i
+                                                class="fas fa-th-large text-3xl text-gray-400 peer-checked:text-red-600"></i>
+                                            <span
+                                                class="font-bold text-gray-500 peer-checked:text-red-600">Grid/Kotak</span>
+                                        </div>
+                                    </label>
+
+                                    <!-- List Option -->
+                                    <label class="cursor-pointer group">
+                                        <input type="radio" name="layout_mode" value="list" class="hidden peer">
+                                        <div
+                                            class="w-40 h-32 border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 peer-checked:border-red-600 peer-checked:bg-red-50 hover:bg-gray-100 transition-all">
+                                            <i class="fas fa-list text-3xl text-gray-400 peer-checked:text-red-600"></i>
+                                            <span
+                                                class="font-bold text-gray-500 peer-checked:text-red-600">List/Daftar</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <p class="mt-6 text-sm text-gray-500">
+                                    * Pengaturan ini akan mengubah tampilan menu untuk <b>Semua Pengunjung</b>.
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Floating Action Button (FAB) -->
+    <button id="btn-add-menu-fab"
+        class="fixed bottom-8 right-8 bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-transform hover:scale-110 z-[1999] hidden flex items-center gap-2 group">
+        <i class="fas fa-plus text-xl"></i>
+        <span
+            class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-out whitespace-nowrap">Tambah
+            Menu</span>
+    </button>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="fixed inset-0 z-[2005] hidden overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <div
+                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div
+                            class="hidden sm:block mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-star text-yellow-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                            <h3 class="text-xl font-bold leading-6 text-gray-900" id="modal-title">Ulasan Produk</h3>
+                            <p class="text-sm text-gray-500 mb-4">Untuk <span id="review-product-name"
+                                    class="font-bold text-gray-800"></span></p>
+
+                            <!-- Existing Reviews List -->
+                            <div id="existing-reviews" class="mb-6 max-h-60 overflow-y-auto space-y-3 text-left">
+                                <!-- Reviews injected via JS -->
+                            </div>
+
+                            <div class="border-t pt-4">
+                                <h4 class="font-bold text-sm text-gray-900 mb-2">Tulis Ulasan Baru</h4>
+                                <form id="reviewForm" class="space-y-4">
+                                    <input type="hidden" id="review_product_id">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Rating</label>
+                                        <div class="flex gap-2 mt-1 justify-center sm:justify-start"
+                                            id="star-rating-input">
+                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                data-value="1"></i>
+                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                data-value="2"></i>
+                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                data-value="3"></i>
+                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                data-value="4"></i>
+                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                data-value="5"></i>
+                                        </div>
+                                        <input type="hidden" id="review_rating" required>
+                                    </div>
+                                    <div>
+                                        <label for="review_comment"
+                                            class="block text-sm font-medium text-gray-700">Komentar</label>
+                                        <textarea id="review_comment" rows="3"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"
+                                            placeholder="Ceritakan pengalamanmu..."></textarea>
+                                    </div>
+                                    <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                        <button type="submit"
+                                            class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Kirim
+                                            Ulasan</button>
+                                        <button type="button" id="closeReviewModal"
+                                            class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Tutup</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal Add Menu (Moved from Tab to Standalone via FAB) -->
+    <div id="addMenuModal" class="fixed inset-0 z-[2004] hidden overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <div
+                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <h3 class="text-xl font-bold mb-4">Tambah Menu Baru</h3>
+                    <form id="addMenuForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nama Menu</label>
+                            <input type="text" id="new_menu_name" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Harga (Rp)</label>
+                            <input type="number" id="new_menu_price" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                            <textarea id="new_menu_desc" rows="3" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">URL Gambar (Opsional)</label>
+                            <input type="text" id="new_menu_img" placeholder="https://..."
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                        </div>
+                        <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                            <button type="submit"
+                                class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:col-start-2">Tambah</button>
+                            <button type="button" id="closeAddMenuModal"
+                                class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0">Batal</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
