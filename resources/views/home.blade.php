@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Chi-Pok - Ledakan Kelezatan di Setiap Gigitan!</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,7 +26,7 @@
                         body: ['Poppins', 'sans-serif'],
                     },
                     backgroundImage: {
-                        'menu-pattern': "url('asset/bg menu.png')",
+                        'menu-pattern': "url('/asset/bg menu.png')",
                     }
                 }
             }
@@ -46,7 +47,7 @@
 
             <!-- Logo (Left) -->
             <div class="logo flex items-center relative h-[100px] lg:h-[70px] w-[120px] lg:w-[150px]">
-                <img src="asset/logo merah.png" alt="Chi-Pok Logo"
+                <img src="{{ asset('asset/logo merah.png') }}" alt="Chi-Pok Logo"
                     class="absolute left-0 h-[160px] lg:h-[200px] max-w-none object-contain z-50 transition-all duration-300 ">
             </div>
 
@@ -63,7 +64,7 @@
                             class="font-heading text-lg md:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">CONTACT</a>
                     </li>
                     <li id="nav-admin" class="hidden"><a href="#" id="btn-admin-panel"
-                            class="font-heading text-lg md:text-xl text-primary-red hover:text-text-dark transition-colors duration-300 uppercase tracking-wide border-b-2 border-primary-red">ADMIN</a>
+                            class="font-heading text-lg md:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">ADMIN</a>
                     </li>
                 </ul>
             </nav>
@@ -93,8 +94,7 @@
         <section id="home"
             class="hero relative bg-primary-red min-h-[100vh] w-full flex justify-center items-center overflow-hidden flex-col md:flex-row pt-[100px]">
             <div class="hero-splash absolute md:-top-[360px] top-0 left-1/2 -translate-x-1/2 z-10 w-full max-w-[800px]">
-                <!-- Splash image overlap at top -->
-                <img src="asset/bg atas.png" alt="Splash Detail" class="w-[100%] mt-[100px] ">
+                <img src="{{ asset('asset/bg atas.png') }}" alt="Splash Detail" class="w-[100%] mt-[100px] ">
             </div>
 
             <div class="hero-content relative z-30 text-center w-full mb-24 -bottom-[100px]">
@@ -110,107 +110,25 @@
 
             <div
                 class="hero-chicken absolute -bottom-[80px] left-0 z-20 w-[90%] md:w-[900px] max-w-[95vw] md:max-w-none">
-                <!-- Chicken image at bottom left -->
-                <img src="asset/bg pinggir.png" alt="Fried Chicken"
+                <img src="{{ asset('asset/bg pinggir.png') }}" alt="Fried Chicken"
                     class="absolute -bottom-[250px] left-[-15%] w-full rotate-[120deg]">
             </div>
 
             <div
                 class="hero-chicken2 absolute -bottom-[80px] right-0 z-20 w-[90%] md:w-[900px] max-w-[95vw] md:max-w-none">
-                <img src="asset/bg pinggir.png" alt=""
+                <img src="{{ asset('asset/bg pinggir.png') }}" alt=""
                     class="absolute -bottom-[250px] right-[-15%] w-full rotate-[120deg]">
             </div>
         </section>
 
         <!-- Menu Section -->
         <section id="menu" class="menu py-20 bg-bg-light bg-menu-pattern bg-cover bg-center">
-            <div class="container mx-auto px-4 h-[90vh]">
+            <div class="container mx-auto px-4 min-h-[90vh]">
                 <h2
-                    class="section-title font-heading text-5xl md:text-[3.5rem] text-primary-red text-center mb-12 uppercase">
+                    class="section-title font-heading text-5xl md:text-[3.5rem] text-primary-red text-center mb-12 uppercase pt-12">
                     MENU</h2>
-                <div class="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-                    <!-- Product 1: Chi'Pok Lava -->
-                    <div
-                        class="product-card bg-primary-white rounded-[20px] p-6 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
-                        <div
-                            class="badge absolute top-0 left-0 bg-primary-red text-white py-1 px-4 text-sm font-bold rounded-tl-[20px] rounded-br-[20px]">
-                            BEST SELLER</div>
-                        <img src="asset/rasa lava.png" alt="Chi'Pok Lava"
-                            class="w-[180px] mx-auto -mt-[70px] drop-shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                        <div class="product-info">
-                            <h3 class="font-heading text-2xl text-text-dark mt-5 mb-1">CHI'POK LAVA 🔥</h3>
-                            <p class="text-text-grey text-sm mb-4">Pedas & melimpah, sensasi lava cabe!</p>
-                            <div
-                                class="price-action flex justify-between items-center mt-5 pt-4 border-t border-gray-100">
-                                <span class="price font-bold text-xl text-primary-red">Rp 27.000,-</span>
-                                <button
-                                    class="btn-cart bg-transparent border-none text-text-dark text-2xl cursor-pointer transition-transform duration-200 hover:text-primary-red hover:scale-125"><i
-                                        class="fas fa-shopping-cart"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 2: Chi'Pok Ori -->
-                    <div
-                        class="product-card bg-primary-white rounded-[20px] p-5 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
-                        <img src="asset/original.png" alt="Chi'Pok Ori"
-                            class="w-[180px] mx-auto -mt-[70px] drop-shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                        <div class="product-info">
-                            <h3 class="font-heading text-2xl text-text-dark mt-5 mb-1">CHI'POK ORI <i
-                                    class="fas fa-check-circle text-primary-red"></i></h3>
-                            <p class="text-text-grey text-sm mb-4">Gurih & renyah klasic favorit!</p>
-                            <div
-                                class="price-action flex justify-between items-center mt-5 pt-4 border-t border-gray-100">
-                                <span class="price font-bold text-xl text-primary-red">Rp 25.000,-</span>
-                                <button
-                                    class="btn-cart bg-transparent border-none text-text-dark text-2xl cursor-pointer transition-transform duration-200 hover:text-primary-red hover:scale-125"><i
-                                        class="fas fa-shopping-cart"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 3: Chi'Pok Keju -->
-                    <div
-                        class="product-card bg-primary-white rounded-[20px] p-5 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
-                        <img src="asset/rasa keju.png" alt="Chi'Pok Keju"
-                            class="w-[180px] mx-auto -mt-[70px] drop-shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                        <div class="product-info">
-                            <h3 class="font-heading text-2xl text-text-dark mt-5 mb-1">CHI'POK KEJU</h3>
-                            <p class="text-text-grey text-sm mb-4">Kriuk, gurih keju melimpah!</p>
-                            <div class="rating flex justify-center gap-1 text-mustard mb-2 text-sm">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <span class="font-bold text-text-dark">4.5</span>
-                            </div>
-                            <div
-                                class="price-action flex justify-between items-center mt-0 pt-4 border-t border-gray-100">
-                                <span class="price font-bold text-xl text-primary-red">Rp 26.000,-</span>
-                                <!-- Estimated price -->
-                                <button
-                                    class="btn-cart bg-transparent border-none text-text-dark text-2xl cursor-pointer transition-transform duration-200 hover:text-primary-red hover:scale-125"><i
-                                        class="fas fa-shopping-cart"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 4: Chi'Pok Bumbu -->
-                    <div
-                        class="product-card bg-primary-white rounded-[20px] p-5 text-center shadow-lg transition-transform duration-300 mt-12 hover:-translate-y-4 relative group">
-                        <img src="asset/rasa bumbu.png" alt="Chi'Pok Bumbu"
-                            class="w-[180px] mx-auto -mt-[70px] drop-shadow-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                        <div class="product-info">
-                            <h3 class="font-heading text-2xl text-text-dark mt-5 mb-1">CHI'POK BUMBU</h3>
-                            <p class="text-text-grey text-sm mb-4">Rasa kaya rempah, unik!</p>
-                            <div
-                                class="price-action flex justify-between items-center mt-5 pt-4 border-t border-gray-100">
-                                <span class="price font-bold text-xl text-primary-red">Rp 24.000,-</span>
-                                <button
-                                    class="btn-cart bg-transparent border-none text-text-dark text-2xl cursor-pointer transition-transform duration-200 hover:text-primary-red hover:scale-125"><i
-                                        class="fas fa-shopping-cart"></i></button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10" id="menu-grid">
+                    {{-- Products will be rendered by JavaScript --}}
                 </div>
             </div>
         </section>
@@ -221,7 +139,7 @@
                 <div
                     class="contact-header absolute top-0 right-0 hidden lg:block opacity-20 hover:opacity-100 transition-opacity duration-300">
                     <div class="footer-logo">
-                        <img src="asset/logo putih.png" alt="Chi-Pok Logo White"
+                        <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok Logo White"
                             class="h-[200px] brightness-0 invert mt-[-90px]">
                     </div>
                 </div>
@@ -259,7 +177,6 @@
                         <h2 class="section-title text-white font-heading text-4xl mb-6 uppercase">CONTACT</h2>
                         <div
                             class="map-container rounded-[20px] overflow-hidden h-[300px] bg-gray-200 shadow-lg relative group">
-                            <!-- Using an iframe for Google Maps or a placeholder image if preferred -->
                             <iframe
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126932.6288647893!2d106.75628659550778!3d-6.186933566160163!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e945e34b9d%3A0x5371bf0fdad786a2!2sJakarta%2C%20Special%20Capital%20Region%20of%20Jakarta%2C%20Indonesia!5e0!3m2!1sen!2sus!4v1707505296053!5m2!1sen!2sus"
                                 width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
@@ -278,9 +195,7 @@
     <!-- Order Modal -->
     <div id="orderModal" class="fixed inset-0 z-[2000] hidden overflow-y-auto" aria-labelledby="modal-title"
         role="dialog" aria-modal="true">
-        <!-- Backdrop -->
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div
                 class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
@@ -290,7 +205,7 @@
                             <h3 class="text-2xl font-semibold leading-6 text-gray-900" id="modal-title">Formulir Pesanan
                             </h3>
                             <div class="mt-4">
-                                <form action="proses_pesanan.php" method="POST" id="orderForm">
+                                <form id="orderForm">
                                     <input type="hidden" id="harga_satuan" name="harga_satuan">
 
                                     <div class="mb-4">
@@ -387,22 +302,6 @@
                         <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                             <h3 class="text-2xl font-semibold leading-6 text-gray-900 mb-4">Login Pelanggan</h3>
 
-                            <!-- Google Login Button Container -->
-                            <div class="flex justify-center mb-4">
-                                <div id="g_id_onload" data-client_id="YOUR_GOOGLE_CLIENT_ID"
-                                    data-callback="handleCredentialResponse" data-auto_prompt="false">
-                                </div>
-                                <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"
-                                    data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left">
-                                </div>
-                            </div>
-
-                            <div class="relative flex py-2 items-center">
-                                <div class="flex-grow border-t border-gray-400"></div>
-                                <span class="flex-shrink mx-4 text-gray-400">Atau Manual</span>
-                                <div class="flex-grow border-t border-gray-400"></div>
-                            </div>
-
                             <form id="loginForm" class="mt-4">
                                 <div class="mb-4">
                                     <label for="username"
@@ -424,7 +323,7 @@
                                 </div>
                             </form>
                             <p class="mt-4 text-xs text-gray-500 text-center">Belum punya akun? <a href="#"
-                                    class="text-red-600 hover:underline">Daftar disini</a></p>
+                                    id="link-signup" class="text-red-600 hover:underline">Daftar disini</a></p>
                         </div>
                     </div>
                 </div>
@@ -503,8 +402,6 @@
                                         Data Pesanan
                                     </button>
                                 </nav>
-
-
                             </div>
                         </div>
 
@@ -529,50 +426,37 @@
                                             <th scope="col"
                                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Status</th>
-                                            <th scope="col"
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="orders-table-body" class="bg-white divide-y divide-gray-200">
-                                        <!-- Orders will be populated here -->
                                         <tr>
-                                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Belum
-                                                ada
-                                                pesanan masuk.</td>
+                                            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Belum
+                                                ada pesanan masuk.</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
-
-
                         <!-- Settings Content (Layout Mode) -->
                         <div id="content-settings" class="w-full hidden">
                             <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
                                 <h4 class="text-xl font-bold text-gray-900 mb-6">Pilih Mode Tampilan Menu</h4>
                                 <div class="flex justify-center gap-8">
-                                    <!-- Grid Option -->
                                     <label class="cursor-pointer group">
                                         <input type="radio" name="layout_mode" value="grid" class="hidden peer">
                                         <div
                                             class="w-40 h-32 border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 peer-checked:border-red-600 peer-checked:bg-red-50 hover:bg-gray-100 transition-all">
-                                            <i
-                                                class="fas fa-th-large text-3xl text-gray-400 peer-checked:text-red-600"></i>
-                                            <span
-                                                class="font-bold text-gray-500 peer-checked:text-red-600">Grid/Kotak</span>
+                                            <i class="fas fa-th-large text-3xl text-gray-400"></i>
+                                            <span class="font-bold text-gray-500">Grid/Kotak</span>
                                         </div>
                                     </label>
-
-                                    <!-- List Option -->
                                     <label class="cursor-pointer group">
                                         <input type="radio" name="layout_mode" value="list" class="hidden peer">
                                         <div
                                             class="w-40 h-32 border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 peer-checked:border-red-600 peer-checked:bg-red-50 hover:bg-gray-100 transition-all">
-                                            <i class="fas fa-list text-3xl text-gray-400 peer-checked:text-red-600"></i>
-                                            <span
-                                                class="font-bold text-gray-500 peer-checked:text-red-600">List/Daftar</span>
+                                            <i class="fas fa-list text-3xl text-gray-400"></i>
+                                            <span class="font-bold text-gray-500">List/Daftar</span>
                                         </div>
                                     </label>
                                 </div>
@@ -581,7 +465,6 @@
                                 </p>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -617,7 +500,6 @@
 
                             <!-- Existing Reviews List -->
                             <div id="existing-reviews" class="mb-6 max-h-60 overflow-y-auto space-y-3 text-left">
-                                <!-- Reviews injected via JS -->
                             </div>
 
                             <div class="border-t pt-4">
@@ -664,7 +546,7 @@
         </div>
     </div>
 
-    <!-- Admin Modal Add Menu (Moved from Tab to Standalone via FAB) -->
+    <!-- Admin Modal Add Menu -->
     <div id="addMenuModal" class="fixed inset-0 z-[2004] hidden overflow-y-auto" aria-labelledby="modal-title"
         role="dialog" aria-modal="true">
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
@@ -706,9 +588,12 @@
         </div>
     </div>
 
-    <!-- Google Identity Services Library -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="script.js"></script>
+    {{-- Pass products data from Laravel to JavaScript --}}
+    <script>
+        const PRODUCTS_DATA = @json($productsData);
+        const CSRF_TOKEN = '{{ csrf_token() }}';
+    </script>
+    <script src="{{ asset('js/app.js') }}"></script>
 </body>
 
 </html>

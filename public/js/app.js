@@ -1,82 +1,81 @@
-// Initialize Data
-const defaultProducts = [
-    {
-        id: 1,
-        name: "CHI'POK LAVA 🔥",
-        price: 27000,
-        desc: "Pedas & melimpah, sensasi lava cabe!",
-        image: "asset/rasa lava.png",
-        badge: "BEST SELLER"
-    },
-    {
-        id: 2,
-        name: "CHI'POK ORI",
-        price: 25000,
-        desc: "Gurih & renyah klasic favorit!",
-        image: "asset/original.png",
-        icon: '<i class="fas fa-check-circle text-primary-red"></i>'
-    },
-    {
-        id: 3,
-        name: "CHI'POK KEJU",
-        price: 26000,
-        desc: "Kriuk, gurih keju melimpah!",
-        image: "asset/rasa keju.png",
-        rating: 4.5
-    },
-    {
-        id: 4,
-        name: "CHI'POK BUMBU",
-        price: 24000,
-        desc: "Rasa kaya rempah, unik!",
-        image: "asset/rasa bumbu.png"
-    }
-];
+// ========================================================================
+// Chi-Pok App - Laravel Version
+// ========================================================================
+// Data produk di-pass dari server via Blade (@json)
+// Auth & CRUD menggunakan AJAX fetch ke Laravel routes
 
-const hardcodedUsers = [
-    { username: 'admin', password: 'admin123', name: 'Admin Chi-Pok', role: 'admin' },
-    { username: 'pelanggan', password: 'pelanggan123', name: 'Pelanggan Setia', role: 'pelanggan' }
-];
+let products = PRODUCTS_DATA;
+let currentUser = null;
 
-// State Management
-let products = JSON.parse(localStorage.getItem('products')) || defaultProducts;
-let orders = JSON.parse(localStorage.getItem('orders')) || [];
-// Sync default products if localstorage is empty to ensure they exist
-if (!localStorage.getItem('products')) {
-    localStorage.setItem('products', JSON.stringify(defaultProducts));
+// Helper: Format Rupiah
+function formatRupiah(number) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
 }
 
+// Helper: AJAX request
+async function apiRequest(url, method = 'GET', data = null) {
+    const options = {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': CSRF_TOKEN,
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin',
+    };
+    if (data) options.body = JSON.stringify(data);
+    const response = await fetch(url, options);
+    return response.json();
+}
+
+// ========================================================================
+// DOM READY
+// ========================================================================
 document.addEventListener("DOMContentLoaded", () => {
     // --- Elements ---
-    const menuGrid = document.querySelector('.menu-grid');
+    const menuGrid = document.getElementById('menu-grid');
     const loginModal = document.getElementById('loginModal');
     const signupModal = document.getElementById('signupModal');
     const orderModal = document.getElementById('orderModal');
     const adminModal = document.getElementById('adminModal');
 
-    // Buttons
     const btnLoginHeader = document.getElementById('btn-login');
     const btnAdminPanel = document.getElementById('btn-admin-panel');
     const navAdmin = document.getElementById('nav-admin');
 
-    // Forms
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
     const orderForm = document.getElementById('orderForm');
     const addMenuForm = document.getElementById('addMenuForm');
 
-    // --- Product Rendering ---
+    // ====================================================================
+    // INIT - Check Auth Status (now INSIDE DOMContentLoaded)
+    // ====================================================================
+    async function checkAuth() {
+        try {
+            const result = await apiRequest('/api/user');
+            if (result.logged_in) {
+                currentUser = result.user;
+            } else {
+                currentUser = null;
+            }
+        } catch (e) {
+            currentUser = null;
+        }
+        updateLoginUI();
+    }
+
+    // ====================================================================
+    // PRODUCT RENDERING
+    // ====================================================================
     function renderProducts() {
         menuGrid.innerHTML = '';
-        const user = JSON.parse(localStorage.getItem('user'));
-        const isAdmin = user && user.role === 'admin';
+        const isAdmin = currentUser && currentUser.role === 'admin';
         const layoutMode = localStorage.getItem('menuLayout') || 'grid';
 
-        // Set Grid Container Class based on Layout
         if (layoutMode === 'grid') {
             menuGrid.className = "menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8";
         } else {
-            // List View: 1 Column, stacked
             menuGrid.className = "menu-grid flex flex-col gap-6 max-w-4xl mx-auto";
         }
 
@@ -84,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement('div');
             card.dataset.id = product.id;
 
-            // Calculate Rating
+            // Rating HTML
             let ratingHtml = '';
             let avgRating = 0;
             let totalReviews = 0;
@@ -94,14 +93,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 const sum = product.reviews.reduce((acc, curr) => acc + parseInt(curr.rating), 0);
                 avgRating = (sum / totalReviews).toFixed(1);
 
-                // Generate Stars
                 let stars = '';
                 const fullStars = Math.floor(avgRating);
                 const halfStar = avgRating % 1 >= 0.5 ? 1 : 0;
-
                 for (let i = 0; i < fullStars; i++) stars += '<i class="fas fa-star text-yellow-500"></i>';
                 if (halfStar) stars += '<i class="fas fa-star-half-alt text-yellow-500"></i>';
-                // remaining empty? maybe not needed for cleaner look or use gray stars
 
                 ratingHtml = `
                     <div class="rating flex justify-center items-center gap-1 text-sm mt-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 transition" onclick="openReviewModal(${product.id})">
@@ -116,16 +112,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>`;
             }
 
-
-            // Admin Controls (Simplified)
+            // Admin Controls
             let adminControls = '';
             if (isAdmin) {
                 adminControls = `
                     <div class="absolute top-2 right-2 flex gap-2 z-10 transition-opacity opacity-0 group-hover:opacity-100">
-                         <button class="bg-white/80 text-gray-700 p-2 rounded-full hover:bg-white hover:text-yellow-600 transition shadow-sm border border-gray-200" onclick="editProduct(${product.id})" title="Edit"><i class="fas fa-pencil-alt text-xs"></i></button>
+                        <button class="bg-white/80 text-gray-700 p-2 rounded-full hover:bg-white hover:text-yellow-600 transition shadow-sm border border-gray-200" onclick="editProduct(${product.id})" title="Edit"><i class="fas fa-pencil-alt text-xs"></i></button>
                         <button class="bg-white/80 text-gray-700 p-2 rounded-full hover:bg-white hover:text-red-600 transition shadow-sm border border-gray-200" onclick="deleteProduct(${product.id})" title="Hapus"><i class="fas fa-trash text-xs"></i></button>
-                    </div>
-                `;
+                    </div>`;
             }
 
             // Badge
@@ -134,17 +128,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 badgeHtml = `<div class="badge absolute top-2 left-2 bg-red-100 text-red-600 border border-red-200 py-0.5 px-3 text-[10px] font-bold rounded-full z-10 tracking-wide shadow-sm">${product.badge}</div>`;
             }
 
-            if (layoutMode === 'grid') {
-                // --- GRID VIEW CARD (FIXED UI) ---
-                card.className = "product-card bg-white rounded-2xl p-4 text-center shadow-lg transition-all duration-300 mt-0 hover:-translate-y-2 hover:shadow-xl relative group flex flex-col justify-between overflow-hidden border border-gray-100";
+            // Image path - use asset path
+            const imgSrc = product.image.startsWith('http') ? product.image : '/' + product.image;
 
-                // Image Container
+            if (layoutMode === 'grid') {
+                card.className = "product-card bg-white rounded-2xl p-4 text-center shadow-lg transition-all duration-300 mt-0 hover:-translate-y-2 hover:shadow-xl relative group flex flex-col justify-between overflow-hidden border border-gray-100";
                 const imgContainer = `
                     <div class="w-full aspect-square bg-gray-50 rounded-xl mb-4 flex items-center justify-center p-4 relative overflow-hidden">
-                         ${badgeHtml}
-                         <img src="${product.image}" alt="${product.name}" class="w-full h-full object-contain drop-shadow transition-transform duration-500 group-hover:scale-110">
-                    </div>
-                `;
+                        ${badgeHtml}
+                        <img src="${imgSrc}" alt="${product.name}" class="w-full h-full object-contain drop-shadow transition-transform duration-500 group-hover:scale-110">
+                    </div>`;
 
                 card.innerHTML = `
                     ${adminControls}
@@ -152,31 +145,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="product-info flex flex-col flex-grow">
                         <h3 class="font-bold text-lg text-gray-800 mb-1 line-clamp-2 leading-tight">${product.name}</h3>
                         <p class="text-gray-500 text-xs mb-3 line-clamp-2 h-8">${product.desc}</p>
-                        
                         ${ratingHtml}
-
                         <div class="flex justify-between items-center mt-auto pt-4 border-t border-gray-50">
                             <span class="font-extrabold text-lg text-red-600">${formatRupiah(product.price)}</span>
                             <button class="btn-cart w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors shadow-sm">
                                 <i class="fas fa-shopping-cart text-sm"></i>
                             </button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             } else {
-                // --- LIST VIEW CARD ---
                 card.className = "product-card bg-white rounded-2xl p-4 shadow-md transition-all duration-300 relative group flex flex-col md:flex-row items-center gap-6 hover:shadow-lg border border-gray-100";
-
                 if (product.badge) {
                     badgeHtml = `<div class="badge absolute top-3 left-3 bg-red-100 text-red-600 border border-red-200 py-0.5 px-3 text-[10px] font-bold rounded-full z-10">${product.badge}</div>`;
                 }
-
                 card.innerHTML = `
                     ${badgeHtml}
                     ${adminControls}
                     <div class="img-container shrink-0 w-full md:w-[160px] aspect-square bg-gray-50 rounded-xl flex items-center justify-center p-2">
-                        <img src="${product.image}" alt="${product.name}"
-                        class="w-full h-full object-contain drop-shadow transition-transform duration-300 group-hover:scale-110">
+                        <img src="${imgSrc}" alt="${product.name}" class="w-full h-full object-contain drop-shadow transition-transform duration-300 group-hover:scale-110">
                     </div>
                     <div class="product-info flex-grow text-center md:text-left w-full">
                         <div class="flex flex-col md:flex-row md:justify-between md:items-start h-full">
@@ -185,9 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     <h3 class="font-bold text-xl text-gray-800 mb-2">${product.name}</h3>
                                     <p class="text-gray-500 text-sm mb-3 max-w-lg">${product.desc}</p>
                                 </div>
-                                <div class="flex justify-center md:justify-start">
-                                     ${ratingHtml}
-                                </div>
+                                <div class="flex justify-center md:justify-start">${ratingHtml}</div>
                             </div>
                             <div class="price-action flex flex-row md:flex-col items-center justify-between md:justify-center md:items-end gap-3 mt-4 md:mt-0 w-full md:w-auto">
                                 <span class="font-extrabold text-2xl text-red-600">${formatRupiah(product.price)}</span>
@@ -196,8 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 </button>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }
 
             // Animation
@@ -212,37 +195,32 @@ document.addEventListener("DOMContentLoaded", () => {
             menuGrid.appendChild(card);
         });
 
-        // Re-attach listeners for new cart buttons
+        // Re-attach cart listeners
         document.querySelectorAll('.btn-cart').forEach(btn => {
             btn.addEventListener('click', handleCartClick);
         });
 
-        // Sync Radio Buttons in Admin Panel
+        // Sync Radio Buttons
         const radios = document.querySelectorAll('input[name="layout_mode"]');
-        radios.forEach(r => {
-            if (r.value === layoutMode) r.checked = true;
-        });
+        const currentLayoutMode = localStorage.getItem('menuLayout') || 'grid';
+        radios.forEach(r => { if (r.value === currentLayoutMode) r.checked = true; });
     }
 
-    // --- Auth Logic ---
-    function getAllUsers() {
-        const storedUsers = JSON.parse(localStorage.getItem('users')) || [];
-        return [...hardcodedUsers, ...storedUsers];
-    }
-
+    // ====================================================================
+    // AUTH UI
+    // ====================================================================
     function updateLoginUI() {
-        const user = JSON.parse(localStorage.getItem('user'));
         const loginIcon = btnLoginHeader.querySelector('i');
-        const fab = document.getElementById('btn-add-menu-fab'); // NEW FAB
+        const fab = document.getElementById('btn-add-menu-fab');
 
-        if (user) {
+        if (currentUser) {
             loginIcon.classList.remove('fa-sign-in-alt');
             loginIcon.classList.add('fa-sign-out-alt');
-            btnLoginHeader.title = `Logout (${user.name})`;
+            btnLoginHeader.title = `Logout (${currentUser.name})`;
 
-            if (user.role === 'admin') {
+            if (currentUser.role === 'admin') {
                 navAdmin.classList.remove('hidden');
-                if (fab) fab.classList.remove('hidden'); // Show FAB
+                if (fab) fab.classList.remove('hidden');
             } else {
                 navAdmin.classList.add('hidden');
                 if (fab) fab.classList.add('hidden');
@@ -254,211 +232,207 @@ document.addEventListener("DOMContentLoaded", () => {
             navAdmin.classList.add('hidden');
             if (fab) fab.classList.add('hidden');
         }
-        renderProducts(); // Re-render to show/hide admin controls
+        renderProducts();
     }
 
-    // Login Form Submit
-    loginForm.addEventListener('submit', (e) => {
+    // ====================================================================
+    // LOGIN
+    // ====================================================================
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
 
-        const allUsers = getAllUsers();
-        const foundUser = allUsers.find(user => user.username === u && user.password === p);
-
-        if (foundUser) {
-            localStorage.setItem('user', JSON.stringify(foundUser));
-            alert(`Login Berhasil! Selamat datang, ${foundUser.name} (${foundUser.role}).`);
-            updateLoginUI();
-            loginModal.classList.add('hidden');
-        } else {
+        try {
+            const result = await apiRequest('/login', 'POST', { username, password });
+            if (result.success) {
+                currentUser = result.user;
+                alert(result.message);
+                updateLoginUI();
+                loginModal.classList.add('hidden');
+                loginForm.reset();
+            } else {
+                alert(result.message || 'Login gagal!');
+            }
+        } catch (err) {
             alert('Username atau Password salah!');
         }
     });
 
-    // Sign Up Form Submit
-    signupForm.addEventListener('submit', (e) => {
+    // ====================================================================
+    // REGISTER
+    // ====================================================================
+    signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('signup_name').value;
         const username = document.getElementById('signup_username').value;
         const password = document.getElementById('signup_password').value;
 
-        const allUsers = getAllUsers();
-        if (allUsers.find(u => u.username === username)) {
-            alert('Username sudah terdaftar!');
-            return;
+        try {
+            const result = await apiRequest('/register', 'POST', { name, username, password });
+            if (result.success) {
+                alert(result.message);
+                signupModal.classList.add('hidden');
+                loginModal.classList.remove('hidden');
+                signupForm.reset();
+            } else {
+                alert(result.message || 'Pendaftaran gagal!');
+            }
+        } catch (err) {
+            alert('Terjadi kesalahan saat mendaftar.');
         }
-
-        const newUser = { username, password, name, role: 'pelanggan' };
-
-        // Save to local storage users
-        const storedUsers = JSON.parse(localStorage.getItem('users')) || [];
-        storedUsers.push(newUser);
-        localStorage.setItem('users', JSON.stringify(storedUsers));
-
-        alert('Pendaftaran Berhasil! Silakan Login.');
-        signupModal.classList.add('hidden');
-        loginModal.classList.remove('hidden');
     });
 
-    // --- Admin Panel Logic ---
+    // ====================================================================
+    // LOGOUT
+    // ====================================================================
+    btnLoginHeader.addEventListener('click', async () => {
+        if (currentUser) {
+            if (confirm('Yakin ingin logout?')) {
+                await apiRequest('/logout', 'POST');
+                currentUser = null;
+                updateLoginUI();
+            }
+        } else {
+            loginModal.classList.remove('hidden');
+        }
+    });
+
+    // ====================================================================
+    // ADMIN PANEL
+    // ====================================================================
     btnAdminPanel.addEventListener('click', (e) => {
         e.preventDefault();
         adminModal.classList.remove('hidden');
         renderOrdersTable();
     });
 
-    // Tabs
-    const tabOrders = document.getElementById('tab-orders');
-    const tabSettings = document.getElementById('tab-settings'); // NEW
-    const contentOrders = document.getElementById('content-orders');
-    const contentSettings = document.getElementById('content-settings'); // NEW
+    async function renderOrdersTable() {
+        const tbody = document.getElementById('orders-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Memuat...</td></tr>';
 
-    function switchTab(activeTab, activeContent) {
-        // Reset all
-        [tabOrders, tabSettings].forEach(t => {
-            if (t) {
-                t.classList.remove('border-red-500', 'text-red-600');
-                t.classList.add('border-transparent', 'text-gray-500');
+        try {
+            const result = await apiRequest('/admin/pesanan');
+            if (result.success && result.data.length > 0) {
+                tbody.innerHTML = '';
+                result.data.forEach(order => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.date}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order.customerName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.items}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${formatRupiah(order.total)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Berhasil</span>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Belum ada pesanan masuk.</td></tr>';
             }
-        });
-        [contentOrders, contentSettings].forEach(c => {
-            if (c) c.classList.add('hidden');
-        });
-
-        // Set active
-        activeTab.classList.add('border-red-500', 'text-red-600');
-        activeTab.classList.remove('border-transparent', 'text-gray-500');
-        activeContent.classList.remove('hidden');
+        } catch (err) {
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-red-500">Gagal memuat data pesanan.</td></tr>';
+        }
     }
 
-    if (tabOrders) {
-        tabOrders.addEventListener('click', () => {
-            switchTab(tabOrders, contentOrders);
-            renderOrdersTable();
-        });
-    }
-
-
-
-    if (tabSettings) {
-        tabSettings.addEventListener('click', () => {
-            switchTab(tabSettings, contentSettings);
-        });
-    }
-
-    // Layout Settings Logic
+    // Layout Settings
     document.querySelectorAll('input[name="layout_mode"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
-            const mode = e.target.value;
-            localStorage.setItem('menuLayout', mode);
-            renderProducts(); // Immediate update
+            localStorage.setItem('menuLayout', e.target.value);
+            renderProducts();
         });
     });
 
-    function renderOrdersTable() {
-        const tbody = document.getElementById('orders-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        const currentOrders = JSON.parse(localStorage.getItem('orders')) || [];
-
-        if (currentOrders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Belum ada pesanan masuk.</td></tr>';
-            return;
-        }
-
-        currentOrders.slice().reverse().forEach((order) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.date}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order.customerName}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.items}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${formatRupiah(order.total)}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        Berhasil
-                    </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <a href="#" class="text-red-600 hover:text-red-900">Detail</a>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    // Add Menu Logic (FAB Triggered)
+    // ====================================================================
+    // ADD MENU (Admin)
+    // ====================================================================
     const fabAddMenu = document.getElementById('btn-add-menu-fab');
     const addMenuModal = document.getElementById('addMenuModal');
     const closeAddMenuBtn = document.getElementById('closeAddMenuModal');
 
     if (fabAddMenu) {
-        fabAddMenu.addEventListener('click', () => {
-            addMenuModal.classList.remove('hidden');
-        });
+        fabAddMenu.addEventListener('click', () => addMenuModal.classList.remove('hidden'));
     }
-
     if (closeAddMenuBtn) {
-        closeAddMenuBtn.addEventListener('click', () => {
-            addMenuModal.classList.add('hidden');
-        });
+        closeAddMenuBtn.addEventListener('click', () => addMenuModal.classList.add('hidden'));
     }
 
-    addMenuForm.addEventListener('submit', (e) => {
+    addMenuForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('new_menu_name').value;
         const price = parseInt(document.getElementById('new_menu_price').value);
-        const desc = document.getElementById('new_menu_desc').value;
-        const img = document.getElementById('new_menu_img').value || 'asset/logo merah.png';
+        const description = document.getElementById('new_menu_desc').value;
+        const image = document.getElementById('new_menu_img').value || 'asset/logo merah.png';
 
-        const newProduct = {
-            id: Date.now(),
-            name,
-            price,
-            desc,
-            image: img,
-            reviews: [] // Init empty reviews
-        };
-
-        products.push(newProduct);
-        localStorage.setItem('products', JSON.stringify(products));
-        alert('Menu berhasil ditambahkan!');
-        addMenuModal.classList.add('hidden'); // Close standalone modal
-        addMenuForm.reset();
-        renderProducts();
+        try {
+            const result = await apiRequest('/products', 'POST', { name, price, description, image });
+            if (result.success) {
+                products.push({
+                    id: result.product.id,
+                    name: result.product.name,
+                    price: result.product.price,
+                    desc: result.product.description,
+                    image: result.product.image,
+                    badge: result.product.badge,
+                    reviews: []
+                });
+                alert(result.message);
+                addMenuModal.classList.add('hidden');
+                addMenuForm.reset();
+                renderProducts();
+            }
+        } catch (err) {
+            alert('Gagal menambahkan menu.');
+        }
     });
 
-    // Make functions global for inline button calls
-    window.deleteProduct = (id) => {
+    // ====================================================================
+    // DELETE & EDIT PRODUCT (Admin)
+    // ====================================================================
+    window.deleteProduct = async (id) => {
         if (confirm('Yakin ingin menghapus menu ini?')) {
-            products = products.filter(p => p.id !== id);
-            localStorage.setItem('products', JSON.stringify(products));
-            renderProducts();
+            try {
+                const result = await apiRequest(`/products/${id}`, 'DELETE');
+                if (result.success) {
+                    products = products.filter(p => p.id !== id);
+                    renderProducts();
+                }
+            } catch (err) {
+                alert('Gagal menghapus menu.');
+            }
         }
     };
 
-    window.editProduct = (id) => {
+    window.editProduct = async (id) => {
         const product = products.find(p => p.id === id);
         if (!product) return;
 
         const newPrice = prompt(`Edit Harga untuk ${product.name}:`, product.price);
         if (newPrice !== null && !isNaN(newPrice)) {
-            product.price = parseInt(newPrice);
-            localStorage.setItem('products', JSON.stringify(products));
-            renderProducts();
-            alert('Harga berhasil diubah!');
+            try {
+                const result = await apiRequest(`/products/${id}`, 'PUT', { price: parseInt(newPrice) });
+                if (result.success) {
+                    product.price = parseInt(newPrice);
+                    renderProducts();
+                    alert('Harga berhasil diubah!');
+                }
+            } catch (err) {
+                alert('Gagal mengubah harga.');
+            }
         }
     };
 
-    // --- Review Logic ---
+    // ====================================================================
+    // REVIEW
+    // ====================================================================
     const reviewModal = document.getElementById('reviewModal');
     const reviewForm = document.getElementById('reviewForm');
     const closeReviewBtn = document.getElementById('closeReviewModal');
     let starRatingValue = 0;
 
     window.openReviewModal = (id) => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
+        if (!currentUser) {
             alert('Silakan login untuk melihat atau memberikan ulasan.');
             loginModal.classList.remove('hidden');
             return;
@@ -470,9 +444,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('review_product_id').value = id;
         document.getElementById('review-product-name').innerText = product.name;
 
-        // Render Existing Reviews
+        // Render reviews
         const reviewsContainer = document.getElementById('existing-reviews');
-        reviewsContainer.innerHTML = ''; // Clear prev
+        reviewsContainer.innerHTML = '';
 
         if (product.reviews && product.reviews.length > 0) {
             product.reviews.slice().reverse().forEach(r => {
@@ -485,8 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span class="text-xs text-gray-400">${r.date}</span>
                     </div>
                     <div class="flex items-center mb-1">${stars}</div>
-                    <p class="text-sm text-gray-600">${r.comment}</p>
-                `;
+                    <p class="text-sm text-gray-600">${r.comment || ''}</p>`;
                 reviewsContainer.appendChild(reviewItem);
             });
         } else {
@@ -498,12 +471,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     if (closeReviewBtn) {
-        closeReviewBtn.addEventListener('click', () => {
-            reviewModal.classList.add('hidden');
-        });
+        closeReviewBtn.addEventListener('click', () => reviewModal.classList.add('hidden'));
     }
 
-    // Star Rating Interaction
+    // Star Rating
     const starInputs = document.querySelectorAll('#star-rating-input i');
     starInputs.forEach(star => {
         star.addEventListener('click', () => {
@@ -516,13 +487,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateStarVisuals(value) {
         starInputs.forEach(s => {
             const v = parseInt(s.dataset.value);
-            if (v <= value) {
-                s.classList.remove('far');
-                s.classList.add('fas');
-            } else {
-                s.classList.remove('fas');
-                s.classList.add('far');
-            }
+            if (v <= value) { s.classList.remove('far'); s.classList.add('fas'); }
+            else { s.classList.remove('fas'); s.classList.add('far'); }
         });
     }
 
@@ -533,38 +499,34 @@ document.addEventListener("DOMContentLoaded", () => {
         updateStarVisuals(0);
     }
 
-    reviewForm.addEventListener('submit', (e) => {
+    reviewForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const productId = parseInt(document.getElementById('review_product_id').value);
+        const product_id = parseInt(document.getElementById('review_product_id').value);
         const rating = parseInt(document.getElementById('review_rating').value);
         const comment = document.getElementById('review_comment').value;
-        const user = JSON.parse(localStorage.getItem('user'));
 
-        if (!rating) {
-            alert('Mohon pilih bintang rating!');
-            return;
-        }
+        if (!rating) { alert('Mohon pilih bintang rating!'); return; }
 
-        const product = products.find(p => p.id === productId);
-        if (product) {
-            if (!product.reviews) product.reviews = [];
-
-            product.reviews.push({
-                user: user.name,
-                rating: rating,
-                comment: comment,
-                date: new Date().toLocaleDateString()
-            });
-
-            localStorage.setItem('products', JSON.stringify(products));
-            alert('Terima kasih atas ulasan Anda!');
-            reviewModal.classList.add('hidden');
-            renderProducts();
+        try {
+            const result = await apiRequest('/reviews', 'POST', { product_id, rating, comment });
+            if (result.success) {
+                const product = products.find(p => p.id === product_id);
+                if (product) {
+                    if (!product.reviews) product.reviews = [];
+                    product.reviews.push(result.review);
+                }
+                alert(result.message);
+                reviewModal.classList.add('hidden');
+                renderProducts();
+            }
+        } catch (err) {
+            alert('Gagal mengirim ulasan.');
         }
     });
 
-
-    // --- Order Logic ---
+    // ====================================================================
+    // ORDER
+    // ====================================================================
     let currentItem = null;
 
     function handleCartClick(e) {
@@ -574,11 +536,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = parseInt(card.dataset.id);
         const product = products.find(p => p.id === id);
 
-        const user = JSON.parse(localStorage.getItem('user'));
-
-        // Removed login check here to allow viewing, but keeping it for ordering is better/safer
-        // Or if you want "Add to Cart" to trigger login
-        if (!user) {
+        if (!currentUser) {
             alert('Silakan login untuk memesan.');
             loginModal.classList.remove('hidden');
             return;
@@ -596,37 +554,36 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('jumlah').value = 1;
         updateTotal();
 
-        // Prefill user data
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user) {
-            document.getElementById('nama').value = user.name;
+        if (currentUser) {
+            document.getElementById('nama').value = currentUser.name;
         }
     }
 
-    orderForm.addEventListener('submit', (e) => {
+    orderForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Collect Data
-        const nama = document.getElementById('nama').value;
-        const total = document.getElementById('total_harga').value;
-        const jumlah = document.getElementById('jumlah').value;
-
-        const newOrder = {
-            id: Date.now(),
-            date: new Date().toLocaleString(),
-            customerName: nama,
-            items: `${currentItem.name} (${jumlah}x)`,
-            total: total
+        const data = {
+            nama: document.getElementById('nama').value,
+            no_hp: document.getElementById('no_hp').value,
+            alamat: document.getElementById('alamat').value,
+            pesanan_item: document.getElementById('pesanan_item').value,
+            jumlah: parseInt(document.getElementById('jumlah').value),
+            harga_satuan: parseFloat(document.getElementById('harga_satuan').value),
+            jenis_belanja: document.getElementById('jenis_belanja').value,
         };
 
-        // Save
-        const currentOrders = JSON.parse(localStorage.getItem('orders')) || [];
-        currentOrders.push(newOrder);
-        localStorage.setItem('orders', JSON.stringify(currentOrders));
-
-        alert('Pesanan Berhasil Dikirim! Mohon tunggu.');
-        orderModal.classList.add('hidden');
-        orderForm.reset();
+        try {
+            const result = await apiRequest('/pesanan', 'POST', data);
+            if (result.success) {
+                alert(result.message);
+                orderModal.classList.add('hidden');
+                orderForm.reset();
+            } else {
+                alert(result.message || 'Gagal membuat pesanan.');
+            }
+        } catch (err) {
+            alert('Gagal membuat pesanan. Pastikan semua data terisi.');
+        }
     });
 
     document.getElementById('jumlah').addEventListener('input', updateTotal);
@@ -639,24 +596,16 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('total_harga').value = total;
     }
 
-    // --- Utilities ---
-    function formatRupiah(number) {
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
-    }
-
-    // --- Modal Closing Logic ---
+    // ====================================================================
+    // MODAL CLOSING
+    // ====================================================================
     document.getElementById('closeLoginModal').addEventListener('click', () => loginModal.classList.add('hidden'));
     document.getElementById('closeSignupModal').addEventListener('click', () => signupModal.classList.add('hidden'));
     document.getElementById('closeModal').addEventListener('click', () => orderModal.classList.add('hidden'));
     document.getElementById('closeAdminModal').addEventListener('click', () => adminModal.classList.add('hidden'));
 
     // Toggle Sign Up
-    const linkSignup = document.querySelector('a[href="#"]'); // The one in login modal? 
-    // Need specific ID for sign up link in login modal to be safe
-    // Added id="link-signup" in HTML previously? Let's assume user clicks the "Daftar disini" link
-
-    // Fix: Locate the signup link more precisely
-    const signUpLink = document.querySelector('#loginModal a');
+    const signUpLink = document.getElementById('link-signup');
     if (signUpLink) {
         signUpLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -665,19 +614,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Header Actions
-    btnLoginHeader.addEventListener('click', () => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user) {
-            if (confirm('Yakin ingin logout?')) {
-                localStorage.removeItem('user');
-                updateLoginUI();
-            }
-        } else {
-            loginModal.classList.remove('hidden');
-        }
-    });
-
     document.getElementById('btn-settings').addEventListener('click', () => alert('Fitur pengaturan belum tersedia.'));
 
     // Mobile Menu
@@ -685,13 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const navLinks = document.querySelector('.nav-links');
     if (hamburger) {
         hamburger.addEventListener('click', () => {
-            navLinks.classList.toggle('hidden'); // Tailwind hidden toggle
-            // Or toggle custom class if defined. Previous code used .active
-            // Let's stick to standard Tailwind logic if possible or previous logic
-            // Previous logic:
             hamburger.classList.toggle('toggle');
-            // The nav is hidden md:block. To show it, we need to remove hidden or add a class that overrides it.
-            // Simplest:
             navLinks.classList.toggle('!flex');
             navLinks.classList.toggle('flex-col');
             navLinks.classList.toggle('bg-white');
@@ -703,8 +633,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Init
-    renderProducts();
-    updateLoginUI();
+    // ====================================================================
+    // INIT - Render products immediately, then check auth in background
+    // ====================================================================
+    renderProducts();  // Tampilkan menu langsung tanpa tunggu auth
+    checkAuth();       // Cek login di background (akan re-render jika ada session)
 });
-
