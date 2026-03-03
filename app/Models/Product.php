@@ -12,6 +12,7 @@ class Product extends Model
         'description',
         'image',
         'badge',
+        'category',
     ];
 
     public function reviews()

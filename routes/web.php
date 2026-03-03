@@ -11,6 +11,7 @@ use App\Http\Controllers\ReviewController;
 // HALAMAN UTAMA
 // ========================================================================
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/menu', [HomeController::class, 'menu'])->name('menu');
 
 // ========================================================================
 // AUTHENTICATION (Login, Register, Logout)

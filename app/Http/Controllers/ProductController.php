@@ -14,6 +14,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'description' => 'required|string',
             'image' => 'nullable|string',
+            'category' => 'nullable|string|in:makanan,minuman',
         ]);
 
         $product = Product::create([
@@ -21,6 +22,7 @@ class ProductController extends Controller
             'price' => $request->price,
             'description' => $request->description,
             'image' => $request->image ?: 'asset/logo merah.png',
+            'category' => $request->category ?: 'makanan',
         ]);
 
         return response()->json([

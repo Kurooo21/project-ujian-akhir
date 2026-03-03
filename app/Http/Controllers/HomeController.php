@@ -19,6 +19,7 @@ class HomeController extends Controller
                 'desc' => $product->description,
                 'image' => $product->image,
                 'badge' => $product->badge,
+                'category' => $product->category ?? 'makanan',
                 'reviews' => $product->reviews->map(function ($review) {
                     return [
                         'user' => $review->user->name,
@@ -32,5 +33,31 @@ class HomeController extends Controller
 
         return view('home', compact('products', 'productsData'));
     }
-}
 
+    public function menu()
+    {
+        $products = Product::with('reviews.user')->get();
+
+        $productsData = $products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'desc' => $product->description,
+                'image' => $product->image,
+                'badge' => $product->badge,
+                'category' => $product->category ?? 'makanan',
+                'reviews' => $product->reviews->map(function ($review) {
+                    return [
+                        'user' => $review->user->name,
+                        'rating' => $review->rating,
+                        'comment' => $review->comment,
+                        'date' => $review->created_at->format('d/m/Y'),
+                    ];
+                })->values()->toArray(),
+            ];
+        })->values()->toArray();
+
+        return view('menu', compact('products', 'productsData'));
+    }
+}

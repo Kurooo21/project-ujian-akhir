@@ -30,6 +30,8 @@ class AuthController extends Controller
                     'name' => Auth::user()->name,
                     'username' => Auth::user()->username,
                     'role' => Auth::user()->role,
+                    'alamat' => Auth::user()->alamat,
+                    'no_hp' => Auth::user()->no_hp,
                 ]
             ]);
         }
@@ -51,6 +53,8 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:50|unique:users',
             'password' => 'required|string|min:4',
+            'alamat' => 'nullable|string',
+            'no_hp' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
@@ -58,6 +62,8 @@ class AuthController extends Controller
             'username' => $request->username,
             'password' => Hash::make($request->password),
             'role' => 'pelanggan',
+            'alamat' => $request->alamat,
+            'no_hp' => $request->no_hp,
         ]);
 
         return response()->json([
@@ -87,6 +93,8 @@ class AuthController extends Controller
                     'name' => Auth::user()->name,
                     'username' => Auth::user()->username,
                     'role' => Auth::user()->role,
+                    'alamat' => Auth::user()->alamat,
+                    'no_hp' => Auth::user()->no_hp,
                 ]
             ]);
         }

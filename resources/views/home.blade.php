@@ -71,6 +71,11 @@
 
             <!-- Action Icons (Right) -->
             <div class="flex items-center gap-4">
+                <!-- Cart Button -->
+                <button id="btn-cart-header" class="relative text-2xl text-primary-red hover:text-accent-red transition-colors" title="Keranjang Belanja">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-badge" class="hidden absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-bounce">0</span>
+                </button>
                 <button id="btn-settings" class="text-2xl text-primary-red hover:text-accent-red transition-colors"
                     title="Pengaturan">
                     <i class="fas fa-cog"></i>
@@ -123,12 +128,61 @@
 
         <!-- Menu Section -->
         <section id="menu" class="menu py-20 bg-bg-light bg-menu-pattern bg-cover bg-center">
-            <div class="container mx-auto px-4 min-h-[90vh]">
+            <div class="container mx-auto px-4 min-h-[70vh]">
                 <h2
-                    class="section-title font-heading text-5xl md:text-[3.5rem] text-primary-red text-center mb-12 uppercase pt-12">
+                    class="section-title font-heading text-5xl md:text-[3.5rem] text-primary-red text-center mb-4 uppercase pt-12">
                     MENU</h2>
-                <div class="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10" id="menu-grid">
-                    {{-- Products will be rendered by JavaScript --}}
+                <p class="text-center text-text-grey mb-8 text-sm md:text-base">Pilih kategori favoritmu!</p>
+
+                <!-- Category Tabs -->
+                <div class="flex justify-center gap-3 mb-10" id="category-tabs">
+                    <button data-category="semua"
+                        class="category-tab active-tab px-6 py-2.5 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-300 shadow-md bg-primary-red text-white hover:shadow-lg hover:scale-105">
+                        <i class="fas fa-utensils mr-1"></i> Semua
+                    </button>
+                    <button data-category="makanan"
+                        class="category-tab px-6 py-2.5 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-300 shadow-md bg-white text-text-dark border border-gray-200 hover:bg-red-50 hover:border-red-300 hover:scale-105">
+                        <i class="fas fa-drumstick-bite mr-1"></i> Makanan
+                    </button>
+                    <button data-category="minuman"
+                        class="category-tab px-6 py-2.5 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-300 shadow-md bg-white text-text-dark border border-gray-200 hover:bg-red-50 hover:border-red-300 hover:scale-105">
+                        <i class="fas fa-glass-water mr-1"></i> Minuman
+                    </button>
+                </div>
+
+                <!-- Carousel Wrapper -->
+                <div class="relative">
+                    <!-- Prev Button -->
+                    <button id="carousel-prev"
+                        class="hidden absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-30 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 text-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-110 items-center justify-center">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+
+                    <!-- Menu Grid / Carousel Track -->
+                    <div class="overflow-hidden">
+                        <div class="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 transition-transform duration-500 ease-in-out"
+                            id="menu-grid">
+                            {{-- Products will be rendered by JavaScript --}}
+                        </div>
+                    </div>
+
+                    <!-- Next Button -->
+                    <button id="carousel-next"
+                        class="hidden absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-30 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 text-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-110 items-center justify-center">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Carousel Dots -->
+                <div id="carousel-dots" class="hidden flex justify-center gap-2 mt-6"></div>
+
+                <!-- Lihat Semua Menu Link -->
+                <div class="text-center mt-10">
+                    <a href="/menu"
+                        class="inline-flex items-center gap-2 px-8 py-3 rounded-full font-bold text-primary-red border-2 border-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm uppercase tracking-wide group">
+                        Lihat Semua Menu
+                        <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
+                    </a>
                 </div>
             </div>
         </section>
@@ -192,97 +246,105 @@
         </section>
     </main>
 
-    <!-- Order Modal -->
-    <div id="orderModal" class="fixed inset-0 z-[2000] hidden overflow-y-auto" aria-labelledby="modal-title"
+    <!-- Cart / Checkout Modal -->
+    <div id="cartModal" class="fixed inset-0 z-[2000] hidden overflow-y-auto" aria-labelledby="modal-title"
         role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl">
                 <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                            <h3 class="text-2xl font-semibold leading-6 text-gray-900" id="modal-title">Formulir Pesanan
-                            </h3>
-                            <div class="mt-4">
-                                <form id="orderForm">
-                                    <input type="hidden" id="harga_satuan" name="harga_satuan">
+                    <div class="w-full">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between mb-5 pb-3 border-b">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-shopping-cart text-red-600"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900">Keranjang Belanja</h3>
+                            </div>
+                            <button type="button" id="closeCartModal" class="text-gray-400 hover:text-gray-600 transition">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
 
-                                    <div class="mb-4">
-                                        <label for="jenis_belanja"
-                                            class="block text-sm font-medium text-gray-700 text-left">Jenis
-                                            Belanja</label>
-                                        <select name="jenis_belanja" id="jenis_belanja" required
+                        <!-- Cart Items List -->
+                        <div id="cart-items-container" class="max-h-[250px] overflow-y-auto space-y-3 mb-5">
+                            <p class="text-gray-400 text-center py-8"><i class="fas fa-shopping-basket text-3xl mb-2 block"></i>Keranjang kosong</p>
+                        </div>
+
+                        <!-- Cart Total -->
+                        <div class="bg-gray-50 rounded-xl p-4 mb-5">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-gray-700">Total Belanja</span>
+                                <span id="cart-total-display" class="text-xl font-extrabold text-red-600">Rp 0</span>
+                            </div>
+                        </div>
+
+                        <!-- Checkout Form -->
+                        <div id="cart-checkout-section" class="hidden">
+                            <div class="border-t pt-4">
+                                <h4 class="font-bold text-sm text-gray-900 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-truck text-red-500"></i> Detail Pengiriman
+                                </h4>
+                                <form id="checkoutForm" class="space-y-3">
+                                    <div>
+                                        <label for="checkout_jenis" class="block text-sm font-medium text-gray-700">Jenis Belanja</label>
+                                        <select id="checkout_jenis" required
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
                                             <option value="Dine In">Dine In (Makan di Tempat)</option>
                                             <option value="Take Away">Take Away (Bungkus)</option>
                                             <option value="Delivery">Delivery (Antar)</option>
                                         </select>
                                     </div>
-
-                                    <div class="mb-4">
-                                        <label for="nama" class="block text-sm font-medium text-gray-700 text-left">Nama
-                                            Lengkap</label>
-                                        <input type="text" name="nama" id="nama" required
+                                    <div>
+                                        <label for="checkout_nama" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                                        <input type="text" id="checkout_nama" required
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
                                     </div>
-
-                                    <div class="mb-4">
-                                        <label for="no_hp" class="block text-sm font-medium text-gray-700 text-left">No.
-                                            HP / WhatsApp</label>
-                                        <input type="tel" name="no_hp" id="no_hp" required
+                                    <div>
+                                        <label for="checkout_no_hp" class="block text-sm font-medium text-gray-700">No. HP / WhatsApp</label>
+                                        <input type="tel" id="checkout_no_hp" required
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
                                     </div>
-
-                                    <div class="mb-4">
-                                        <label for="alamat"
-                                            class="block text-sm font-medium text-gray-700 text-left">Alamat
-                                            Lengkap</label>
-                                        <textarea name="alamat" id="alamat" rows="3" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"></textarea>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                                        <div id="address-options" class="hidden mb-2">
+                                            <label class="flex items-center gap-2 cursor-pointer bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm hover:bg-red-100 transition">
+                                                <input type="checkbox" id="use_saved_address" class="accent-red-600">
+                                                <i class="fas fa-map-marker-alt text-red-500"></i>
+                                                <span>Gunakan alamat tersimpan: <strong id="saved-address-preview" class="text-gray-800"></strong></span>
+                                            </label>
+                                        </div>
+                                        <textarea id="checkout_alamat" rows="2" required
+                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"
+                                            placeholder="Masukkan alamat pengiriman"></textarea>
                                     </div>
-
-                                    <div class="mb-4">
-                                        <label for="pesanan_item"
-                                            class="block text-sm font-medium text-gray-700 text-left">Menu
-                                            Pesanan</label>
-                                        <input type="text" name="pesanan_item" id="pesanan_item" readonly
-                                            class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm sm:text-sm border p-2 cursor-not-allowed">
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label for="jumlah"
-                                            class="block text-sm font-medium text-gray-700 text-left">Jumlah</label>
-                                        <input type="number" name="jumlah" id="jumlah" min="1" value="1" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700 text-left">Harga
-                                            Satuan</label>
-                                        <div id="display_harga_satuan"
-                                            class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 p-2 sm:text-sm text-gray-900 font-bold">
-                                            Rp 0,-</div>
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700 text-left">Total
-                                            Belanja</label>
-                                        <div id="display_total_harga"
-                                            class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 p-2 sm:text-sm text-red-600 font-bold text-lg">
-                                            Rp 0,-</div>
-                                        <input type="hidden" name="total_harga" id="total_harga">
-                                    </div>
-
-                                    <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                    <div class="pt-2 flex gap-3">
                                         <button type="submit"
-                                            class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Kirim
-                                            Pesanan</button>
-                                        <button type="button" id="closeModal"
-                                            class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
+                                            class="flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 transition flex items-center gap-2">
+                                            <i class="fas fa-paper-plane"></i> Kirim Pesanan
+                                        </button>
+                                        <button type="button" id="btn-back-to-cart"
+                                            class="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
+                                            Kembali
+                                        </button>
                                     </div>
                                 </form>
                             </div>
+                        </div>
+
+                        <!-- Cart Action Buttons -->
+                        <div id="cart-action-buttons" class="flex gap-3">
+                            <button id="btn-checkout"
+                                class="flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled>
+                                <i class="fas fa-credit-card"></i> Checkout
+                            </button>
+                            <button id="btn-clear-cart"
+                                class="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50 transition">
+                                <i class="fas fa-trash"></i> Kosongkan
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -360,6 +422,18 @@
                                         class="block text-sm font-medium text-gray-700 text-left">Password</label>
                                     <input type="password" id="signup_password" name="signup_password" required
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="signup_no_hp"
+                                        class="block text-sm font-medium text-gray-700 text-left">No. HP / WhatsApp</label>
+                                    <input type="tel" id="signup_no_hp" name="signup_no_hp" placeholder="08xxxxxxxxxx"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="signup_alamat"
+                                        class="block text-sm font-medium text-gray-700 text-left">Alamat</label>
+                                    <textarea id="signup_alamat" name="signup_alamat" rows="2" placeholder="Masukkan alamat lengkap Anda"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"></textarea>
                                 </div>
                                 <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                                     <button type="submit"
@@ -576,6 +650,14 @@
                             <input type="text" id="new_menu_img" placeholder="https://..."
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Kategori</label>
+                            <select id="new_menu_category"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                <option value="makanan">🍗 Makanan</option>
+                                <option value="minuman">🥤 Minuman</option>
+                            </select>
+                        </div>
                         <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
                             <button type="submit"
                                 class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:col-start-2">Tambah</button>
@@ -593,7 +675,7 @@
         const PRODUCTS_DATA = @json($productsData);
         const CSRF_TOKEN = '{{ csrf_token() }}';
     </script>
-    <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ asset('js/app.js') }}?v={{ time() }}"></script>
 </body>
 
 </html>
