@@ -95,35 +95,39 @@
     </header>
 
     <main>
-        <!-- Hero Section -->
-        <section id="home"
-            class="hero relative bg-primary-red min-h-[100vh] w-full flex justify-center items-center overflow-hidden flex-col md:flex-row pt-[100px]">
-            <div class="hero-splash absolute md:-top-[360px] top-0 left-1/2 -translate-x-1/2 z-10 w-full max-w-[800px]">
-                <img src="{{ asset('asset/bg atas.png') }}" alt="Splash Detail" class="w-[100%] mt-[100px] ">
-            </div>
+        <!-- Hero Slider Section -->
+        <section id="home" class="hero relative w-full min-h-[100vh] overflow-hidden pt-[100px]">
 
-            <div class="hero-content relative z-30 text-center w-full mb-24 -bottom-[100px]">
-                <div class="hero-text">
-                    <h1
-                        class="font-heading text-primary-white text-[3rem] md:text-[5.5rem] leading-[0.9] uppercase drop-shadow-md mb-8 -rotate-3">
-                        LEDAKAN KELEZATAN<br>DI SETIAP GIGITAN!</h1>
-                    <a href="#menu"
-                        class="btn btn-primary inline-block px-12 py-4 rounded-full font-bold uppercase transition-transform shadow-lg hover:scale-110 cursor-pointer border-none font-body text-xl bg-mustard text-text-dark">PESAN
-                        SEKARANG</a>
+            <!-- Slider Container -->
+            <div id="hero-slider" class="absolute inset-0 w-full h-full">
+                <!-- Slide 1 -->
+                <div class="hero-slide absolute inset-0 w-full h-full opacity-100 transition-opacity duration-700 ease-in-out"
+                    style="background-image: url('{{ asset('asset/ledakan kelezatan.jpg') }}'); background-size: cover; background-position: center;">
+                    <div class="absolute inset-0 "></div>
                 </div>
+
+                {{-- Tambahkan slide lainnya di bawah ini, contoh:
+                <div class="hero-slide absolute inset-0 w-full h-full opacity-0 transition-opacity duration-700 ease-in-out"
+                    style="background-image: url('{{ asset('asset/gambar2.jpg') }}'); background-size: cover; background-position: center;">
+                    <div class="absolute inset-0 bg-black/30"></div>
+                </div>
+                --}}
             </div>
 
-            <div
-                class="hero-chicken absolute -bottom-[80px] left-0 z-20 w-[90%] md:w-[900px] max-w-[95vw] md:max-w-none">
-                <img src="{{ asset('asset/bg pinggir.png') }}" alt="Fried Chicken"
-                    class="absolute -bottom-[250px] left-[-15%] w-full rotate-[120deg]">
+            <!-- Slider Navigation Arrows -->
+            <button id="hero-prev"
+                class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/30 hidden">
+                <i class="fas fa-chevron-left text-lg"></i>
+            </button>
+            <button id="hero-next"
+                class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/30 hidden">
+                <i class="fas fa-chevron-right text-lg"></i>
+            </button>
+
+            <!-- Slider Dots -->
+            <div id="hero-dots" class="absolute bottom-8 left-1/2 -translate-x-1/2 z-40 flex gap-3 hidden">
             </div>
 
-            <div
-                class="hero-chicken2 absolute -bottom-[80px] right-0 z-20 w-[90%] md:w-[900px] max-w-[95vw] md:max-w-none">
-                <img src="{{ asset('asset/bg pinggir.png') }}" alt=""
-                    class="absolute -bottom-[250px] right-[-15%] w-full rotate-[120deg]">
-            </div>
         </section>
 
         <!-- Menu Section -->
@@ -675,6 +679,7 @@
         const PRODUCTS_DATA = @json($productsData);
         const CSRF_TOKEN = '{{ csrf_token() }}';
     </script>
+    <script src="{{ asset('js/hero-slider.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/app.js') }}?v={{ time() }}"></script>
 </body>
 
