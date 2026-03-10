@@ -37,95 +37,175 @@
         rel="stylesheet">
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        /* Hamburger → X animation */
+        .hamburger-line {
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+        }
+        .hamburger-btn.active .hamburger-line:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        .hamburger-btn.active .hamburger-line:nth-child(2) {
+            opacity: 0; transform: scaleX(0);
+        }
+        .hamburger-btn.active .hamburger-line:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+        /* Mobile drawer */
+        .mobile-drawer {
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+        }
+        .mobile-drawer.open {
+            transform: translateX(0);
+        }
+        .drawer-overlay {
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .drawer-overlay.open {
+            opacity: 1; pointer-events: auto;
+        }
+        /* Logo shrink on scroll */
+        header.scrolled .header-logo {
+            height: 50px !important;
+        }
+        @media (min-width: 768px) {
+            header.scrolled .header-logo {
+                height: 60px !important;
+            }
+        }
+    </style>
 </head>
 
 <body class="font-body bg-bg-light text-text-dark leading-relaxed overflow-x-hidden">
 
     <!-- Header -->
-    <header class="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-sm shadow-md transition-all duration-300">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+    <header id="main-header" class="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-sm shadow-md transition-all duration-300">
+        <div class="container mx-auto px-3 sm:px-4 lg:px-6 py-2 md:py-3 flex justify-between items-center">
 
             <!-- Logo (Left) -->
-            <div class="logo flex items-center relative h-[100px] lg:h-[70px] w-[120px] lg:w-[150px]">
+            <a href="#home" class="flex-shrink-0 flex items-center">
                 <img src="{{ asset('asset/logo merah.png') }}" alt="Chi-Pok Logo"
-                    class="absolute left-0 h-[160px] lg:h-[200px] max-w-none object-contain z-50 transition-all duration-300 ">
-            </div>
+                    class="header-logo h-[60px] sm:h-[70px] md:h-[80px] lg:h-[90px] max-w-none object-contain z-10 transition-all duration-300 drop-shadow-sm">
+            </a>
 
-            <!-- Nav Links (Center) -->
-            <nav class="hidden md:block absolute left-1/2 -translate-x-1/2">
-                <ul class="nav-links flex gap-6 text-text-dark items-center">
+            <!-- Nav Links (Center) — hidden on mobile -->
+            <nav class="hidden md:flex items-center">
+                <ul class="nav-links flex gap-4 lg:gap-8 text-text-dark items-center">
                     <li><a href="#home"
-                            class="font-heading text-lg md:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide active:text-primary-red">HOME</a>
+                            class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary-red after:transition-all after:duration-300 hover:after:w-full">HOME</a>
                     </li>
                     <li><a href="#menu"
-                            class="font-heading text-lg md:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">MENU</a>
+                            class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary-red after:transition-all after:duration-300 hover:after:w-full">MENU</a>
                     </li>
                     <li><a href="#contact"
-                            class="font-heading text-lg md:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">CONTACT</a>
+                            class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary-red after:transition-all after:duration-300 hover:after:w-full">CONTACT</a>
                     </li>
                     <li id="nav-admin" class="hidden"><a href="#" id="btn-admin-panel"
-                            class="font-heading text-lg md:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">ADMIN</a>
+                            class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">ADMIN</a>
                     </li>
                 </ul>
             </nav>
 
             <!-- Action Icons (Right) -->
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 sm:gap-3 md:gap-4">
                 <!-- Cart Button -->
-                <button id="btn-cart-header" class="relative text-2xl text-primary-red hover:text-accent-red transition-colors" title="Keranjang Belanja">
+                <button id="btn-cart-header" class="relative text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1" title="Keranjang Belanja">
                     <i class="fas fa-shopping-cart"></i>
-                    <span id="cart-badge" class="hidden absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-bounce">0</span>
+                    <span id="cart-badge" class="hidden absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-600 text-white text-[8px] sm:text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center animate-bounce">0</span>
                 </button>
-                <button id="btn-settings" class="text-2xl text-primary-red hover:text-accent-red transition-colors"
+                <button id="btn-settings" class="hidden sm:block text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
                     title="Pengaturan">
                     <i class="fas fa-cog"></i>
                 </button>
-                <button id="btn-login" class="text-2xl text-primary-red hover:text-accent-red transition-colors"
+                <button id="btn-login" class="text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
                     title="Login / Logout">
                     <i class="fas fa-sign-in-alt"></i>
                 </button>
 
-                <!-- Mobile Menu Button (Visible on Small Screens) -->
-                <div class="hamburger md:hidden cursor-pointer text-text-dark text-2xl ml-2">
-                    <i class="fas fa-bars"></i>
-                </div>
+                <!-- Hamburger Button (Mobile) -->
+                <button class="hamburger-btn md:hidden flex flex-col justify-center items-center w-8 h-8 gap-[6px] ml-1 relative z-[60]" aria-label="Menu">
+                    <span class="hamburger-line block w-6 h-[2px] bg-text-dark rounded-full origin-center"></span>
+                    <span class="hamburger-line block w-6 h-[2px] bg-text-dark rounded-full origin-center"></span>
+                    <span class="hamburger-line block w-6 h-[2px] bg-text-dark rounded-full origin-center"></span>
+                </button>
             </div>
 
         </div>
     </header>
 
+    <!-- Mobile Drawer Overlay -->
+    <div class="drawer-overlay fixed inset-0 bg-black/50 z-[55] md:hidden"></div>
+
+    <!-- Mobile Drawer -->
+    <nav class="mobile-drawer fixed top-0 right-0 h-full w-[75%] max-w-[320px] bg-white z-[56] md:hidden shadow-2xl flex flex-col">
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between p-5 border-b border-gray-100">
+            <img src="{{ asset('asset/logo merah.png') }}" alt="Chi-Pok" class="h-10 object-contain">
+            <button class="drawer-close w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <!-- Drawer Links -->
+        <ul class="nav-links-mobile flex flex-col py-4 flex-grow">
+            <li><a href="#home" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
+                <i class="fas fa-home text-base w-6 text-center text-gray-400"></i> HOME</a></li>
+            <li><a href="#menu" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
+                <i class="fas fa-utensils text-base w-6 text-center text-gray-400"></i> MENU</a></li>
+            <li><a href="#contact" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
+                <i class="fas fa-envelope text-base w-6 text-center text-gray-400"></i> CONTACT</a></li>
+            <li id="nav-admin-mobile" class="hidden"><a href="#" id="btn-admin-panel-mobile" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
+                <i class="fas fa-shield-alt text-base w-6 text-center text-gray-400"></i> ADMIN</a></li>
+        </ul>
+        <!-- Drawer Footer -->
+        <div class="p-5 border-t border-gray-100">
+            <div class="flex items-center justify-center gap-4">
+                <button id="btn-settings-mobile" class="w-10 h-10 rounded-full bg-gray-100 text-primary-red flex items-center justify-center hover:bg-red-50 transition-colors" title="Pengaturan">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button id="btn-login-mobile" class="flex-1 py-2.5 bg-gradient-to-r from-primary-red to-accent-red text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:shadow-lg transition-all">
+                    <i class="fas fa-sign-in-alt"></i> <span>Login</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
     <main>
         <!-- Hero Slider Section -->
-        <section id="home" class="hero relative w-full min-h-[100vh] overflow-hidden pt-[100px]">
+        <section id="home" class="hero relative w-full overflow-hidden mt-[64px] sm:mt-[74px] md:mt-[86px]">
 
             <!-- Slider Container -->
-            <div id="hero-slider" class="absolute inset-0 w-full h-full">
+            <div id="hero-slider" class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px]">
                 <!-- Slide 1 -->
-                <div class="hero-slide absolute inset-0 w-full h-full opacity-100 transition-opacity duration-700 ease-in-out"
-                    style="background-image: url('{{ asset('asset/ledakan kelezatan.jpg') }}'); background-size: cover; background-position: center;">
-                    <div class="absolute inset-0 "></div>
+                <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out" style="opacity:1;">
+                    <img src="{{ asset('asset/ledakan kelezatan.jpg') }}" alt="Ledakan Kelezatan"
+                        class="w-full h-full object-cover block">
                 </div>
 
-                {{-- Tambahkan slide lainnya di bawah ini, contoh:
-                <div class="hero-slide absolute inset-0 w-full h-full opacity-0 transition-opacity duration-700 ease-in-out"
-                    style="background-image: url('{{ asset('asset/gambar2.jpg') }}'); background-size: cover; background-position: center;">
-                    <div class="absolute inset-0 bg-black/30"></div>
+                <!-- Slide 2 -->
+                <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out" style="opacity:0;">
+                    <img src="{{ asset('asset/vocer.jpg') }}" alt="Vocer Promo"
+                        class="w-full h-full object-cover block">
                 </div>
-                --}}
             </div>
 
             <!-- Slider Navigation Arrows -->
             <button id="hero-prev"
-                class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/30 hidden">
-                <i class="fas fa-chevron-left text-lg"></i>
+                class="absolute left-2 sm:left-4 md:left-8 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/30 hidden">
+                <i class="fas fa-chevron-left text-sm sm:text-lg"></i>
             </button>
             <button id="hero-next"
-                class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/30 hidden">
-                <i class="fas fa-chevron-right text-lg"></i>
+                class="absolute right-2 sm:right-4 md:right-8 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/30 hidden">
+                <i class="fas fa-chevron-right text-sm sm:text-lg"></i>
             </button>
 
             <!-- Slider Dots -->
-            <div id="hero-dots" class="absolute bottom-8 left-1/2 -translate-x-1/2 z-40 flex gap-3 hidden">
+            <div id="hero-dots" class="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 flex gap-2 sm:gap-3 hidden">
             </div>
 
         </section>
@@ -356,99 +436,238 @@
         </div>
     </div>
 
-    <!-- Login Modal -->
+    <!-- ================================================================ -->
+    <!-- LOGIN MODAL — Premium Split Layout                               -->
+    <!-- ================================================================ -->
     <div id="loginModal" class="fixed inset-0 z-[2001] hidden overflow-y-auto" aria-labelledby="modal-title"
         role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-            <div
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                            <h3 class="text-2xl font-semibold leading-6 text-gray-900 mb-4">Login Pelanggan</h3>
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
 
-                            <form id="loginForm" class="mt-4">
-                                <div class="mb-4">
-                                    <label for="username"
-                                        class="block text-sm font-medium text-gray-700 text-left">Username</label>
-                                    <input type="text" id="username" name="username" required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                </div>
-                                <div class="mb-4">
-                                    <label for="password"
-                                        class="block text-sm font-medium text-gray-700 text-left">Password</label>
-                                    <input type="password" id="password" name="password" required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                </div>
-                                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                                    <button type="submit"
-                                        class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Masuk</button>
-                                    <button type="button" id="closeLoginModal"
-                                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
-                                </div>
-                            </form>
-                            <p class="mt-4 text-xs text-gray-500 text-center">Belum punya akun? <a href="#"
-                                    id="link-signup" class="text-red-600 hover:underline">Daftar disini</a></p>
-                        </div>
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <!-- Card -->
+            <div class="relative w-full max-w-[900px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row transform transition-all duration-500 animate-[modalIn_0.4s_ease-out]">
+
+                <!-- Left — Branding Panel -->
+                <div class="hidden md:flex md:w-[45%] bg-gradient-to-br from-[#D20000] via-[#B30000] to-[#8B0000] flex-col items-center justify-center p-10 relative overflow-hidden">
+                    <!-- Decorative circles -->
+                    <div class="absolute -top-20 -left-20 w-56 h-56 bg-white/10 rounded-full"></div>
+                    <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-white/5 rounded-full"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-white/5 rounded-full"></div>
+
+                    <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok Logo" class="h-28 brightness-0 invert mb-6 drop-shadow-2xl relative z-10">
+                    <h2 class="font-heading text-3xl text-white text-center tracking-widest relative z-10 mb-3">SELAMAT DATANG</h2>
+                    <p class="text-white/70 text-sm text-center max-w-[220px] relative z-10 leading-relaxed">Masuk ke akunmu dan nikmati ledakan kelezatan di setiap gigitan!</p>
+                    <div class="mt-8 flex gap-3 relative z-10">
+                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
+                        <span class="w-6 h-2 rounded-full bg-white"></span>
+                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
                     </div>
                 </div>
+
+                <!-- Right — Form Panel -->
+                <div class="flex-1 p-8 md:p-12 flex flex-col justify-center">
+                    <!-- Close button -->
+                    <button type="button" id="closeLoginModal"
+                        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-all duration-300 hover:rotate-90 z-20">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+
+                    <!-- Mobile logo -->
+                    <div class="flex md:hidden justify-center mb-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-[#D20000] to-[#8B0000] rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
+                            <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok" class="h-10 brightness-0 invert">
+                        </div>
+                    </div>
+
+                    <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">MASUK</h3>
+                    <p class="text-gray-400 text-sm mb-8">Login ke akun Chi-Pok kamu</p>
+
+                    <form id="loginForm" class="space-y-5">
+                        <!-- Username -->
+                        <div>
+                            <label for="username" class="block text-sm font-semibold text-gray-600 mb-1.5">Username</label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                    <i class="fas fa-user text-sm"></i>
+                                </span>
+                                <input type="text" id="username" name="username" required placeholder="Masukkan username"
+                                    class="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <label for="password" class="block text-sm font-semibold text-gray-600 mb-1.5">Password</label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                    <i class="fas fa-lock text-sm"></i>
+                                </span>
+                                <input type="password" id="password" name="password" required placeholder="Masukkan password"
+                                    class="w-full pl-11 pr-12 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                <button type="button" onclick="togglePassword('password', this)"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Login Button -->
+                        <button type="submit"
+                            class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide">
+                            <i class="fas fa-sign-in-alt"></i> MASUK
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="flex items-center gap-4 my-6">
+                        <div class="flex-1 h-px bg-gray-200"></div>
+                        <span class="text-xs text-gray-400 font-medium">ATAU</span>
+                        <div class="flex-1 h-px bg-gray-200"></div>
+                    </div>
+
+                    <p class="text-center text-sm text-gray-500">
+                        Belum punya akun?
+                        <a href="#" id="link-signup" class="text-red-600 font-bold hover:text-red-700 hover:underline transition-colors">Daftar disini</a>
+                    </p>
+                </div>
+
             </div>
         </div>
     </div>
 
-    <!-- Sign Up Modal -->
+    <!-- ================================================================ -->
+    <!-- SIGNUP MODAL — Premium Split Layout                              -->
+    <!-- ================================================================ -->
     <div id="signupModal" class="fixed inset-0 z-[2002] hidden overflow-y-auto" aria-labelledby="modal-title"
         role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-            <div
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                            <h3 class="text-2xl font-semibold leading-6 text-gray-900 mb-4">Daftar Akun Baru</h3>
-                            <form id="signupForm" class="mt-4">
-                                <div class="mb-4">
-                                    <label for="signup_name"
-                                        class="block text-sm font-medium text-gray-700 text-left">Nama Lengkap</label>
-                                    <input type="text" id="signup_name" name="signup_name" required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                </div>
-                                <div class="mb-4">
-                                    <label for="signup_username"
-                                        class="block text-sm font-medium text-gray-700 text-left">Username</label>
-                                    <input type="text" id="signup_username" name="signup_username" required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                </div>
-                                <div class="mb-4">
-                                    <label for="signup_password"
-                                        class="block text-sm font-medium text-gray-700 text-left">Password</label>
-                                    <input type="password" id="signup_password" name="signup_password" required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                </div>
-                                <div class="mb-4">
-                                    <label for="signup_no_hp"
-                                        class="block text-sm font-medium text-gray-700 text-left">No. HP / WhatsApp</label>
-                                    <input type="tel" id="signup_no_hp" name="signup_no_hp" placeholder="08xxxxxxxxxx"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                </div>
-                                <div class="mb-4">
-                                    <label for="signup_alamat"
-                                        class="block text-sm font-medium text-gray-700 text-left">Alamat</label>
-                                    <textarea id="signup_alamat" name="signup_alamat" rows="2" placeholder="Masukkan alamat lengkap Anda"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"></textarea>
-                                </div>
-                                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                                    <button type="submit"
-                                        class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Daftar</button>
-                                    <button type="button" id="closeSignupModal"
-                                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
-                                </div>
-                            </form>
-                        </div>
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <!-- Card -->
+            <div class="relative w-full max-w-[900px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row transform transition-all duration-500 animate-[modalIn_0.4s_ease-out]">
+
+                <!-- Left — Branding Panel -->
+                <div class="hidden md:flex md:w-[45%] bg-gradient-to-br from-[#D20000] via-[#B30000] to-[#8B0000] flex-col items-center justify-center p-10 relative overflow-hidden">
+                    <!-- Decorative circles -->
+                    <div class="absolute -top-20 -left-20 w-56 h-56 bg-white/10 rounded-full"></div>
+                    <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-white/5 rounded-full"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-white/5 rounded-full"></div>
+
+                    <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok Logo" class="h-28 brightness-0 invert mb-6 drop-shadow-2xl relative z-10">
+                    <h2 class="font-heading text-3xl text-white text-center tracking-widest relative z-10 mb-3">BERGABUNGLAH</h2>
+                    <p class="text-white/70 text-sm text-center max-w-[220px] relative z-10 leading-relaxed">Buat akunmu sekarang dan jadi bagian dari keluarga Chi-Pok!</p>
+                    <div class="mt-8 flex gap-3 relative z-10">
+                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
+                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
+                        <span class="w-6 h-2 rounded-full bg-white"></span>
                     </div>
                 </div>
+
+                <!-- Right — Form Panel -->
+                <div class="flex-1 p-8 md:p-10 flex flex-col justify-center">
+                    <!-- Close button -->
+                    <button type="button" id="closeSignupModal"
+                        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-all duration-300 hover:rotate-90 z-20">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+
+                    <!-- Mobile logo -->
+                    <div class="flex md:hidden justify-center mb-5">
+                        <div class="w-14 h-14 bg-gradient-to-br from-[#D20000] to-[#8B0000] rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
+                            <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok" class="h-9 brightness-0 invert">
+                        </div>
+                    </div>
+
+                    <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">DAFTAR</h3>
+                    <p class="text-gray-400 text-sm mb-6">Buat akun baru di Chi-Pok</p>
+
+                    <form id="signupForm" class="space-y-4">
+                        <!-- Nama Lengkap -->
+                        <div>
+                            <label for="signup_name" class="block text-sm font-semibold text-gray-600 mb-1">Nama Lengkap</label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                    <i class="fas fa-id-card text-sm"></i>
+                                </span>
+                                <input type="text" id="signup_name" name="signup_name" required placeholder="Nama lengkapmu"
+                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                            </div>
+                        </div>
+
+                        <!-- Username -->
+                        <div>
+                            <label for="signup_username" class="block text-sm font-semibold text-gray-600 mb-1">Username</label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                    <i class="fas fa-user text-sm"></i>
+                                </span>
+                                <input type="text" id="signup_username" name="signup_username" required placeholder="Pilih username"
+                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <label for="signup_password" class="block text-sm font-semibold text-gray-600 mb-1">Password</label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                    <i class="fas fa-lock text-sm"></i>
+                                </span>
+                                <input type="password" id="signup_password" name="signup_password" required placeholder="Buat password"
+                                    class="w-full pl-11 pr-12 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                <button type="button" onclick="togglePassword('signup_password', this)"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Two columns: No HP + Alamat -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="signup_no_hp" class="block text-sm font-semibold text-gray-600 mb-1">No. HP</label>
+                                <div class="relative group">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                        <i class="fas fa-phone text-sm"></i>
+                                    </span>
+                                    <input type="tel" id="signup_no_hp" name="signup_no_hp" placeholder="08xxxxxxxxxx"
+                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="signup_alamat" class="block text-sm font-semibold text-gray-600 mb-1">Alamat</label>
+                                <div class="relative group">
+                                    <span class="absolute left-4 top-3 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                        <i class="fas fa-map-marker-alt text-sm"></i>
+                                    </span>
+                                    <textarea id="signup_alamat" name="signup_alamat" rows="1" placeholder="Alamat lengkap"
+                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Register Button -->
+                        <button type="submit"
+                            class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide mt-2">
+                            <i class="fas fa-user-plus"></i> DAFTAR SEKARANG
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="flex items-center gap-4 my-5">
+                        <div class="flex-1 h-px bg-gray-200"></div>
+                        <span class="text-xs text-gray-400 font-medium">ATAU</span>
+                        <div class="flex-1 h-px bg-gray-200"></div>
+                    </div>
+
+                    <p class="text-center text-sm text-gray-500">
+                        Sudah punya akun?
+                        <a href="#" id="link-login-from-signup" class="text-red-600 font-bold hover:text-red-700 hover:underline transition-colors">Masuk disini</a>
+                    </p>
+                </div>
+
             </div>
         </div>
     </div>
@@ -681,6 +900,30 @@
     </script>
     <script src="{{ asset('js/hero-slider.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/app.js') }}?v={{ time() }}"></script>
+
+    <script>
+        // Toggle password visibility
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Link: "Masuk disini" from signup modal
+        document.getElementById('link-login-from-signup')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('signupModal').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('hidden');
+        });
+    </script>
 </body>
 
 </html>

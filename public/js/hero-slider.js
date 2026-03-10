@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentSlide = 0;
     let autoPlayInterval;
-    const AUTO_PLAY_DELAY = 4000; // 4 detik
+    const AUTO_PLAY_DELAY = 1000; // 1 detik
 
     // Tampilkan navigasi jika ada lebih dari 1 slide
     if (slides.length > 1) {

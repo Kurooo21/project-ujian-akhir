@@ -665,6 +665,7 @@ document.addEventListener("DOMContentLoaded", () => {
             navAdmin.classList.add('hidden');
             if (fab) fab.classList.add('hidden');
         }
+        updateMobileDrawerUI();
         renderProducts();
     }
 
@@ -998,35 +999,103 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('btn-settings').addEventListener('click', () => alert('Fitur pengaturan belum tersedia.'));
 
-    // Mobile Menu
-    const hamburger = document.querySelector('.hamburger');
-    const navLinks = document.querySelector('.nav-links');
-    if (hamburger) {
-        hamburger.addEventListener('click', () => {
-            hamburger.classList.toggle('toggle');
-            navLinks.classList.toggle('!flex');
-            navLinks.classList.toggle('flex-col');
-            navLinks.classList.toggle('bg-white');
-            navLinks.classList.toggle('p-4');
-            navLinks.classList.toggle('absolute');
-            navLinks.classList.toggle('top-full');
-            navLinks.classList.toggle('right-0');
-            navLinks.classList.toggle('w-full');
-        });
+    const HEADER_OFFSET = 100; // tinggi header fixed
+
+    // Mobile Drawer
+    const hamburgerBtn = document.querySelector('.hamburger-btn');
+    const mobileDrawer = document.querySelector('.mobile-drawer');
+    const drawerOverlay = document.querySelector('.drawer-overlay');
+    const drawerClose = document.querySelector('.drawer-close');
+
+    function openDrawer() {
+        mobileDrawer.classList.add('open');
+        drawerOverlay.classList.add('open');
+        hamburgerBtn.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
+    function closeDrawer() {
+        mobileDrawer.classList.remove('open');
+        drawerOverlay.classList.remove('open');
+        hamburgerBtn.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => {
+        mobileDrawer.classList.contains('open') ? closeDrawer() : openDrawer();
+    });
+    if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+    if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+
+    // Mobile drawer button proxies
+    const btnLoginMobile = document.getElementById('btn-login-mobile');
+    const btnSettingsMobile = document.getElementById('btn-settings-mobile');
+    const btnAdminPanelMobile = document.getElementById('btn-admin-panel-mobile');
+
+    if (btnLoginMobile) btnLoginMobile.addEventListener('click', () => {
+        closeDrawer();
+        btnLoginHeader.click();
+    });
+    if (btnSettingsMobile) btnSettingsMobile.addEventListener('click', () => {
+        closeDrawer();
+        document.getElementById('btn-settings').click();
+    });
+    if (btnAdminPanelMobile) btnAdminPanelMobile.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeDrawer();
+        btnAdminPanel.click();
+    });
+
+    // Update mobile drawer admin visibility & login button text
+    function updateMobileDrawerUI() {
+        const navAdminMobile = document.getElementById('nav-admin-mobile');
+        if (currentUser) {
+            if (btnLoginMobile) {
+                btnLoginMobile.querySelector('i').classList.remove('fa-sign-in-alt');
+                btnLoginMobile.querySelector('i').classList.add('fa-user');
+                btnLoginMobile.querySelector('span').textContent = currentUser.name;
+            }
+            if (currentUser.role === 'admin' && navAdminMobile) {
+                navAdminMobile.classList.remove('hidden');
+            }
+        } else {
+            if (btnLoginMobile) {
+                btnLoginMobile.querySelector('i').classList.remove('fa-user');
+                btnLoginMobile.querySelector('i').classList.add('fa-sign-in-alt');
+                btnLoginMobile.querySelector('span').textContent = 'Login';
+            }
+            if (navAdminMobile) navAdminMobile.classList.add('hidden');
+        }
+    }
+
+    // Smooth scroll for drawer links
+    document.querySelectorAll('.nav-links-mobile a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeDrawer();
+            const targetId = link.getAttribute('href');
+            const targetSection = document.querySelector(targetId);
+            if (targetSection) {
+                const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - HEADER_OFFSET;
+                window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+            }
+        });
+    });
+
+    // Header shrink on scroll
+    const mainHeader = document.getElementById('main-header');
+    window.addEventListener('scroll', () => {
+        if (mainHeader) {
+            if (window.scrollY > 50) {
+                mainHeader.classList.add('scrolled');
+            } else {
+                mainHeader.classList.remove('scrolled');
+            }
+        }
+    });
 
     // ====================================================================
     // SMOOTH SCROLL ANIMATION FOR NAVBAR
     // ====================================================================
-    const HEADER_OFFSET = 100; // tinggi header fixed
-
-    // Fungsi untuk menutup mobile menu
-    function closeMobileMenu() {
-        if (hamburger && navLinks) {
-            hamburger.classList.remove('toggle');
-            navLinks.classList.remove('!flex', 'flex-col', 'bg-white', 'p-4', 'absolute', 'top-full', 'right-0', 'w-full');
-        }
-    }
 
     // Smooth scroll saat klik link navbar
     document.querySelectorAll('.nav-links a[href^="#"]').forEach(link => {
@@ -1042,9 +1111,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     top: targetPosition,
                     behavior: 'smooth'
                 });
-
-                // Tutup mobile menu setelah klik
-                closeMobileMenu();
             }
         });
     });
