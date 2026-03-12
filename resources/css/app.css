@@ -1,10 +1,59 @@
+/* ========================================================================
+ * FILE: app.css - Stylesheet utama aplikasi Chi-Pok (Laravel + Tailwind)
+ * ========================================================================
+ *
+ * File ini adalah entry point CSS untuk Tailwind CSS.
+ * Di sini kita mengimpor Tailwind dan mendefinisikan kustomisasi tema.
+ *
+ * CATATAN: File ini diproses oleh Vite/Laravel Mix saat build.
+ * Class-class Tailwind (seperti 'bg-red-500', 'flex', dll) akan
+ * dihasilkan secara otomatis berdasarkan penggunaan di file-file
+ * template Blade dan JavaScript.
+ */
+
+/* ====================================================================
+ * IMPORT TAILWIND CSS
+ * ====================================================================
+ * Baris ini mengimpor semua utilitas Tailwind CSS.
+ * Tailwind menyediakan class-class siap pakai seperti:
+ * - Layout: flex, grid, block, hidden
+ * - Spacing: p-4 (padding), m-2 (margin)
+ * - Warna: bg-red-500, text-white
+ * - Responsive: md:flex, lg:grid-cols-4
+ * - dll.
+ */
 @import 'tailwindcss';
 
+/* ====================================================================
+ * SOURCE PATHS - Beritahu Tailwind di mana mencari class yang digunakan
+ * ====================================================================
+ * Tailwind akan men-scan file-file di path ini untuk menemukan
+ * class CSS mana saja yang dipakai, lalu hanya menghasilkan
+ * CSS untuk class yang benar-benar digunakan (tree-shaking).
+ */
+
+/* Scan file pagination bawaan Laravel (untuk tampilan halaman-halaman) */
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+/* Scan file view yang sudah di-compile oleh Laravel */
 @source '../../storage/framework/views/*.php';
+
+/* Scan SEMUA file Blade template di folder resources (rekursif) */
 @source '../**/*.blade.php';
+
+/* Scan SEMUA file JavaScript di folder resources (rekursif) */
 @source '../**/*.js';
 
+/* ====================================================================
+ * KUSTOMISASI TEMA (THEME)
+ * ====================================================================
+ * Di sini kita bisa menambahkan/mengubah variabel desain Tailwind.
+ * Misalnya mengubah font default, warna, breakpoints, dll.
+ *
+ * --font-sans: Mengubah font default sans-serif yang digunakan Tailwind
+ * menjadi font 'Instrument Sans' (jika tersedia), dengan fallback
+ * ke font sistem operasi.
+ */
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';

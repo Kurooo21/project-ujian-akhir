@@ -1,134 +1,214 @@
+<!-- ================================================================
+     HOME.BLADE.PHP - Halaman Utama Chi-Pok (Laravel Blade Template)
+     ================================================================
+     File ini adalah HALAMAN UTAMA website Chi-Pok.
+     Menggunakan Blade Template Engine dari Laravel untuk merender HTML.
+
+     STRUKTUR HALAMAN:
+     1. HEAD: Meta tags, Tailwind CSS, Google Fonts, Font Awesome, CSS custom
+     2. HEADER: Logo, Navigasi, Tombol aksi (login/cart/settings)
+     3. HERO: Slider gambar dengan tombol CTA
+     4. MENU: Kategori filter + Grid produk (carousel)
+     5. KONTAK: Info kontak & link media sosial
+     6. MODALS: Pop-up Login, Sign Up, Keranjang, Admin, Review, Tambah Menu
+     7. SCRIPTS: JavaScript files (hero-slider.js, app.js)
+     ================================================================ -->
 <!DOCTYPE html>
+<!-- lang="id" = bahasa Indonesia, scroll-smooth = animasi scroll halus -->
 <html lang="id" class="scroll-smooth">
 
+<!-- ================================================================
+     BAGIAN HEAD - Metadata & Resource Eksternal
+     ================================================================ -->
 <head>
+    <!-- Encoding karakter UTF-8 (mendukung semua bahasa termasuk Indonesia) -->
     <meta charset="UTF-8">
+    <!-- Viewport agar responsif di semua ukuran layar (desktop, tablet, HP) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSRF Token: Token keamanan Laravel untuk mencegah serangan CSRF -->
+    <!-- Digunakan oleh JavaScript (app.js) saat mengirim AJAX request -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Chi-Pok - Ledakan Kelezatan di Setiap Gigitan!</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- ============================================================
+         TAILWIND CSS - Framework CSS berbasis class (utilitas)
+         ============================================================
+         Dimuat dari CDN (Content Delivery Network)
+         Class-class seperti 'bg-red-500', 'flex', 'p-4' langsung bisa dipakai
+         ============================================================ -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ============================================================
+         KONFIGURASI TAILWIND - Warna & Font Kustom
+         ============================================================
+         Di sini kita mendefinisikan warna dan font khusus untuk Chi-Pok
+         agar bisa dipakai sebagai class Tailwind (misal: bg-primary-red)
+         ============================================================ -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary-red': '#D20000',
-                        'accent-red': '#FF2E00',
-                        'primary-white': '#FFFFFF',
-                        'text-dark': '#333333',
-                        'text-grey': '#666666',
-                        'bg-light': '#F9F9F9',
-                        'mustard': '#FFC107',
+                        // Warna-warna kustom Chi-Pok
+                        'primary-red': '#D20000',      // Merah utama (logo, tombol)
+                        'accent-red': '#FF2E00',       // Merah aksen (hover effects)
+                        'primary-white': '#FFFFFF',    // Putih
+                        'text-dark': '#333333',        // Warna teks gelap
+                        'text-grey': '#666666',        // Warna teks abu-abu
+                        'bg-light': '#F9F9F9',         // Background terang
+                        'mustard': '#FFC107',          // Kuning mustard (bintang rating)
                     },
                     fontFamily: {
-                        heading: ['Anton', 'sans-serif'],
-                        body: ['Poppins', 'sans-serif'],
+                        // Font kustom
+                        heading: ['Anton', 'sans-serif'],     // Font untuk judul (tebal, bold)
+                        body: ['Poppins', 'sans-serif'],      // Font untuk body text (mudah dibaca)
                     },
                     backgroundImage: {
+                        // Gambar background kustom untuk section menu
                         'menu-pattern': "url('/asset/bg menu.png')",
                     }
                 }
             }
         }
     </script>
-    <!-- Google Fonts -->
+
+    <!-- Google Fonts: Anton (judul) & Poppins (body text) -->
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600;700&display=swap"
         rel="stylesheet">
-    <!-- Font Awesome for Icons -->
+    <!-- Font Awesome: Library icon gratis (fa-cart, fa-star, dll) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- ============================================================
+         CSS KUSTOM (Animasi & Responsive)
+         ============================================================
+         @keyframes modalIn: Animasi modal muncul (fade-in + scale-up)
+         .hamburger-*: Animasi tombol hamburger berubah jadi X
+         .mobile-drawer: Panel navigasi geser dari kanan (mobile)
+         .drawer-overlay: Overlay gelap di belakang drawer
+         header.scrolled: Logo mengecil saat scroll ke bawah
+         ============================================================ -->
     <style>
+        /* Animasi modal: masuk dari transparan + kecil ke terlihat + ukuran normal */
         @keyframes modalIn {
             from { opacity: 0; transform: scale(0.9) translateY(20px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        /* Hamburger → X animation */
+
+        /* Animasi tombol Hamburger (☰) berubah menjadi X saat drawer terbuka */
         .hamburger-line {
             transition: all 0.3s cubic-bezier(.4,0,.2,1);
         }
+        /* Garis pertama: geser ke bawah 8px + rotasi 45° (membentuk \) */
         .hamburger-btn.active .hamburger-line:nth-child(1) {
             transform: translateY(8px) rotate(45deg);
         }
+        /* Garis tengah: menghilang (opacity 0) */
         .hamburger-btn.active .hamburger-line:nth-child(2) {
             opacity: 0; transform: scaleX(0);
         }
+        /* Garis ketiga: geser ke atas 8px + rotasi -45° (membentuk /) */
         .hamburger-btn.active .hamburger-line:nth-child(3) {
             transform: translateY(-8px) rotate(-45deg);
         }
-        /* Mobile drawer */
+
+        /* Mobile Drawer: panel navigasi geser dari kanan */
         .mobile-drawer {
-            transform: translateX(100%);
+            transform: translateX(100%);  /* Awalnya tersembunyi di luar layar kanan */
             transition: transform 0.35s cubic-bezier(.4,0,.2,1);
         }
         .mobile-drawer.open {
-            transform: translateX(0);
+            transform: translateX(0);  /* Saat terbuka: geser ke posisi normal */
         }
+
+        /* Overlay gelap di belakang drawer (saat drawer terbuka) */
         .drawer-overlay {
-            opacity: 0; pointer-events: none;
+            opacity: 0; pointer-events: none;  /* Awalnya transparan & tidak bisa diklik */
             transition: opacity 0.3s ease;
         }
         .drawer-overlay.open {
-            opacity: 1; pointer-events: auto;
+            opacity: 1; pointer-events: auto;  /* Saat terbuka: terlihat & bisa diklik */
         }
-        /* Logo shrink on scroll */
+
+        /* Logo mengecil saat user scroll ke bawah */
         header.scrolled .header-logo {
-            height: 50px !important;
+            height: 50px !important;  /* Ukuran logo di mobile saat scroll */
         }
         @media (min-width: 768px) {
             header.scrolled .header-logo {
-                height: 60px !important;
+                height: 60px !important;  /* Ukuran logo di desktop saat scroll */
             }
         }
     </style>
 </head>
 
+<!-- ================================================================
+     BODY - Isi halaman utama
+     ================================================================
+     font-body = Font Poppins (didefinisikan di Tailwind config)
+     bg-bg-light = Background abu-abu terang
+     overflow-x-hidden = Sembunyikan scroll horizontal
+     ================================================================ -->
 <body class="font-body bg-bg-light text-text-dark leading-relaxed overflow-x-hidden">
 
-    <!-- Header -->
+    <!-- ============================================================
+         HEADER - Bagian atas halaman (fixed/tetap saat di-scroll)
+         ============================================================
+         Berisi: Logo, Navigasi, dan Tombol Aksi (Cart/Login/Settings)
+         fixed = tetap di posisi atas saat halaman di-scroll
+         z-50 = di atas semua elemen lain (z-index tinggi)
+         backdrop-blur-sm = efek blur transparan di belakang header
+         ============================================================ -->
     <header id="main-header" class="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-sm shadow-md transition-all duration-300">
         <div class="container mx-auto px-3 sm:px-4 lg:px-6 py-2 md:py-3 flex justify-between items-center">
 
-            <!-- Logo (Left) -->
+            <!-- Logo (Kiri) - Menggunakan helper asset() dari Laravel -->
+            <!-- asset() menghasilkan URL lengkap ke file di folder /public -->
             <a href="#home" class="flex-shrink-0 flex items-center">
                 <img src="{{ asset('asset/logo merah.png') }}" alt="Chi-Pok Logo"
                     class="header-logo h-[60px] sm:h-[70px] md:h-[80px] lg:h-[90px] max-w-none object-contain z-10 transition-all duration-300 drop-shadow-sm">
             </a>
 
-            <!-- Nav Links (Center) — hidden on mobile -->
+            <!-- Link Navigasi (Tengah) - Tersembunyi di mobile (hidden md:flex) -->
+            <!-- md:flex = hanya tampil di layar >= 768px -->
             <nav class="hidden md:flex items-center">
                 <ul class="nav-links flex gap-4 lg:gap-8 text-text-dark items-center">
+                    <!-- Link HOME - mengarah ke section #home -->
                     <li><a href="#home"
                             class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary-red after:transition-all after:duration-300 hover:after:w-full">HOME</a>
                     </li>
+                    <!-- Link MENU - mengarah ke section #menu -->
                     <li><a href="#menu"
                             class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary-red after:transition-all after:duration-300 hover:after:w-full">MENU</a>
                     </li>
+                    <!-- Link CONTACT - mengarah ke section #contact -->
                     <li><a href="#contact"
                             class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary-red after:transition-all after:duration-300 hover:after:w-full">CONTACT</a>
                     </li>
+                    <!-- Link ADMIN - disembunyikan, muncul hanya saat admin login -->
                     <li id="nav-admin" class="hidden"><a href="#" id="btn-admin-panel"
                             class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">ADMIN</a>
                     </li>
                 </ul>
             </nav>
 
-            <!-- Action Icons (Right) -->
+            <!-- Tombol-Tombol Aksi (Kanan) -->
             <div class="flex items-center gap-2 sm:gap-3 md:gap-4">
-                <!-- Cart Button -->
+                <!-- Tombol Keranjang Belanja -->
                 <button id="btn-cart-header" class="relative text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1" title="Keranjang Belanja">
                     <i class="fas fa-shopping-cart"></i>
+                    <!-- Badge angka (hidden saat kosong, muncul saat ada item di cart) -->
                     <span id="cart-badge" class="hidden absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-600 text-white text-[8px] sm:text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center animate-bounce">0</span>
                 </button>
+                <!-- Tombol Pengaturan (hidden di mobile) -->
                 <button id="btn-settings" class="hidden sm:block text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
                     title="Pengaturan">
                     <i class="fas fa-cog"></i>
                 </button>
+                <!-- Tombol Login/Logout (icon berubah via JavaScript) -->
                 <button id="btn-login" class="text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
                     title="Login / Logout">
                     <i class="fas fa-sign-in-alt"></i>
                 </button>
 
-                <!-- Hamburger Button (Mobile) -->
+                <!-- Tombol Hamburger (☰) - Hanya muncul di mobile (md:hidden) -->
+                <!-- Terdiri dari 3 garis yang beranimasi menjadi X -->
                 <button class="hamburger-btn md:hidden flex flex-col justify-center items-center w-8 h-8 gap-[6px] ml-1 relative z-[60]" aria-label="Menu">
                     <span class="hamburger-line block w-6 h-[2px] bg-text-dark rounded-full origin-center"></span>
                     <span class="hamburger-line block w-6 h-[2px] bg-text-dark rounded-full origin-center"></span>
@@ -139,19 +219,24 @@
         </div>
     </header>
 
-    <!-- Mobile Drawer Overlay -->
+    <!-- Overlay gelap saat Mobile Drawer terbuka (klik untuk menutup) -->
     <div class="drawer-overlay fixed inset-0 bg-black/50 z-[55] md:hidden"></div>
 
-    <!-- Mobile Drawer -->
+    <!-- ============================================================
+         MOBILE DRAWER - Panel navigasi geser dari kanan (mobile only)
+         ============================================================
+         Muncul saat tombol hamburger diklik. Berisi link navigasi,
+         tombol login, dan tombol settings.
+         ============================================================ -->
     <nav class="mobile-drawer fixed top-0 right-0 h-full w-[75%] max-w-[320px] bg-white z-[56] md:hidden shadow-2xl flex flex-col">
-        <!-- Drawer Header -->
+        <!-- Header Drawer: Logo + Tombol Tutup -->
         <div class="flex items-center justify-between p-5 border-b border-gray-100">
             <img src="{{ asset('asset/logo merah.png') }}" alt="Chi-Pok" class="h-10 object-contain">
             <button class="drawer-close w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500">
                 <i class="fas fa-times text-lg"></i>
             </button>
         </div>
-        <!-- Drawer Links -->
+        <!-- Link Navigasi di Drawer -->
         <ul class="nav-links-mobile flex flex-col py-4 flex-grow">
             <li><a href="#home" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
                 <i class="fas fa-home text-base w-6 text-center text-gray-400"></i> HOME</a></li>
@@ -162,7 +247,7 @@
             <li id="nav-admin-mobile" class="hidden"><a href="#" id="btn-admin-panel-mobile" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
                 <i class="fas fa-shield-alt text-base w-6 text-center text-gray-400"></i> ADMIN</a></li>
         </ul>
-        <!-- Drawer Footer -->
+        <!-- Footer Drawer: Tombol Settings & Login -->
         <div class="p-5 border-t border-gray-100">
             <div class="flex items-center justify-center gap-4">
                 <button id="btn-settings-mobile" class="w-10 h-10 rounded-full bg-gray-100 text-primary-red flex items-center justify-center hover:bg-red-50 transition-colors" title="Pengaturan">
@@ -175,42 +260,61 @@
         </div>
     </nav>
 
+    <!-- ============================================================
+         KONTEN UTAMA (<main>)
+         ============================================================ -->
     <main>
-        <!-- Hero Slider Section -->
+        <!-- ========================================================
+             HERO SECTION - Slider gambar di bagian atas halaman
+             ========================================================
+             Menampilkan slideshow gambar promosi dengan navigasi
+             prev/next dan dots. Dikelola oleh hero-slider.js.
+             mt-[64px] dst = margin top sebesar tinggi header
+             ======================================================== -->
         <section id="home" class="hero relative w-full overflow-hidden mt-[64px] sm:mt-[74px] md:mt-[86px]">
 
-            <!-- Slider Container -->
+            <!-- Container Slider -->
             <div id="hero-slider" class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px]">
-                <!-- Slide 1 -->
+                <!-- Slide 1: Gambar promosi utama (opacity 1 = terlihat) -->
                 <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out" style="opacity:1;">
                     <img src="{{ asset('asset/ledakan kelezatan.jpg') }}" alt="Ledakan Kelezatan"
                         class="w-full h-full object-cover block">
                 </div>
 
-                <!-- Slide 2 -->
+                <!-- Slide 2: Gambar vocer promo (opacity 0 = tersembunyi, ditampilkan oleh JS) -->
                 <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out" style="opacity:0;">
                     <img src="{{ asset('asset/vocer.jpg') }}" alt="Vocer Promo"
                         class="w-full h-full object-cover block">
                 </div>
             </div>
 
-            <!-- Slider Navigation Arrows -->
+            <!-- Tombol Navigasi Slider: Panah Kiri (Previous) -->
             <button id="hero-prev"
                 class="absolute left-2 sm:left-4 md:left-8 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/30 hidden">
                 <i class="fas fa-chevron-left text-sm sm:text-lg"></i>
             </button>
+            <!-- Tombol Navigasi Slider: Panah Kanan (Next) -->
             <button id="hero-next"
                 class="absolute right-2 sm:right-4 md:right-8 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-all duration-300 hover:scale-110 flex items-center justify-center border border-white/30 hidden">
                 <i class="fas fa-chevron-right text-sm sm:text-lg"></i>
             </button>
 
-            <!-- Slider Dots -->
+            <!-- Dots Navigasi Slider (dibuat oleh JavaScript) -->
             <div id="hero-dots" class="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 flex gap-2 sm:gap-3 hidden">
             </div>
 
         </section>
 
-        <!-- Menu Section -->
+        <!-- ========================================================
+             SECTION MENU - Daftar produk makanan & minuman
+             ========================================================
+             Terdiri dari:
+             1. Judul section & sub-judul
+             2. Tab filter kategori (Semua/Makanan/Minuman)
+             3. Grid produk (carousel jika > 4 item)
+             4. Tombol navigasi carousel
+             5. Layout toggle (Grid/List) & link ke halaman menu penuh
+             ======================================================== -->
         <section id="menu" class="menu py-20 bg-bg-light bg-menu-pattern bg-cover bg-center">
             <div class="container mx-auto px-4 min-h-[70vh]">
                 <h2
@@ -218,7 +322,8 @@
                     MENU</h2>
                 <p class="text-center text-text-grey mb-8 text-sm md:text-base">Pilih kategori favoritmu!</p>
 
-                <!-- Category Tabs -->
+                <!-- Tab Filter Kategori (Semua / Makanan / Minuman) -->
+                <!-- data-category = value kategori yang akan difilter oleh JavaScript -->
                 <div class="flex justify-center gap-3 mb-10" id="category-tabs">
                     <button data-category="semua"
                         class="category-tab active-tab px-6 py-2.5 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-300 shadow-md bg-primary-red text-white hover:shadow-lg hover:scale-105">
@@ -234,33 +339,33 @@
                     </button>
                 </div>
 
-                <!-- Carousel Wrapper -->
+                <!-- Wrapper Carousel (Container untuk grid produk + tombol navigasi) -->
                 <div class="relative">
-                    <!-- Prev Button -->
+                    <!-- Tombol Prev Carousel (←) -->
                     <button id="carousel-prev"
                         class="hidden absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-30 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 text-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-110 items-center justify-center">
                         <i class="fas fa-chevron-left"></i>
                     </button>
 
-                    <!-- Menu Grid / Carousel Track -->
+                    <!-- Grid Menu - Tempat card produk ditampilkan oleh JavaScript -->
                     <div class="overflow-hidden">
                         <div class="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 transition-transform duration-500 ease-in-out"
                             id="menu-grid">
-                            {{-- Products will be rendered by JavaScript --}}
+                            {{-- Produk akan di-render oleh JavaScript (app.js) --}}
                         </div>
                     </div>
 
-                    <!-- Next Button -->
+                    <!-- Tombol Next Carousel (→) -->
                     <button id="carousel-next"
                         class="hidden absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-30 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 text-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-110 items-center justify-center">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
 
-                <!-- Carousel Dots -->
+                <!-- Dots persegi untuk navigasi halaman carousel -->
                 <div id="carousel-dots" class="hidden flex justify-center gap-2 mt-6"></div>
 
-                <!-- Lihat Semua Menu Link -->
+                <!-- Tombol "Lihat Semua Menu" - mengarah ke halaman /menu -->
                 <div class="text-center mt-10">
                     <a href="/menu"
                         class="inline-flex items-center gap-2 px-8 py-3 rounded-full font-bold text-primary-red border-2 border-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm uppercase tracking-wide group">
@@ -271,7 +376,12 @@
             </div>
         </section>
 
-        <!-- Contact Section -->
+        <!-- ========================================================
+             SECTION CONTACT - Info kontak & peta lokasi
+             ========================================================
+             Berisi link media sosial, alamat outlet, jam buka,
+             dan peta Google Maps embed
+             ======================================================== -->
         <section id="contact" class="contact bg-[#B30000] py-20 text-white relative">
             <div class="container mx-auto px-4 contact-content relative h-[70vh]">
                 <div
@@ -330,9 +440,17 @@
         </section>
     </main>
 
-    <!-- Cart / Checkout Modal -->
+    <!-- ============================================================
+         MODAL KERANJANG & CHECKOUT
+         ============================================================
+         Pop-up yang muncul saat tombol keranjang diklik.
+         Berisi daftar item di keranjang, total belanja,
+         dan form checkout (jenis belanja, nama, HP, alamat).
+         z-[2000] = z-index tinggi agar di atas semua elemen
+         ============================================================ -->
     <div id="cartModal" class="fixed inset-0 z-[2000] hidden overflow-y-auto" aria-labelledby="modal-title"
         role="dialog" aria-modal="true">
+        <!-- Overlay gelap di belakang modal -->
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div
@@ -436,9 +554,12 @@
         </div>
     </div>
 
-    <!-- ================================================================ -->
-    <!-- LOGIN MODAL — Premium Split Layout                               -->
-    <!-- ================================================================ -->
+    <!-- ============================================================
+         MODAL LOGIN - Form masuk akun user
+         ============================================================
+         Layout split: panel kiri (branding) + panel kanan (form)
+         Di mobile: hanya tampil form (panel kiri tersembunyi)
+         ============================================================ -->
     <div id="loginModal" class="fixed inset-0 z-[2001] hidden overflow-y-auto" aria-labelledby="modal-title"
         role="dialog" aria-modal="true">
         <!-- Backdrop -->
@@ -843,10 +964,16 @@
         </div>
     </div>
 
-    <!-- Admin Modal Add Menu -->
+    <!-- ============================================================
+         MODAL TAMBAH MENU (Admin Only)
+         ============================================================
+         Form untuk menambah produk baru ke database.
+         Berisi input: nama, harga, deskripsi, URL gambar, kategori
+         ============================================================ -->
     <div id="addMenuModal" class="fixed inset-0 z-[2004] hidden overflow-y-auto" aria-labelledby="modal-title"
         role="dialog" aria-modal="true">
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <!-- Overlay gelap -->
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
             <div
                 class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
@@ -893,35 +1020,50 @@
         </div>
     </div>
 
-    {{-- Pass products data from Laravel to JavaScript --}}
+    <!-- ============================================================
+         SCRIPT SECTION - Data & JavaScript Files
+         ============================================================ -->
+
+    {{-- Meneruskan data produk dari Laravel (PHP) ke JavaScript --}}
+    {{-- @json() = helper Blade yang mengkonversi array PHP menjadi JSON --}}
+    {{-- Sehingga variabel PRODUCTS_DATA bisa diakses di app.js --}}
     <script>
-        const PRODUCTS_DATA = @json($productsData);
-        const CSRF_TOKEN = '{{ csrf_token() }}';
+        const PRODUCTS_DATA = @json($productsData);   // Data produk dari database
+        const CSRF_TOKEN = '{{ csrf_token() }}';       // Token CSRF untuk keamanan
     </script>
+
+    <!-- JavaScript Files -->
+    <!-- ?v={{ time() }} = cache buster, mencegah browser menyimpan versi lama -->
     <script src="{{ asset('js/hero-slider.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/app.js') }}?v={{ time() }}"></script>
 
     <script>
-        // Toggle password visibility
+        /**
+         * togglePassword() - Toggle tampilkan/sembunyikan password
+         * Saat tombol mata (eye icon) diklik, input password berubah:
+         * type="password" → type="text" (terlihat)
+         * type="text" → type="password" (tersembunyi)
+         */
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
             const icon = btn.querySelector('i');
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+                icon.classList.remove('fa-eye-slash');  // Tampilkan password
+                icon.classList.add('fa-eye'); 
+                 // Ubah icon jadi mata coret
             } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+                input.type = 'password';           // Sembunyikan password
+                 icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');      // Ubah icon jadi mata terbuka
             }
         }
 
-        // Link: "Masuk disini" from signup modal
+        // Link "Masuk disini" di modal signup → pindah ke modal login
         document.getElementById('link-login-from-signup')?.addEventListener('click', (e) => {
             e.preventDefault();
-            document.getElementById('signupModal').classList.add('hidden');
-            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('signupModal').classList.add('hidden');    // Tutup signup
+            document.getElementById('loginModal').classList.remove('hidden'); // Buka login
         });
     </script>
 </body>
