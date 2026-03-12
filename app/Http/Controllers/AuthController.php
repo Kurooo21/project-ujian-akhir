@@ -100,4 +100,43 @@ class AuthController extends Controller
         }
         return response()->json(['logged_in' => false]);
     }
+
+    /**
+     * updateProfile() - Update data profil user yang sedang login
+     * User bisa mengubah: nama, no_hp, alamat, dan password (opsional)
+     */
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:50|unique:users,username,' . Auth::id(),
+            'no_hp' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+            'password' => 'nullable|string|min:4',
+        ]);
+
+        $user = Auth::user();
+        $user->name = $request->name;
+        $user->username = $request->username;
+        $user->no_hp = $request->no_hp;
+        $user->alamat = $request->alamat;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil diperbarui!',
+            'user' => [
+                'name' => $user->name,
+                'username' => $user->username,
+                'role' => $user->role,
+                'alamat' => $user->alamat,
+                'no_hp' => $user->no_hp,
+            ]
+        ]);
+    }
 }

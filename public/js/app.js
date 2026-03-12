@@ -1385,8 +1385,92 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Tombol settings (belum diimplementasikan)
-    document.getElementById('btn-settings').addEventListener('click', () => alert('Fitur pengaturan belum tersedia.'));
+    // ====================================================================
+    // PENGATURAN USER (Settings Modal)
+    // ====================================================================
+
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsForm = document.getElementById('settingsForm');
+    const settingsNotLoggedIn = document.getElementById('settings-not-logged-in');
+
+    /**
+     * openSettingsModal() - Buka modal settings dan isi data user
+     * Jika belum login → tampilkan pesan "silakan login"
+     * Jika sudah login → isi form dengan data user saat ini
+     */
+    function openSettingsModal() {
+        if (!settingsModal) return;
+
+        if (currentUser) {
+            // User sudah login: tampilkan form, isi dengan data
+            settingsNotLoggedIn.classList.add('hidden');
+            settingsForm.classList.remove('hidden');
+            document.getElementById('settings_name').value = currentUser.name || '';
+            document.getElementById('settings_username').value = currentUser.username || '';
+            document.getElementById('settings_no_hp').value = currentUser.no_hp || '';
+            document.getElementById('settings_alamat').value = currentUser.alamat || '';
+            document.getElementById('settings_password').value = '';
+        } else {
+            // User belum login: tampilkan pesan
+            settingsForm.classList.add('hidden');
+            settingsNotLoggedIn.classList.remove('hidden');
+        }
+
+        settingsModal.classList.remove('hidden');
+    }
+
+    // Tombol settings di header (desktop)
+    document.getElementById('btn-settings').addEventListener('click', () => openSettingsModal());
+
+    // Tutup modal settings
+    document.getElementById('closeSettingsModal').addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+    });
+
+    // Tombol "Login Sekarang" di settings modal (saat belum login)
+    const settingsGoLogin = document.getElementById('settings-go-login');
+    if (settingsGoLogin) {
+        settingsGoLogin.addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+            loginModal.classList.remove('hidden');
+        });
+    }
+
+    // Submit form settings (update profil)
+    settingsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const data = {
+            name: document.getElementById('settings_name').value,
+            username: document.getElementById('settings_username').value,
+            no_hp: document.getElementById('settings_no_hp').value,
+            alamat: document.getElementById('settings_alamat').value,
+        };
+
+        // Tambahkan password hanya jika diisi
+        const newPassword = document.getElementById('settings_password').value;
+        if (newPassword) {
+            data.password = newPassword;
+        }
+
+        try {
+            const result = await apiRequest('/api/user/update', 'PUT', data);
+            if (result.success) {
+                // Update data user lokal
+                currentUser.name = data.name;
+                currentUser.username = data.username;
+                currentUser.no_hp = data.no_hp;
+                currentUser.alamat = data.alamat;
+                alert(result.message || 'Profil berhasil diperbarui!');
+                settingsModal.classList.add('hidden');
+                updateLoginUI();
+            } else {
+                alert(result.message || 'Gagal memperbarui profil.');
+            }
+        } catch (err) {
+            alert('Terjadi kesalahan saat memperbarui profil.');
+        }
+    });
 
     // Offset header untuk smooth scroll (tinggi header fixed dalam px)
     const HEADER_OFFSET = 100;

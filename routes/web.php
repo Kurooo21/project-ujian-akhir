@@ -20,6 +20,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/api/user', [AuthController::class, 'user'])->name('api.user');
+Route::put('/api/user/update', [AuthController::class, 'updateProfile'])->middleware('auth')->name('api.user.update');
 
 // ========================================================================
 // PESANAN (perlu login)

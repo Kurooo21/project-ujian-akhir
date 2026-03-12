@@ -1021,6 +1021,149 @@
     </div>
 
     <!-- ============================================================
+         MODAL USER SETTINGS - Pengaturan Profil User
+         ============================================================
+         Modal ini muncul saat tombol settings (gear icon) diklik.
+         Menampilkan data profil user yang sedang login.
+         User bisa mengedit: Nama, Username, No HP, Alamat.
+         Layout split: panel kiri (branding) + panel kanan (form)
+         ============================================================ -->
+    <div id="settingsModal" class="fixed inset-0 z-[2006] hidden overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <!-- Card -->
+            <div class="relative w-full max-w-[900px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row transform transition-all duration-500 animate-[modalIn_0.4s_ease-out]">
+
+                <!-- Left — Branding Panel -->
+                <div class="hidden md:flex md:w-[45%] bg-gradient-to-br from-[#D20000] via-[#B30000] to-[#8B0000] flex-col items-center justify-center p-10 relative overflow-hidden">
+                    <!-- Decorative circles -->
+                    <div class="absolute -top-20 -left-20 w-56 h-56 bg-white/10 rounded-full"></div>
+                    <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-white/5 rounded-full"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-white/5 rounded-full"></div>
+
+                    <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-6 relative z-10">
+                        <i class="fas fa-user-cog text-5xl text-white"></i>
+                    </div>
+                    <h2 class="font-heading text-3xl text-white text-center tracking-widest relative z-10 mb-3">PENGATURAN</h2>
+                    <p class="text-white/70 text-sm text-center max-w-[220px] relative z-10 leading-relaxed">Kelola profil dan informasi akun Chi-Pok kamu di sini.</p>
+                    <div class="mt-8 flex gap-3 relative z-10">
+                        <span class="w-6 h-2 rounded-full bg-white"></span>
+                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
+                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
+                    </div>
+                </div>
+
+                <!-- Right — Settings Form Panel -->
+                <div class="flex-1 p-8 md:p-10 flex flex-col justify-center">
+                    <!-- Close button -->
+                    <button type="button" id="closeSettingsModal"
+                        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-all duration-300 hover:rotate-90 z-20">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+
+                    <!-- Mobile icon -->
+                    <div class="flex md:hidden justify-center mb-5">
+                        <div class="w-14 h-14 bg-gradient-to-br from-[#D20000] to-[#8B0000] rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
+                            <i class="fas fa-user-cog text-2xl text-white"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">PROFIL SAYA</h3>
+                    <p class="text-gray-400 text-sm mb-6">Kelola informasi akun kamu</p>
+
+                    <!-- Pesan saat belum login -->
+                    <div id="settings-not-logged-in" class="hidden text-center py-8">
+                        <i class="fas fa-lock text-4xl text-gray-300 mb-3 block"></i>
+                        <p class="text-gray-400 text-sm">Silakan login terlebih dahulu untuk mengakses pengaturan.</p>
+                        <button type="button" id="settings-go-login"
+                            class="mt-4 px-6 py-2.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl text-sm hover:shadow-lg transition-all">
+                            <i class="fas fa-sign-in-alt mr-1"></i> Login Sekarang
+                        </button>
+                    </div>
+
+                    <!-- Form Settings (muncul saat sudah login) -->
+                    <form id="settingsForm" class="space-y-4 hidden">
+                        <!-- Nama Lengkap -->
+                        <div>
+                            <label for="settings_name" class="block text-sm font-semibold text-gray-600 mb-1">Nama Lengkap</label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                    <i class="fas fa-id-card text-sm"></i>
+                                </span>
+                                <input type="text" id="settings_name" name="settings_name" placeholder="Nama lengkapmu"
+                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                            </div>
+                        </div>
+
+                        <!-- Username (readonly) -->
+                        <div>
+                            <label for="settings_username" class="block text-sm font-semibold text-gray-600 mb-1">Username</label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                    <i class="fas fa-user text-sm"></i>
+                                </span>
+                                <input type="text" id="settings_username" name="settings_username"
+                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                            </div>
+                        </div>
+
+                        <!-- Two columns: No HP + Alamat -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="settings_no_hp" class="block text-sm font-semibold text-gray-600 mb-1">No. HP</label>
+                                <div class="relative group">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                        <i class="fas fa-phone text-sm"></i>
+                                    </span>
+                                    <input type="tel" id="settings_no_hp" name="settings_no_hp" placeholder="08xxxxxxxxxx"
+                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="settings_alamat" class="block text-sm font-semibold text-gray-600 mb-1">Alamat</label>
+                                <div class="relative group">
+                                    <span class="absolute left-4 top-3 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                        <i class="fas fa-map-marker-alt text-sm"></i>
+                                    </span>
+                                    <textarea id="settings_alamat" name="settings_alamat" rows="1" placeholder="Alamat lengkap"
+                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Password Baru (opsional) -->
+                        <div>
+                            <label for="settings_password" class="block text-sm font-semibold text-gray-600 mb-1">Password Baru <span class="text-gray-400 font-normal">(opsional)</span></label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                    <i class="fas fa-lock text-sm"></i>
+                                </span>
+                                <input type="password" id="settings_password" name="settings_password" placeholder="Kosongkan jika tidak ingin ubah"
+                                    class="w-full pl-11 pr-12 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                <button type="button" onclick="togglePassword('settings_password', this)"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Simpan -->
+                        <button type="submit"
+                            class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide mt-2">
+                            <i class="fas fa-save"></i> SIMPAN PERUBAHAN
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
          SCRIPT SECTION - Data & JavaScript Files
          ============================================================ -->
 
