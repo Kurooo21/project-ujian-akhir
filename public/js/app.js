@@ -171,21 +171,15 @@ function clearCart() {
  * lalu menghilangkannya setelah 2 detik dengan animasi slide-out.
  */
 function showCartNotification(itemName) {
-    // Buat elemen notifikasi
-    const notif = document.createElement('div');
-    notif.className = 'fixed bottom-24 right-8 bg-green-600 text-white px-5 py-3 rounded-xl shadow-2xl z-[9999] flex items-center gap-3 animate-bounce';
-    notif.innerHTML = `<i class="fas fa-check-circle"></i> <span class="font-bold text-sm">${itemName}</span> ditambahkan ke keranjang!`;
-
-    // Tambahkan ke halaman
-    document.body.appendChild(notif);
-
-    // Setelah 2 detik, hilangkan dengan animasi
-    setTimeout(() => {
-        notif.style.transition = 'all 0.5s ease';
-        notif.style.opacity = '0';                    // Fade out
-        notif.style.transform = 'translateX(100px)';  // Geser ke kanan
-        setTimeout(() => notif.remove(), 500);         // Hapus dari DOM setelah animasi selesai
-    }, 2000);
+    Swal.fire({
+        toast: true,
+        position: 'bottom-end',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+        icon: 'success',
+        title: `${itemName} ditambahkan ke keranjang!`
+    });
 }
 
 // ========================================================================
@@ -421,10 +415,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Saat tombol "Kosongkan" diklik → konfirmasi lalu kosongkan cart
     btnClearCart.addEventListener('click', () => {
-        if (cart.length === 0) return;                          // Abaikan jika cart sudah kosong
-        if (confirm('Kosongkan keranjang belanja?')) {          // Tampilkan dialog konfirmasi
-            clearCart();
-        }
+        if (cart.length === 0) return;
+        Swal.fire({
+            title: 'Hapus Semua?',
+            text: "Apakah kamu yakin ingin mengosongkan keranjang lezatmu?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#D20000',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Kosongkan!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                clearCart();
+                Swal.fire({
+                    toast: true,
+                    position: 'bottom-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    icon: 'success',
+                    title: 'Keranjang berhasil dikosongkan!'
+                });
+            }
+        });
     });
 
     // ====================================================================
@@ -436,9 +449,10 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCheckout.addEventListener('click', () => {
         // Cek apakah user sudah login
         if (!currentUser) {
-            alert('Silakan login terlebih dahulu untuk checkout.');
-            cartModal.classList.add('hidden');
-            loginModal.classList.remove('hidden');
+            Swal.fire({icon: 'info', title: 'Ups!', text: 'Kamu harus login dulu buat lanjutin pesanan lezatmu!', confirmButtonColor: '#D20000', confirmButtonText: 'Oke, Login!'}).then(() => {
+                cartModal.classList.add('hidden');
+                loginModal.classList.remove('hidden');
+            });
             return;
         }
 
@@ -515,17 +529,18 @@ document.addEventListener("DOMContentLoaded", () => {
             // Kirim data pesanan ke server via POST
             const result = await apiRequest('/pesanan', 'POST', data);
             if (result.success) {
-                alert(result.message);                          // Tampilkan pesan sukses
-                clearCart();                                      // Kosongkan keranjang
-                cartModal.classList.add('hidden');               // Tutup modal cart
-                checkoutForm.reset();                            // Reset form
-                cartCheckoutSection.classList.add('hidden');     // Sembunyikan form checkout
-                cartActionButtons.classList.remove('hidden');    // Tampilkan tombol cart
+                Swal.fire({icon: 'success', title: 'Pesanan Berhasil!', text: result.message || 'Hore! Makanan enakmu segera disiapkan!', confirmButtonColor: '#D20000'}).then(() => {
+                    clearCart();                                      // Kosongkan keranjang
+                    cartModal.classList.add('hidden');               // Tutup modal cart
+                    checkoutForm.reset();                            // Reset form
+                    cartCheckoutSection.classList.add('hidden');     // Sembunyikan form checkout
+                    cartActionButtons.classList.remove('hidden');    // Tampilkan tombol cart
+                });
             } else {
-                alert(result.message || 'Gagal membuat pesanan.');
+                Swal.fire({icon: 'error', title: 'Gagal Pesan', text: result.message || 'Waduh, pesananmu gagal gaes. Coba lagi yuk!', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
-            alert('Gagal membuat pesanan. Pastikan semua data terisi.');
+            Swal.fire({icon: 'error', title: 'Periksa Datanya!', text: 'Wah, sepertinya ada data yang belum lengkap nih. Yuk cek lagi!', confirmButtonColor: '#D20000'});
         }
     });
 
@@ -984,15 +999,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await apiRequest('/login', 'POST', { username, password });
             if (result.success) {
                 currentUser = result.user;        // Simpan data user
-                alert(result.message);             // Tampilkan pesan sukses
-                updateLoginUI();                   // Update tampilan
-                loginModal.classList.add('hidden'); // Tutup modal login
-                loginForm.reset();                 // Kosongkan form
+                Swal.fire({icon: 'success', title: 'Yeay Berhasil!', text: result.message || 'Selamat datang di dunia penuh kelezatan, Chi-Pok!', confirmButtonColor: '#D20000'}).then(() => {
+                    updateLoginUI();                   // Update tampilan
+                    loginModal.classList.add('hidden'); // Tutup modal login
+                    loginForm.reset();                 // Kosongkan form
+                });
             } else {
-                alert(result.message || 'Login gagal!');
+                Swal.fire({icon: 'error', title: 'Oops!', text: result.message || 'Sepertinya ada yang salah, login ditolak!', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
-            alert('Username atau Password salah!');
+            Swal.fire({icon: 'error', title: 'Akses Ditolak!', text: 'Hmm.. Username atau password kamu keliru. Coba diingat-ingat lagi ya!', confirmButtonColor: '#D20000'});
         }
     });
 
@@ -1017,15 +1033,16 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const result = await apiRequest('/register', 'POST', { name, username, password, alamat, no_hp });
             if (result.success) {
-                alert(result.message);
-                signupModal.classList.add('hidden');   // Tutup modal signup
-                loginModal.classList.remove('hidden'); // Buka modal login
-                signupForm.reset();
+                Swal.fire({icon: 'success', title: 'Pendaftaran Sukses!', text: result.message || 'Yeay! Akun barumu sudah siap. Yuk, langsung login!', confirmButtonColor: '#D20000'}).then(() => {
+                    signupModal.classList.add('hidden');   // Tutup modal signup
+                    loginModal.classList.remove('hidden'); // Buka modal login
+                    signupForm.reset();
+                });
             } else {
-                alert(result.message || 'Pendaftaran gagal!');
+                Swal.fire({icon: 'error', title: 'Yah Gagal!', text: result.message || 'Aduh, pendaftaran gagal. Pastikan semua datamu unik ya.', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
-            alert('Terjadi kesalahan saat mendaftar.');
+            Swal.fire({icon: 'error', title: 'Aduh..', text: 'Terjadi kesalahan sistem saat mendaftar. Sabar ya, coba lagi nanti.', confirmButtonColor: '#D20000'});
         }
     });
 
@@ -1040,12 +1057,30 @@ document.addEventListener("DOMContentLoaded", () => {
      */
     btnLoginHeader.addEventListener('click', async () => {
         if (currentUser) {
-            // User sudah login → konfirmasi logout
-            if (confirm('Yakin ingin logout?')) {
-                await apiRequest('/logout', 'POST'); // Kirim request logout ke server
-                currentUser = null;                   // Hapus data user lokal
-                updateLoginUI();                      // Update tampilan
-            }
+            Swal.fire({
+                title: 'Mau Pergi?',
+                text: "Yakin ingin keluar dari akun Chi-Pok kamu?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#D20000',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Logout!',
+                cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await apiRequest('/logout', 'POST');
+                    currentUser = null;
+                    updateLoginUI();
+                    Swal.fire({
+                        toast: true,
+                        position: 'bottom-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        icon: 'info',
+                        title: 'Sampai jumpa lagi!'
+                    });
+                }
+            });
         } else {
             // User belum login → buka modal login
             loginModal.classList.remove('hidden');
@@ -1154,13 +1189,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     category: result.product.category || 'makanan',
                     reviews: []
                 });
-                alert(result.message);
-                addMenuModal.classList.add('hidden'); // Tutup modal
-                addMenuForm.reset();                  // Reset form
-                renderProducts();                     // Render ulang
+                Swal.fire({icon: 'success', title: 'Menu Baru!', text: result.message || 'Wah, menu baru berhasil ditambahkan! Makin mantap nih.', confirmButtonColor: '#D20000'}).then(() => {
+                    addMenuModal.classList.add('hidden'); // Tutup modal
+                    addMenuForm.reset();                  // Reset form
+                    renderProducts();                     // Render ulang
+                });
             }
         } catch (err) {
-            alert('Gagal menambahkan menu.');
+            Swal.fire({icon: 'error', title: 'Oops!', text: 'Sistem menolak menu barumu. Pastikan isi formnya bener ya bos.', confirmButtonColor: '#D20000'});
         }
     });
 
@@ -1173,17 +1209,29 @@ document.addEventListener("DOMContentLoaded", () => {
      * Mengirim DELETE request ke server, lalu hapus dari array lokal
      */
     window.deleteProduct = async (id) => {
-        if (confirm('Yakin ingin menghapus menu ini?')) {
-            try {
-                const result = await apiRequest(`/products/${id}`, 'DELETE');
-                if (result.success) {
-                    products = products.filter(p => p.id !== id); // Hapus dari array lokal
-                    renderProducts();                              // Render ulang
+        Swal.fire({
+            title: 'Hapus Menu?',
+            text: 'Yakin ingin menghapus menu ini secara permanen?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#D20000',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await apiRequest(`/products/${id}`, 'DELETE');
+                    if (res.success) {
+                        products = products.filter(p => p.id !== id);
+                        renderProducts();
+                        Swal.fire({toast:true, position:'bottom-end', showConfirmButton:false, timer:2000, icon:'success', title:'Menu berhasil dihapus!'});
+                    }
+                } catch (err) {
+                    Swal.fire({icon: 'error', title: 'Waduh..', text: 'Gagal menghapus menu.', confirmButtonColor: '#D20000'});
                 }
-            } catch (err) {
-                alert('Gagal menghapus menu.');
             }
-        }
+        });
     };
 
     /**
@@ -1194,20 +1242,34 @@ document.addEventListener("DOMContentLoaded", () => {
         const product = products.find(p => p.id === id);
         if (!product) return;
 
-        // Tampilkan dialog input untuk harga baru
-        const newPrice = prompt(`Edit Harga untuk ${product.name}:`, product.price);
-        if (newPrice !== null && !isNaN(newPrice)) {
-            try {
-                const result = await apiRequest(`/products/${id}`, 'PUT', { price: parseInt(newPrice) });
-                if (result.success) {
-                    product.price = parseInt(newPrice); // Update harga lokal
-                    renderProducts();
-                    alert('Harga berhasil diubah!');
-                }
-            } catch (err) {
-                alert('Gagal mengubah harga.');
+        Swal.fire({
+            title: `Update Harga`,
+            text: `Masukkan harga baru untuk ${product.name}`,
+            input: 'number',
+            inputValue: product.price,
+            showCancelButton: true,
+            confirmButtonColor: '#D20000',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Simpan',
+            cancelButtonText: 'Batal',
+            inputValidator: (value) => {
+                if (!value || isNaN(value)) return 'Masukkan harga yang valid ya!';
             }
-        }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const newPrice = result.value;
+                try {
+                    const res = await apiRequest(`/products/${id}`, 'PUT', { price: parseInt(newPrice) });
+                    if (res.success) {
+                        product.price = parseInt(newPrice);
+                        renderProducts();
+                        Swal.fire({icon: 'success', title: 'Mantap!', text: 'Harga menu berhasil diupdate!', confirmButtonColor: '#D20000'});
+                    }
+                } catch (err) {
+                    Swal.fire({icon: 'error', title: 'Waduh..', text: 'Gagal mengubah harga. Coba lagi yuk!', confirmButtonColor: '#D20000'});
+                }
+            }
+        });
     };
 
     // ====================================================================
@@ -1226,8 +1288,9 @@ document.addEventListener("DOMContentLoaded", () => {
     window.openReviewModal = (id) => {
         // Cek login dulu
         if (!currentUser) {
-            alert('Silakan login untuk melihat atau memberikan ulasan.');
-            loginModal.classList.remove('hidden');
+            Swal.fire({icon: 'info', title: 'Stop!', text: 'Kamu harus login dulu buat ngintip komentar orang-orang atau ngasih rating!', confirmButtonColor: '#D20000', confirmButtonText: 'Oke, Login!'}).then(() => {
+                loginModal.classList.remove('hidden');
+            });
             return;
         }
 
@@ -1319,7 +1382,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const rating = parseInt(document.getElementById('review_rating').value);
         const comment = document.getElementById('review_comment').value;
 
-        if (!rating) { alert('Mohon pilih bintang rating!'); return; }
+        if (!rating) { Swal.fire({icon: 'warning', title: 'Eits..', text: 'Jangan lupa kasih bintangnya dong!', confirmButtonColor: '#f59e0b'}); return; }
 
         try {
             const result = await apiRequest('/reviews', 'POST', { product_id, rating, comment });
@@ -1330,12 +1393,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (!product.reviews) product.reviews = [];
                     product.reviews.push(result.review);
                 }
-                alert(result.message);
-                reviewModal.classList.add('hidden'); // Tutup modal
-                renderProducts();                    // Render ulang (rating terupdate)
+                Swal.fire({icon: 'success', title: 'Terima Kasih!', text: result.message || 'Ulasanmu sangat berarti buat kemajuan kami!', confirmButtonColor: '#f59e0b'}).then(() => {
+                    reviewModal.classList.add('hidden'); // Tutup modal
+                    renderProducts();                    // Render ulang (rating terupdate)
+                });
             }
         } catch (err) {
-            alert('Gagal mengirim ulasan.');
+            Swal.fire({icon: 'error', title: 'Gagal Ngirim', text: 'Hayo.. ulasan kamu nyangkut. Cek koneksi ya!', confirmButtonColor: '#f59e0b'});
         }
     });
 
@@ -1358,8 +1422,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = parseInt(card.dataset.id);            // Ambil ID produk
 
         if (!currentUser) {
-            alert('Silakan login untuk memesan.');
-            loginModal.classList.remove('hidden');
+            Swal.fire({icon: 'info', title: 'Lapar Ya?', text: 'Login dulu yuk sebelum masukin makanan enak ke keranjang!', confirmButtonColor: '#D20000', confirmButtonText: 'Meluncur!'}).then(() => {
+                loginModal.classList.remove('hidden');
+            });
             return;
         }
 
@@ -1461,14 +1526,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentUser.username = data.username;
                 currentUser.no_hp = data.no_hp;
                 currentUser.alamat = data.alamat;
-                alert(result.message || 'Profil berhasil diperbarui!');
-                settingsModal.classList.add('hidden');
-                updateLoginUI();
+                Swal.fire({icon: 'success', title: 'Mantap!', text: result.message || 'Profil berhasil di-makeover! Keren kan.', confirmButtonColor: '#D20000'}).then(() => {
+                    settingsModal.classList.add('hidden');
+                    updateLoginUI();
+                });
             } else {
-                alert(result.message || 'Gagal memperbarui profil.');
+                Swal.fire({icon: 'error', title: 'Gagal Update', text: result.message || 'Waduh, data profilnya nolak buat diganti nih.', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
-            alert('Terjadi kesalahan saat memperbarui profil.');
+            Swal.fire({icon: 'error', title: 'Oops!', text: 'Terjadi kesalahan sistem saat ngerombak profilmu!', confirmButtonColor: '#D20000'});
         }
     });
 
