@@ -1183,40 +1183,60 @@ document.addEventListener("DOMContentLoaded", () => {
      * dan menampilkannya dalam bentuk tabel HTML
      */
     async function renderOrdersTable() {
-        const tbody = document.getElementById('orders-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-4 text-center text-sm text-gray-500">Memuat...</td></tr>';
+        const listContainer = document.getElementById('orders-table-body');
+        if (!listContainer) return;
+        listContainer.innerHTML = '<div class="col-span-full p-6 text-center text-sm text-gray-500">Memuat data pesanan...</div>';
 
         try {
             const result = await apiRequest('/admin/pesanan');
             if (result.success && result.data.length > 0) {
-                tbody.innerHTML = '';
+                listContainer.innerHTML = '';
                 result.data.forEach(order => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-gray-50 transition-colors';
-                    tr.innerHTML = `
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${order.date}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${order.customerName}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${order.no_hp || '-'}</td>
-                        <td class="px-4 py-3 text-sm text-gray-500 max-w-[150px] truncate" title="${order.alamat || '-'}">${order.alamat || '-'}</td>
-                        <td class="px-4 py-3 text-sm text-gray-500 max-w-[200px]">${order.items}</td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${order.jenis === 'delivery' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}">${order.jenis || '-'}</span>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-gray-900">${formatRupiah(order.total)}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 status-cell">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">${order.status}</span>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
-                            ${getActionHtml(order.group_id, order.jenis, order.status)}
-                        </td>`;
-                    tbody.appendChild(tr);
+                    const card = document.createElement('div');
+                    card.className = 'bg-white border text-left rounded-xl p-4 shadow-sm relative transition hover:shadow-md flex flex-col gap-3';
+
+                    // Info Pengguna & Kontak & Label Jenis
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start border-b pb-2">
+                            <div>
+                                <h4 class="font-bold text-gray-900 leading-tight">${order.customerName}</h4>
+                                <p class="text-xs text-gray-500 mb-1"><i class="fas fa-phone-alt opacity-75"></i> ${order.no_hp || '-'}</p>
+                                <span class="px-2 py-0.5 inline-flex text-[10px] font-bold rounded-md ${order.jenis === 'delivery' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'} uppercase">
+                                    ${order.jenis || '-'}
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-gray-400 font-medium mb-1"><i class="far fa-clock"></i> ${order.date}</p>
+                                <span class="px-2 py-1 inline-flex text-[10px] sm:text-xs font-bold rounded-full bg-yellow-100 text-yellow-800">
+                                    ${order.status}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Info Pesanan & Alamat -->
+                        <div class="flex-grow">
+                            <p class="text-sm text-gray-700 font-medium line-clamp-2 leading-snug"><i class="fas fa-utensils text-red-400 mr-1.5"></i> ${order.items}</p>
+                            ${order.jenis === 'delivery' ? `<p class="text-xs text-gray-500 mt-2 truncate max-w-full" title="${order.alamat || '-'}"><i class="fas fa-map-marker-alt text-gray-400 mr-1.5"></i> ${order.alamat || '-'}</p>` : ''}
+                        </div>
+
+                        <!-- Footer: Total Harga & Tombol Aksi -->
+                        <div class="mt-2 pt-3 border-t flex justify-between items-center bg-gray-50/50 rounded-lg p-2">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</span>
+                                <span class="font-black text-gray-900">${formatRupiah(order.total)}</span>
+                            </div>
+                            <div>
+                                ${getActionHtml(order.group_id, order.jenis, order.status)}
+                            </div>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
                 });
             } else {
-                tbody.innerHTML = '<tr><td colspan="9" class="px-4 py-4 text-center text-sm text-gray-500">Belum ada pesanan masuk.</td></tr>';
+                listContainer.innerHTML = '<div class="col-span-full py-10 flex flex-col items-center justify-center text-center text-sm text-gray-500"><i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>Belum ada pesanan masuk.</div>';
             }
         } catch (err) {
-            tbody.innerHTML = '<tr><td colspan="9" class="px-4 py-4 text-center text-sm text-red-500">Gagal memuat data pesanan.</td></tr>';
+            listContainer.innerHTML = '<div class="col-span-full p-4 text-center text-sm text-red-500">Gagal memuat data pesanan.</div>';
         }
     }
 
