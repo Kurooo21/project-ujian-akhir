@@ -284,17 +284,27 @@
 
             <!-- Container Slider -->
             <div id="hero-slider" class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px]">
-                <!-- Slide 1: Gambar promosi utama (opacity 1 = terlihat) -->
+                
+                <!-- Slide Default 1: Gambar promosi utama -->
                 <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out" style="opacity:1;">
                     <img src="{{ asset('asset/ledakan kelezatan.jpg') }}" alt="Ledakan Kelezatan"
                         class="w-full h-full object-cover block">
                 </div>
 
-                <!-- Slide 2: Gambar vocer promo (opacity 0 = tersembunyi, ditampilkan oleh JS) -->
+                <!-- Slide Default 2: Gambar vocer promo -->
                 <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out" style="opacity:0;">
                     <img src="{{ asset('asset/vocer.jpg') }}" alt="Vocer Promo"
                         class="w-full h-full object-cover block">
                 </div>
+
+                <!-- Slide Tambahan dari Database -->
+                @if(isset($banners) && count($banners) > 0)
+                    @foreach($banners as $index => $banner)
+                        <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out bg-[#A80D11] flex items-center justify-center" style="opacity:0;">
+                            <img src="{{ asset($banner->image_path) }}" alt="{{ $banner->description ?? 'Banner Chi-Pok' }}" class="w-full h-full object-contain block text-transparent drop-shadow-xl">
+                        </div>
+                    @endforeach
+                @endif
             </div>
 
             <!-- Tombol Navigasi Slider: Panah Kiri (Previous) -->
@@ -828,9 +838,9 @@
                         <!-- Tabs -->
                         <div class="w-full mb-4">
                             <div class="border-b border-gray-200">
-                                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                <nav class="-mb-px flex" aria-label="Tabs">
                                     <button id="tab-orders"
-                                        class="border-red-500 text-red-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm w-1/2 text-center hover:bg-red-50 transition-colors">
+                                        class="border-red-500 text-red-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm w-full text-center hover:bg-red-50 transition-colors">
                                         Data Pesanan
                                     </button>
                                 </nav>
@@ -1106,8 +1116,16 @@
                         </div>
                     </div>
 
-                    <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">PROFIL SAYA</h3>
-                    <p class="text-gray-400 text-sm mb-6">Kelola informasi akun kamu</p>
+                    <!-- Tab Switcher untuk Admin -->
+                    <div id="settings-tab-slider" class="flex p-1 bg-gray-100 rounded-xl mb-6 hidden border border-gray-200">
+                        <button id="btn-tab-profile" type="button" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all">Profil Saya</button>
+                        <button id="btn-tab-banner" type="button" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Edit Banner</button>
+                    </div>
+
+                    <!-- Container Profil -->
+                    <div id="container-profile">
+                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">PROFIL SAYA</h3>
+                        <p class="text-gray-400 text-sm mb-6">Kelola informasi akun kamu</p>
 
                     <!-- Pesan saat belum login -->
                     <div id="settings-not-logged-in" class="hidden text-center py-8">
@@ -1191,6 +1209,42 @@
                             <i class="fas fa-save"></i> SIMPAN PERUBAHAN
                         </button>
                     </form>
+                    </div>
+
+                    <!-- Container Banner -->
+                    <div id="container-banner" class="hidden">
+                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">EDIT BANNER</h3>
+                        <p class="text-gray-400 text-sm mb-6">Kelola gambar promosi halaman utama</p>
+                        
+                        <div class="max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
+                            <!-- Form Tambah Banner -->
+                            <form id="form-add-banner" class="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Pilih Gambar Banner</label>
+                                    <input type="file" id="banner-image" name="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer transition" required>
+                                    <p class="text-[11px] text-gray-500 mt-2 p-2 bg-gray-50 rounded-lg border border-gray-100 leading-tight">
+                                        💡 <strong>Rekomendasi Responsif:</strong><br/>
+                                        Rasio <strong>2:1</strong> / <strong>16:9</strong> (Contoh: 1920x1080px). Pusatkan desain inti (Center-safe).
+                                    </p>
+                                </div>
+                                <div class="mb-5">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Deskripsi Singkat <span class="text-gray-400 font-normal">(opsional)</span></label>
+                                    <input type="text" id="banner-desc" name="description" placeholder="Contoh: Promo Lebaran" class="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500 outline-none transition text-sm">
+                                </div>
+                                <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white font-bold rounded-lg shadow hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm flex items-center justify-center gap-2">
+                                    <i class="fas fa-upload"></i> Unggah Banner
+                                </button>
+                            </form>
+
+                            <!-- List Banner Saat Ini -->
+                            <div>
+                                <h5 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-widest border-b pb-2">Daftar Banner Aktif</h5>
+                                <div id="banner-list-container" class="grid grid-cols-1 gap-3">
+                                    <div class="col-span-full text-center text-sm text-gray-500 py-4">Memuat banner...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
 

@@ -45,4 +45,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::get('/admin/banners', [\App\Http\Controllers\BannerController::class, 'index']);
+    Route::post('/admin/banners', [\App\Http\Controllers\BannerController::class, 'store']);
+    Route::delete('/admin/banners/{id}', [\App\Http\Controllers\BannerController::class, 'destroy']);
 });

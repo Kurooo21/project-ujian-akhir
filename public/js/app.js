@@ -1017,6 +1017,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Icon → clipboard-check (pesanan)
                 cartIcon.className = 'fas fa-clipboard-check';
                 btnCartHeader.title = 'Lihat Pesanan Masuk';
+                
+                // Tampilkan tab switcher di settings
+                const tabSlider = document.getElementById('settings-tab-slider');
+                if(tabSlider) tabSlider.classList.remove('hidden');
+
+                startOrderPolling(); // Mulai polling pesanan
             } else {
                 // === USER BIASA (PELANGGAN) ===
                 navAdmin.classList.add('hidden');
@@ -1027,6 +1033,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (document.getElementById('btn-show-user-orders')) document.getElementById('btn-show-user-orders').classList.remove('hidden');
                 if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.remove('hidden');
                 if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.add('flex');
+                
+                // Sembunyikan tab switcher di settings
+                if(tabSlider) tabSlider.classList.add('hidden');
             }
         } else {
             // BELUM LOGIN
@@ -1040,6 +1049,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (document.getElementById('btn-show-user-orders')) document.getElementById('btn-show-user-orders').classList.add('hidden');
             if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.add('hidden');
             if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.remove('flex');
+            
+            // Sembunyikan tab switcher di settings
+            if(tabSlider) tabSlider.classList.add('hidden');
+            
             stopOrderPolling();
         }
 
@@ -1073,6 +1086,12 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const result = await apiRequest('/login', 'POST', { username, password });
             if (result.success) {
+                // Update CSRF Token dari response (karena session diregenerate)
+                if (result.csrf_token) {
+                    const m = document.querySelector('meta[name="csrf-token"]');
+                    if(m) m.setAttribute('content', result.csrf_token);
+                    if(typeof CSRF_TOKEN !== 'undefined') CSRF_TOKEN = result.csrf_token;
+                }
                 currentUser = result.user;        // Simpan data user
                 Swal.fire({icon: 'success', title: 'Yeay Berhasil!', text: result.message || 'Selamat datang di dunia penuh kelezatan, Chi-Pok!', confirmButtonColor: '#D20000'}).then(() => {
                     updateLoginUI();                   // Update tampilan
@@ -1146,17 +1165,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 cancelButtonText: 'Batal'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    await apiRequest('/logout', 'POST');
+                    try {
+                        const res = await apiRequest('/logout', 'POST');
+                        if (res.csrf_token) {
+                            const m = document.querySelector('meta[name="csrf-token"]');
+                            if(m) m.setAttribute('content', res.csrf_token);
+                            if(typeof CSRF_TOKEN !== 'undefined') CSRF_TOKEN = res.csrf_token;
+                        }
+                    } catch(e) {}
                     currentUser = null;
+                    Swal.fire({icon: 'success', title: 'Sampai Jumpa!', text: 'Kamu berhasil logout. Ditunggu kedatangannya lagi ya!', confirmButtonColor: '#D20000'});
                     updateLoginUI();
-                    Swal.fire({
-                        toast: true,
-                        position: 'bottom-end',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        icon: 'info',
-                        title: 'Sampai jumpa lagi!'
-                    });
                 }
             });
         } else {
@@ -1175,6 +1194,113 @@ document.addEventListener("DOMContentLoaded", () => {
         adminModal.classList.remove('hidden');        // Tampilkan modal admin
         renderOrdersTable();                          // Muat data pesanan
     });
+
+    // ====================================================================
+    // FUNGSI KELOLA BANNER
+    // ====================================================================
+    // Fungsi muat banner
+    async function renderAdminBanners() {
+        const container = document.getElementById('banner-list-container');
+        if (!container) return;
+        container.innerHTML = '<div class="col-span-full text-center text-sm text-gray-500">Memuat banner...</div>';
+
+        try {
+            const res = await apiRequest('/admin/banners');
+            if (res.success && res.data.length > 0) {
+                container.innerHTML = '';
+                res.data.forEach(banner => {
+                    const card = document.createElement('div');
+                    card.className = 'relative bg-white border rounded shadow-sm overflow-hidden group';
+                    card.innerHTML = `
+                        <img src="/${banner.image_path}" class="w-full h-24 object-cover" alt="Banner">
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center text-white p-2 text-center">
+                            <span class="text-xs mb-2 font-medium truncate w-full">${banner.description || 'Tidak ada deskripsi'}</span>
+                            <button onclick="window.deleteBanner(${banner.id})" class="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 text-xs transition">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<div class="col-span-full text-center text-sm text-gray-400 py-4"><i class="fas fa-images text-2xl mb-2 opacity-50 block"></i>Belum ada banner terpasang.</div>';
+            }
+        } catch (e) {
+            container.innerHTML = '<div class="col-span-full text-center text-sm text-red-500 py-4">Gagal memuat banner.</div>';
+        }
+    }
+
+    // Fungsi submit banner
+    const formAddBanner = document.getElementById('form-add-banner');
+    if (formAddBanner) {
+        formAddBanner.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(formAddBanner);
+            
+            const submitBtn = formAddBanner.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Mengunggah...';
+            submitBtn.disabled = true;
+
+            try {
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const token = csrfMeta ? csrfMeta.getAttribute('content') : CSRF_TOKEN;
+
+                const response = await fetch('/admin/banners', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire({
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
+                        icon: 'success', title: 'Banner ditambahkan!'
+                    });
+                    formAddBanner.reset();
+                    renderAdminBanners(); // refresh list
+                } else {
+                    Swal.fire({icon: 'error', title: 'Gagal!', text: result.message || 'Mungkin ukuran file > 5MB.'});
+                }
+            } catch (err) {
+                if (err.message === 'CSRF token expired') return;
+                Swal.fire({icon: 'error', title: 'Aduh..', text: 'Koneksi gagal saat unggah banner.'});
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
+    // Fungsi global delete banner
+    window.deleteBanner = async (id) => {
+        Swal.fire({
+            title: 'Hapus Banner?',
+            text: "Banner ini akan dihapus dari sistem secara permanen.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#D20000',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Hapus'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await apiRequest('/admin/banners/' + id, 'DELETE');
+                    if(res.success) {
+                        Swal.fire({
+                            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
+                            icon: 'success', title: 'Banner dihapus!'
+                        });
+                        renderAdminBanners();
+                    }
+                } catch (e) {
+                    Swal.fire({icon: 'error', title: 'Gagal', text: 'Tidak dapat menghapus banner.'});
+                }
+            }
+        });
+    };
 
     /**
      * renderOrdersTable() - Muat dan tampilkan data pesanan di tabel admin
@@ -1980,6 +2106,35 @@ document.addEventListener("DOMContentLoaded", () => {
         settingsGoLogin.addEventListener('click', () => {
             settingsModal.classList.add('hidden');
             loginModal.classList.remove('hidden');
+        });
+    }
+
+    // ====================================================================
+    // TAB SLIDER PENGATURAN (PROFIL VS BANNER) - ADMIN ONLY
+    // ====================================================================
+    const btnTabProfile = document.getElementById('btn-tab-profile');
+    const btnTabBanner = document.getElementById('btn-tab-banner');
+    const containerProfile = document.getElementById('container-profile');
+    const containerBanner = document.getElementById('container-banner');
+
+    if (btnTabProfile && btnTabBanner) {
+        btnTabProfile.addEventListener('click', () => {
+            btnTabProfile.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all';
+            btnTabBanner.className = 'flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all';
+            containerProfile.classList.remove('hidden');
+            containerBanner.classList.add('hidden');
+        });
+
+        btnTabBanner.addEventListener('click', () => {
+            btnTabBanner.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all';
+            btnTabProfile.className = 'flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all';
+            containerProfile.classList.add('hidden');
+            containerBanner.classList.remove('hidden');
+            
+            // Render banners if they click the banner tab
+            if (typeof renderAdminBanners === 'function') {
+                renderAdminBanners();
+            }
         });
     }
 

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Banner;
 
 class HomeController extends Controller
 {
     public function index()
     {
         $products = Product::with('reviews.user')->get();
+        $banners = Banner::all();
 
         // Transform for JS consumption
         $productsData = $products->map(function ($product) {
@@ -31,7 +33,7 @@ class HomeController extends Controller
             ];
         })->values()->toArray();
 
-        return view('home', compact('products', 'productsData'));
+        return view('home', compact('products', 'productsData', 'banners'));
     }
 
     public function menu()
