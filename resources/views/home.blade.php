@@ -136,6 +136,9 @@
             header.scrolled .header-logo {
                 height: 60px !important;  /* Ukuran logo di desktop saat scroll */
             }
+        /* SweetAlert2: Pastikan popup selalu di atas semua modal */
+        .swal2-container {
+            z-index: 99999 !important;
         }
     </style>
 </head>
@@ -183,15 +186,19 @@
                     <li><a href="#contact"
                             class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-primary-red after:transition-all after:duration-300 hover:after:w-full">CONTACT</a>
                     </li>
-                    <!-- Link ADMIN - disembunyikan, muncul hanya saat admin login -->
-                    <li id="nav-admin" class="hidden"><a href="#" id="btn-admin-panel"
-                            class="font-heading text-base lg:text-xl hover:text-primary-red transition-colors duration-300 uppercase tracking-wide">ADMIN</a>
+                    <!-- Link ADMIN - disembunyikan (dipindah ke icon cart) -->
+                    <li id="nav-admin" class="hidden"><a href="#" id="btn-admin-panel" class="hidden"></a>
                     </li>
                 </ul>
             </nav>
 
             <!-- Tombol-Tombol Aksi (Kanan) -->
             <div class="flex items-center gap-2 sm:gap-3 md:gap-4">
+                <!-- Tombol Pesanan Saya (User Biasa) -->
+                <button id="btn-show-user-orders-nav" class="hidden items-center gap-1 sm:gap-2 text-sm sm:text-base font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors px-2 sm:px-3 py-1.5 rounded-full shadow-sm" title="Pesanan Saya">
+                    <i class="fas fa-receipt text-lg"></i> <span class="hidden sm:inline">Pesanan Saya</span>
+                </button>
+                
                 <!-- Tombol Keranjang Belanja -->
                 <button id="btn-cart-header" class="relative text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1" title="Keranjang Belanja">
                     <i class="fas fa-shopping-cart"></i>
@@ -247,7 +254,7 @@
             <li><a href="#contact" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
                 <i class="fas fa-envelope text-base w-6 text-center text-gray-400"></i> CONTACT</a></li>
             <li id="nav-admin-mobile" class="hidden"><a href="#" id="btn-admin-panel-mobile" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
-                <i class="fas fa-shield-alt text-base w-6 text-center text-gray-400"></i> ADMIN</a></li>
+                <i class="fas fa-clipboard-check text-base w-6 text-center text-gray-400"></i> PESANAN</a></li>
         </ul>
         <!-- Footer Drawer: Tombol Settings & Login -->
         <div class="p-5 border-t border-gray-100">
@@ -467,9 +474,14 @@
                                 </div>
                                 <h3 class="text-xl font-bold text-gray-900">Keranjang Belanja</h3>
                             </div>
-                            <button type="button" id="closeCartModal" class="text-gray-400 hover:text-gray-600 transition">
-                                <i class="fas fa-times text-xl"></i>
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <button type="button" id="btn-show-user-orders" class="hidden text-sm font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-full transition-colors flex items-center gap-2">
+                                    <i class="fas fa-receipt"></i> Pesanan Aktif
+                                </button>
+                                <button type="button" id="closeCartModal" class="text-gray-400 hover:text-gray-600 transition w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Cart Items List -->
@@ -801,7 +813,7 @@
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
                 <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start flex-col w-full">
                         <div class="flex justify-between items-center w-full mb-6 border-b pb-4">
@@ -832,31 +844,77 @@
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th scope="col"
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Waktu</th>
                                             <th scope="col"
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Pelanggan</th>
                                             <th scope="col"
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                No HP</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Alamat</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Menu</th>
                                             <th scope="col"
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Jenis</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Total</th>
                                             <th scope="col"
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Status</th>
+                                            <th scope="col"
+                                                class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="orders-table-body" class="bg-white divide-y divide-gray-200">
                                         <tr>
-                                            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Belum
+                                            <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">Belum
                                                 ada pesanan masuk.</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- USER ORDERS MODAL — User Modal to Track Orders                   -->
+    <!-- ================================================================ -->
+    <div id="userOrdersModal" class="fixed inset-0 z-[2003] hidden overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div class="relative w-full max-w-4xl bg-white text-left shadow-2xl rounded-2xl overflow-hidden animate-[modalIn_0.3s_ease-out]">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="flex items-center justify-between mb-5 pb-3 border-b">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-receipt text-red-600"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900">Pesanan Saya</h3>
+                        </div>
+                        <button type="button" id="closeUserOrdersModal"
+                            class="text-gray-400 hover:text-red-500 transition-colors w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <div class="w-full">
+                        <!-- Container untuk List Pesanan (Card Style) -->
+                        <div id="user-orders-list" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="p-6 text-center text-gray-500">Belum ada riwayat pesanan.</div>
+                        </div>
+                    </div>
 
                         <!-- Settings Content (Layout Mode) -->
                         <div id="content-settings" class="w-full hidden">
@@ -988,9 +1046,13 @@
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Harga (Rp)</label>
-                            <input type="number" id="new_menu_price" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                            <label class="block text-sm font-medium text-gray-700">Harga</label>
+                            <div class="mt-1 flex rounded-md shadow-sm border">
+                                <span class="inline-flex items-center px-3 rounded-l-md bg-gray-50 text-gray-500 text-sm font-medium border-r">Rp</span>
+                                <input type="text" id="new_menu_price_display" required placeholder="25,000" inputmode="numeric"
+                                    class="block w-full rounded-r-md border-0 focus:ring-red-500 focus:border-red-500 sm:text-sm p-2">
+                            </div>
+                            <input type="hidden" id="new_menu_price" value="">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
@@ -998,9 +1060,17 @@
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"></textarea>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">URL Gambar (Opsional)</label>
-                            <input type="text" id="new_menu_img" placeholder="https://..."
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                            <label class="block text-sm font-medium text-gray-700">Gambar Menu</label>
+                            <div class="mt-1 flex items-center gap-4">
+                                <div id="new_menu_img_preview" class="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+                                    <i class="fas fa-image text-2xl text-gray-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <input type="file" id="new_menu_img" accept="image/*"
+                                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-600 hover:file:bg-red-100 cursor-pointer">
+                                    <p class="mt-1 text-xs text-gray-400">PNG, JPG, JPEG (maks. 2MB)</p>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Kategori</label>

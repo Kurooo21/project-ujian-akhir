@@ -10,18 +10,14 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create([
-            'name' => 'Admin Chi-Pok',
-            'username' => 'admin',
-            'password' => Hash::make('admin123'),
-            'role' => 'admin',
-        ]);
-
-        User::create([
-            'name' => 'Pelanggan Setia',
-            'username' => 'pelanggan',
-            'password' => Hash::make('pelanggan123'),
-            'role' => 'pelanggan',
-        ]);
+        // Hanya seed akun admin - user/pelanggan membuat akun sendiri via register
+        User::firstOrCreate(
+            ['username' => 'admin'],  // Cari berdasarkan username
+            [
+                'name' => 'Admin Chi-Pok',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin',
+            ]
+        );
     }
 }

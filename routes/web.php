@@ -27,6 +27,7 @@ Route::put('/api/user/update', [AuthController::class, 'updateProfile'])->middle
 // ========================================================================
 Route::middleware('auth')->group(function () {
     Route::post('/pesanan', [PesananController::class, 'store'])->name('pesanan.store');
+    Route::get('/pesanan/user', [PesananController::class, 'userOrders'])->name('pesanan.user');
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 });
 
@@ -40,6 +41,7 @@ Route::get('/reviews/{productId}', [ReviewController::class, 'show'])->name('rev
 // ========================================================================
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/pesanan', [PesananController::class, 'index'])->name('admin.pesanan');
+    Route::put('/admin/pesanan/status', [PesananController::class, 'updateStatus'])->name('admin.pesanan.status');
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');

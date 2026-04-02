@@ -192,7 +192,12 @@ function showCartNotification(itemName) {
  * @returns {string} - Contoh: "Rp 25.000,00"
  */
 function formatRupiah(number) {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
+    return new Intl.NumberFormat('id-ID', { 
+        style: 'currency', 
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(number);
 }
 
 /**
@@ -208,11 +213,15 @@ function formatRupiah(number) {
  * - async/await digunakan agar kode lebih mudah dibaca (tidak callback hell)
  */
 async function apiRequest(url, method = 'GET', data = null) {
+    // Ambil CSRF token terbaru dari meta tag (untuk menghindari token expired)
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const token = csrfMeta ? csrfMeta.getAttribute('content') : CSRF_TOKEN;
+
     const options = {
         method,
         headers: {
             'Content-Type': 'application/json',    // Beritahu server bahwa data berformat JSON
-            'X-CSRF-TOKEN': CSRF_TOKEN,             // Token keamanan Laravel (dari Blade template)
+            'X-CSRF-TOKEN': token,                  // Token keamanan Laravel (dari meta tag)
             'Accept': 'application/json',           // Minta response dalam format JSON
         },
         credentials: 'same-origin',                // Kirim cookie session agar auth bekerja
@@ -224,8 +233,42 @@ async function apiRequest(url, method = 'GET', data = null) {
     // Kirim request dan tunggu response
     const response = await fetch(url, options);
 
+    // Jika CSRF token expired (419), reload halaman untuk mendapatkan token baru
+    if (response.status === 419) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sesi Kedaluwarsa',
+            text: 'Halaman akan dimuat ulang untuk memperbarui sesi.',
+            confirmButtonColor: '#D20000',
+            confirmButtonText: 'Oke'
+        }).then(() => {
+            window.location.reload();
+        });
+        throw new Error('CSRF token expired');
+    }
+
     // Parse response menjadi object JavaScript
-    return response.json();
+    let result;
+    try {
+        result = await response.json();
+    } catch (e) {
+        // Jika response bukan JSON (misalnya HTML error page)
+        throw new Error('Server mengembalikan response yang tidak valid.');
+    }
+
+    // Jika response status bukan OK (bukan 2xx), format ulang sebagai error
+    if (!response.ok) {
+        // Untuk 422 (validation error), ambil pesan error pertama
+        if (response.status === 422 && result.errors) {
+            const firstField = Object.keys(result.errors)[0];
+            const firstMessage = result.errors[firstField][0];
+            return { success: false, message: firstMessage };
+        }
+        // Untuk error lain (401, 403, 500, dll)
+        return { success: false, message: result.message || 'Terjadi kesalahan pada server.' };
+    }
+
+    return result;
 }
 
 // ========================================================================
@@ -399,13 +442,19 @@ document.addEventListener("DOMContentLoaded", () => {
     // BUKA/TUTUP MODAL KERANJANG
     // ====================================================================
 
-    // Saat tombol keranjang di header diklik → buka modal cart
+    // Saat tombol keranjang/pesanan di header diklik
     btnCartHeader.addEventListener('click', () => {
-        // Pastikan tampilan cart (bukan checkout form) yang terlihat
-        cartCheckoutSection.classList.add('hidden');     // Sembunyikan form checkout
-        cartActionButtons.classList.remove('hidden');    // Tampilkan tombol aksi cart
-        renderCartModal();                               // Render ulang isi cart
-        cartModal.classList.remove('hidden');             // Tampilkan modal cart
+        // Jika admin → buka panel admin (lihat pesanan)
+        if (currentUser && currentUser.role === 'admin') {
+            adminModal.classList.remove('hidden');
+            renderOrdersTable();
+            return;
+        }
+        // Jika user biasa → buka modal keranjang
+        cartCheckoutSection.classList.add('hidden');
+        cartActionButtons.classList.remove('hidden');
+        renderCartModal();
+        cartModal.classList.remove('hidden');
     });
 
     // Saat tombol × (close) diklik → tutup modal cart
@@ -950,33 +999,59 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateLoginUI() {
         const loginIcon = btnLoginHeader.querySelector('i');
         const fab = document.getElementById('btn-add-menu-fab');
+        const cartIcon = btnCartHeader.querySelector('i');
+        const cartBadgeEl = document.getElementById('cart-badge');
+
+        // RESET: Hapus semua class icon terlebih dahulu
+        const isAdmin = currentUser && currentUser.role === 'admin';
 
         if (currentUser) {
             // USER SUDAH LOGIN
-            // Ubah icon menjadi fa-user (icon orang)
-            loginIcon.classList.remove('fa-sign-in-alt', 'fa-sign-out-alt');
-            loginIcon.classList.add('fa-user');
+            loginIcon.className = 'fas fa-user';
             btnLoginHeader.title = `${currentUser.name} (Logout)`;
 
-            // Tampilkan menu admin jika role = admin
-            if (currentUser.role === 'admin') {
+            if (isAdmin) {
+                // === ADMIN ===
                 navAdmin.classList.remove('hidden');
-                if (fab) fab.classList.remove('hidden'); // Tampilkan FAB tambah menu
+                if (fab) fab.classList.remove('hidden');
+                // Icon → clipboard-check (pesanan)
+                cartIcon.className = 'fas fa-clipboard-check';
+                btnCartHeader.title = 'Lihat Pesanan Masuk';
             } else {
+                // === USER BIASA (PELANGGAN) ===
                 navAdmin.classList.add('hidden');
                 if (fab) fab.classList.add('hidden');
+                // Icon → shopping-cart (keranjang)
+                cartIcon.className = 'fas fa-shopping-cart';
+                btnCartHeader.title = 'Keranjang Belanja';
+                if (document.getElementById('btn-show-user-orders')) document.getElementById('btn-show-user-orders').classList.remove('hidden');
+                if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.remove('hidden');
+                if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.add('flex');
             }
         } else {
-            // USER BELUM LOGIN
-            // Ubah icon kembali ke fa-sign-in-alt (icon login)
-            loginIcon.classList.remove('fa-user', 'fa-sign-out-alt');
-            loginIcon.classList.add('fa-sign-in-alt');
+            // BELUM LOGIN
+            loginIcon.className = 'fas fa-sign-in-alt';
             btnLoginHeader.title = "Login";
-            navAdmin.classList.add('hidden');       // Sembunyikan menu admin
-            if (fab) fab.classList.add('hidden');   // Sembunyikan FAB
+            navAdmin.classList.add('hidden');
+            if (fab) fab.classList.add('hidden');
+            // Icon → shopping-cart (keranjang)
+            cartIcon.className = 'fas fa-shopping-cart';
+            btnCartHeader.title = 'Keranjang Belanja';
+            if (document.getElementById('btn-show-user-orders')) document.getElementById('btn-show-user-orders').classList.add('hidden');
+            if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.add('hidden');
+            if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.remove('flex');
+            stopOrderPolling();
         }
-        updateMobileDrawerUI();   // Update juga drawer mobile
-        renderProducts();          // Render ulang produk (tombol admin muncul/hilang)
+
+        updateMobileDrawerUI();
+        renderProducts();
+
+        // Mulai/hentikan polling notifikasi pesanan
+        if (isAdmin) {
+            startOrderPolling();
+        } else {
+            stopOrderPolling();
+        }
     }
 
     // ====================================================================
@@ -1005,10 +1080,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     loginForm.reset();                 // Kosongkan form
                 });
             } else {
-                Swal.fire({icon: 'error', title: 'Oops!', text: result.message || 'Sepertinya ada yang salah, login ditolak!', confirmButtonColor: '#D20000'});
+                Swal.fire({icon: 'error', title: 'Oops!', text: result.message || 'Username atau password salah!', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
-            Swal.fire({icon: 'error', title: 'Akses Ditolak!', text: 'Hmm.. Username atau password kamu keliru. Coba diingat-ingat lagi ya!', confirmButtonColor: '#D20000'});
+            // Jangan tampilkan error jika CSRF expired (sudah di-handle di apiRequest)
+            if (err.message === 'CSRF token expired') return;
+            Swal.fire({icon: 'error', title: 'Koneksi Bermasalah!', text: 'Gagal terhubung ke server. Periksa koneksi internetmu ya!', confirmButtonColor: '#D20000'});
         }
     });
 
@@ -1042,6 +1119,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 Swal.fire({icon: 'error', title: 'Yah Gagal!', text: result.message || 'Aduh, pendaftaran gagal. Pastikan semua datamu unik ya.', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
+            if (err.message === 'CSRF token expired') return;
             Swal.fire({icon: 'error', title: 'Aduh..', text: 'Terjadi kesalahan sistem saat mendaftar. Sabar ya, coba lagi nanti.', confirmButtonColor: '#D20000'});
         }
     });
@@ -1107,7 +1185,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function renderOrdersTable() {
         const tbody = document.getElementById('orders-table-body');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Memuat...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-4 text-center text-sm text-gray-500">Memuat...</td></tr>';
 
         try {
             const result = await apiRequest('/admin/pesanan');
@@ -1115,21 +1193,337 @@ document.addEventListener("DOMContentLoaded", () => {
                 tbody.innerHTML = '';
                 result.data.forEach(order => {
                     const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 transition-colors';
                     tr.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.date}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order.customerName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.items}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${formatRupiah(order.total)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Berhasil</span>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${order.date}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${order.customerName}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${order.no_hp || '-'}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 max-w-[150px] truncate" title="${order.alamat || '-'}">${order.alamat || '-'}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 max-w-[200px]">${order.items}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${order.jenis === 'delivery' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}">${order.jenis || '-'}</span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-bold text-gray-900">${formatRupiah(order.total)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 status-cell">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">${order.status}</span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
+                            ${getActionHtml(order.group_id, order.jenis, order.status)}
                         </td>`;
                     tbody.appendChild(tr);
                 });
             } else {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Belum ada pesanan masuk.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="px-4 py-4 text-center text-sm text-gray-500">Belum ada pesanan masuk.</td></tr>';
             }
         } catch (err) {
-            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-red-500">Gagal memuat data pesanan.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="px-4 py-4 text-center text-sm text-red-500">Gagal memuat data pesanan.</td></tr>';
+        }
+    }
+
+    /**
+     * Helper action buttons untuk status
+     */
+    function getActionHtml(groupId, type, currentStatus) {
+        let actionStatus = '';
+        let btnText = '';
+        let btnClass = '';
+        type = (type || '').toLowerCase();
+
+        if (currentStatus === 'Sedang Disiapkan') {
+            if (type === 'delivery') {
+                actionStatus = 'Sedang Diantar';
+                btnText = 'Kirim Pesanan';
+            } else {
+                actionStatus = 'Pesanan Siap';
+                btnText = 'Tandai Siap';
+            }
+            btnClass = 'bg-blue-600 hover:bg-blue-700';
+        } else if (currentStatus === 'Sedang Diantar' || currentStatus === 'Pesanan Siap') {
+            actionStatus = 'Selesai';
+            btnText = 'Selesai';
+            btnClass = 'bg-green-600 hover:bg-green-700';
+        } else if (currentStatus === 'Selesai') {
+            return `<span class="text-green-500 font-bold"><i class="fas fa-check-circle"></i> Selesai</span>`;
+        }
+
+        return `<button onclick="updateOrderStatus('${groupId}', '${actionStatus}')" class="px-3 py-1 rounded text-white text-xs font-bold transition-colors ${btnClass}">${btnText}</button>`;
+    }
+
+    // Expose updateOrderStatus to window
+    window.updateOrderStatus = async function(groupId, newStatus) {
+        try {
+            const result = await apiRequest('/admin/pesanan/status', 'PUT', {
+                group_id: groupId,
+                status: newStatus
+            });
+            if (result.success) {
+                renderOrdersTable(); // Refresh tabel
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    icon: 'success',
+                    title: 'Status berhasil diubah'
+                });
+            }
+        } catch (err) {
+            Swal.fire({icon: 'error', title: 'Gagal', text: 'Tidak dapat mengubah status.', confirmButtonColor: '#D20000'});
+        }
+    };
+
+    // ====================================================================
+    // NOTIFIKASI PESANAN BARU (Admin Only)
+    // ====================================================================
+
+    let lastOrderCount = 0;          // Jumlah pesanan terakhir yang diketahui
+    let orderPollingInterval = null;  // Interval polling
+    let isFirstCheck = true;          // Flag untuk cek pertama (jangan bunyi saat pertama load)
+
+    /**
+     * playNotificationSound() - Mainkan suara notifikasi menggunakan Web Audio API
+     * Menghasilkan suara "ding-dong" tanpa perlu file audio eksternal
+     */
+    function playNotificationSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Nada pertama (ding) - frekuensi tinggi
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(830, audioCtx.currentTime);      // Nada E5
+            gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.start(audioCtx.currentTime);
+            osc1.stop(audioCtx.currentTime + 0.4);
+
+            // Nada kedua (dong) - frekuensi lebih tinggi, delay sedikit
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(1046, audioCtx.currentTime + 0.15); // Nada C6
+            gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain2.gain.setValueAtTime(0.3, audioCtx.currentTime + 0.15);
+            gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.start(audioCtx.currentTime + 0.15);
+            osc2.stop(audioCtx.currentTime + 0.6);
+
+            // Nada ketiga (bonus sparkle)
+            const osc3 = audioCtx.createOscillator();
+            const gain3 = audioCtx.createGain();
+            osc3.type = 'sine';
+            osc3.frequency.setValueAtTime(1318, audioCtx.currentTime + 0.3); // Nada E6
+            gain3.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain3.gain.setValueAtTime(0.2, audioCtx.currentTime + 0.3);
+            gain3.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+            osc3.connect(gain3);
+            gain3.connect(audioCtx.destination);
+            osc3.start(audioCtx.currentTime + 0.3);
+            osc3.stop(audioCtx.currentTime + 0.8);
+        } catch (e) {
+            // Audio tidak didukung, abaikan
+        }
+    }
+
+    /**
+     * updateOrderBadge(count) - Tampilkan/sembunyikan badge notifikasi di icon pesanan
+     */
+    function updateOrderBadge(count) {
+        const badge = document.getElementById('cart-badge');
+        if (!badge) return;
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+            badge.classList.add('animate-bounce');
+        } else {
+            badge.classList.add('hidden');
+            badge.classList.remove('animate-bounce');
+        }
+    }
+
+    /**
+     * checkNewOrders() - Cek apakah ada pesanan baru
+     * Dijalankan secara berkala (polling) setiap 15 detik
+     */
+    async function checkNewOrders() {
+        if (!currentUser || currentUser.role !== 'admin') return;
+
+        try {
+            const result = await apiRequest('/admin/pesanan');
+            if (result.success) {
+                const currentCount = result.data.length;
+
+                if (isFirstCheck) {
+                    // Pertama kali: simpan jumlah tanpa bunyi notif
+                    lastOrderCount = currentCount;
+                    isFirstCheck = false;
+                    updateOrderBadge(currentCount);
+                    return;
+                }
+
+                if (currentCount > lastOrderCount) {
+                    // Ada pesanan baru!
+                    const newOrders = currentCount - lastOrderCount;
+
+                    // Mainkan suara notifikasi
+                    playNotificationSound();
+
+                    // Tampilkan toast notifikasi
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 5000,
+                        timerProgressBar: true,
+                        icon: 'info',
+                        title: `🔔 ${newOrders} Pesanan Baru!`,
+                        text: 'Klik icon pesanan untuk melihat detail.',
+                        background: '#FEF3C7',
+                        color: '#92400E',
+                        didOpen: (toast) => {
+                            toast.addEventListener('click', () => {
+                                adminModal.classList.remove('hidden');
+                                renderOrdersTable();
+                                Swal.close();
+                            });
+                        }
+                    });
+
+                    lastOrderCount = currentCount;
+                }
+
+                // Update badge
+                updateOrderBadge(currentCount);
+            }
+        } catch (e) {
+            // Gagal cek, abaikan (coba lagi di polling berikutnya)
+        }
+    }
+
+    /**
+     * startOrderPolling() - Mulai polling cek pesanan baru setiap 15 detik
+     */
+    function startOrderPolling() {
+        if (orderPollingInterval) clearInterval(orderPollingInterval);
+        isFirstCheck = true;
+        checkNewOrders(); // Cek langsung pertama kali
+        orderPollingInterval = setInterval(checkNewOrders, 15000); // Cek setiap 15 detik
+    }
+
+    /**
+     * stopOrderPolling() - Berhenti polling (saat logout atau bukan admin)
+     */
+    function stopOrderPolling() {
+        if (orderPollingInterval) {
+            clearInterval(orderPollingInterval);
+            orderPollingInterval = null;
+        }
+        lastOrderCount = 0;
+        isFirstCheck = true;
+        updateOrderBadge(0);
+    }
+
+    // ====================================================================
+    // PENGATURAN USER ORDERS MODAL (Pesanan Saya)
+    // ====================================================================
+    const userOrdersModal = document.getElementById('userOrdersModal');
+    const btnShowUserOrders = document.getElementById('btn-show-user-orders'); // Tombol di dalam Cart
+    const btnShowUserOrdersNav = document.getElementById('btn-show-user-orders-nav'); // Tombol di Header Navigasi
+    const closeUserOrdersModal = document.getElementById('closeUserOrdersModal');
+
+    // Event saat tombol "Pesanan Aktif" (dari dalam modal cart) diklik
+    if (btnShowUserOrders) {
+        btnShowUserOrders.addEventListener('click', () => {
+            cartModal.classList.add('hidden'); // Sembunyikan cart
+            userOrdersModal.classList.remove('hidden'); // Tampilkan pesanan
+            renderUserOrdersTable(); // Load data pesanan
+        });
+    }
+
+    // Event saat tombol "Pesanan Saya" di Header Navbar diklik
+    if (btnShowUserOrdersNav) {
+        btnShowUserOrdersNav.addEventListener('click', () => {
+            userOrdersModal.classList.remove('hidden'); // Tampilkan pesanan
+            renderUserOrdersTable(); // Load data pesanan
+        });
+    }
+
+    if (closeUserOrdersModal) {
+        closeUserOrdersModal.addEventListener('click', () => {
+            userOrdersModal.classList.add('hidden');
+        });
+    }
+
+    async function renderUserOrdersTable() {
+        const listContainer = document.getElementById('user-orders-list');
+        if (!listContainer) return;
+        listContainer.innerHTML = '<div class="p-6 text-center text-sm text-gray-500">Memuat pesanan...</div>';
+
+        try {
+            const result = await apiRequest('/pesanan/user');
+            if (result.success && result.data.length > 0) {
+                listContainer.innerHTML = '';
+                result.data.forEach(order => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white border rounded-xl p-4 shadow-sm relative overflow-hidden transition hover:shadow-md';
+
+                    // Beri warna status menarik
+                    let statusColor = 'bg-gray-100 text-gray-800 border-gray-200';
+                    let statusIcon = 'fa-clock';
+                    if (order.status === 'Sedang Disiapkan') {
+                        statusColor = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+                        statusIcon = 'fa-fire-burner';
+                    }
+                    if (order.status === 'Sedang Diantar') {
+                        statusColor = 'bg-blue-50 text-blue-700 border border-blue-200';
+                        statusIcon = 'fa-motorcycle';
+                    }
+                    if (order.status === 'Pesanan Siap') {
+                        statusColor = 'bg-blue-50 text-blue-700 border border-blue-200';
+                        statusIcon = 'fa-shopping-bag';
+                    }
+                    if (order.status === 'Selesai') {
+                        statusColor = 'bg-green-50 text-green-700 border border-green-200';
+                        statusIcon = 'fa-check-circle';
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3 border-b pb-3">
+                            <div>
+                                <p class="text-xs text-gray-500 font-medium mb-1"><i class="fas fa-calendar-alt opacity-70"></i> ${order.date}</p>
+                                <span class="px-2 py-1 inline-flex text-[10px] font-bold rounded-md ${order.jenis === 'delivery' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'} uppercase">
+                                    ${order.jenis || '-'}
+                                </span>
+                            </div>
+                            <span class="px-3 py-1.5 inline-flex items-center gap-1.5 text-xs font-bold rounded-full ${statusColor}">
+                                <i class="fas ${statusIcon}"></i> ${order.status}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-lg flex items-center justify-center shrink-0">
+                                <i class="fas fa-utensils text-xl"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">${order.items}</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg mt-2">
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Belanja</span>
+                            <span class="text-base font-black text-gray-900">${formatRupiah(order.total)}</span>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+            } else {
+                listContainer.innerHTML = '<div class="p-8 text-center text-sm text-gray-500 flex flex-col items-center justify-center"><i class="fas fa-receipt text-4xl text-gray-300 mb-3 block"></i>Belum ada riwayat pesanan aktif. Yuk pesan sekarang!</div>';
+            }
+        } catch (err) {
+            listContainer.innerHTML = '<div class="p-6 text-center text-sm text-red-500">Gagal memuat pesanan.</div>';
         }
     }
 
@@ -1162,21 +1556,85 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * Submit form Tambah Menu:
-     * 1. Ambil data dari form (nama, harga, deskripsi, gambar, kategori)
-     * 2. Kirim ke server via POST '/products'
+     * Preview gambar saat admin memilih file
+     */
+    const imgInput = document.getElementById('new_menu_img');
+    const imgPreview = document.getElementById('new_menu_img_preview');
+    if (imgInput && imgPreview) {
+        imgInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    imgPreview.innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imgPreview.innerHTML = '<i class="fas fa-image text-2xl text-gray-300"></i>';
+            }
+        });
+    }
+
+    /**
+     * Auto-format harga saat mengetik (25000 → 25,000)
+     * Hanya izinkan angka, otomatis tambahkan koma pemisah ribuan
+     */
+    const priceDisplay = document.getElementById('new_menu_price_display');
+    const priceHidden = document.getElementById('new_menu_price');
+    if (priceDisplay && priceHidden) {
+        priceDisplay.addEventListener('input', (e) => {
+            // Hapus semua karakter selain angka
+            let raw = e.target.value.replace(/[^0-9]/g, '');
+            // Simpan nilai angka murni ke hidden input
+            priceHidden.value = raw;
+            // Format dengan koma pemisah ribuan (25000 → 25,000)
+            if (raw) {
+                e.target.value = parseInt(raw).toLocaleString('en-US');
+            } else {
+                e.target.value = '';
+            }
+        });
+    }
+    /**
+     * Submit form Tambah Menu (dengan upload file gambar):
+     * 1. Buat FormData dari form (termasuk file gambar)
+     * 2. Kirim ke server via POST '/products' (multipart/form-data)
      * 3. Jika berhasil → tambahkan ke array products & render ulang
      */
     addMenuForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('new_menu_name').value;
-        const price = parseInt(document.getElementById('new_menu_price').value);
-        const description = document.getElementById('new_menu_desc').value;
-        const image = document.getElementById('new_menu_img').value || 'asset/logo merah.png'; // Default gambar
-        const category = document.getElementById('new_menu_category').value || 'makanan';
+
+        // Buat FormData untuk upload file
+        const formData = new FormData();
+        formData.append('name', document.getElementById('new_menu_name').value);
+        formData.append('price', document.getElementById('new_menu_price').value);
+        formData.append('description', document.getElementById('new_menu_desc').value);
+        formData.append('category', document.getElementById('new_menu_category').value || 'makanan');
+
+        // Tambahkan file gambar jika ada
+        const imageFile = document.getElementById('new_menu_img').files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
 
         try {
-            const result = await apiRequest('/products', 'POST', { name, price, description, image, category });
+            // Ambil CSRF token
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const token = csrfMeta ? csrfMeta.getAttribute('content') : CSRF_TOKEN;
+
+            // Kirim dengan fetch (FormData, tanpa Content-Type header agar browser set boundary)
+            const response = await fetch('/products', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: formData
+            });
+
+            const result = await response.json();
+
             if (result.success) {
                 // Tambahkan produk baru ke array lokal agar langsung terlihat
                 products.push({
@@ -1192,8 +1650,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 Swal.fire({icon: 'success', title: 'Menu Baru!', text: result.message || 'Wah, menu baru berhasil ditambahkan! Makin mantap nih.', confirmButtonColor: '#D20000'}).then(() => {
                     addMenuModal.classList.add('hidden'); // Tutup modal
                     addMenuForm.reset();                  // Reset form
+                    // Reset preview gambar
+                    if (imgPreview) imgPreview.innerHTML = '<i class="fas fa-image text-2xl text-gray-300"></i>';
                     renderProducts();                     // Render ulang
                 });
+            } else {
+                Swal.fire({icon: 'error', title: 'Gagal!', text: result.message || 'Menu gagal ditambahkan.', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
             Swal.fire({icon: 'error', title: 'Oops!', text: 'Sistem menolak menu barumu. Pastikan isi formnya bener ya bos.', confirmButtonColor: '#D20000'});

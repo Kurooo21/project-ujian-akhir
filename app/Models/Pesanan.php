@@ -18,6 +18,7 @@ class Pesanan extends Model
         'harga_satuan',
         'total_harga',
         'jenis_belanja',
+        'status',
     ];
 
     public function user()

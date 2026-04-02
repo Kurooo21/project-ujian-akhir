@@ -13,15 +13,25 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'description' => 'required|string',
-            'image' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'category' => 'nullable|string|in:makanan,minuman',
         ]);
+
+        // Handle upload gambar
+        $imagePath = 'asset/logo merah.png'; // Default jika tidak upload
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+            // Simpan ke public/asset/menu/
+            $file->move(public_path('asset/menu'), $filename);
+            $imagePath = 'asset/menu/' . $filename;
+        }
 
         $product = Product::create([
             'name' => $request->name,
             'price' => $request->price,
             'description' => $request->description,
-            'image' => $request->image ?: 'asset/logo merah.png',
+            'image' => $imagePath,
             'category' => $request->category ?: 'makanan',
         ]);
 

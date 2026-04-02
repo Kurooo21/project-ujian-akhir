@@ -21,7 +21,8 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
+        // remember = true agar session tetap aktif setelah browser refresh
+        if (Auth::attempt(['username' => $request->username, 'password' => $request->password], true)) {
             $request->session()->regenerate();
             return response()->json([
                 'success' => true,
