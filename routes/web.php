@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SettingController;
 
 // ========================================================================
 // HALAMAN UTAMA
@@ -48,4 +49,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/banners', [\App\Http\Controllers\BannerController::class, 'index']);
     Route::post('/admin/banners', [\App\Http\Controllers\BannerController::class, 'store']);
     Route::delete('/admin/banners/{id}', [\App\Http\Controllers\BannerController::class, 'destroy']);
+    Route::get('/admin/settings', [SettingController::class, 'getSettings']);
+    Route::post('/admin/settings', [SettingController::class, 'update']);
 });

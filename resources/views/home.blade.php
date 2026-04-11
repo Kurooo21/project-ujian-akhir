@@ -84,7 +84,6 @@
          .hamburger-*: Animasi tombol hamburger berubah jadi X
          .mobile-drawer: Panel navigasi geser dari kanan (mobile)
          .drawer-overlay: Overlay gelap di belakang drawer
-         header.scrolled: Logo mengecil saat scroll ke bawah
          ============================================================ -->
     <style>
         /* Animasi modal: masuk dari transparan + kecil ke terlihat + ukuran normal */
@@ -128,14 +127,6 @@
             opacity: 1; pointer-events: auto;  /* Saat terbuka: terlihat & bisa diklik */
         }
 
-        /* Logo mengecil saat user scroll ke bawah */
-        header.scrolled .header-logo {
-            height: 50px !important;  /* Ukuran logo di mobile saat scroll */
-        }
-        @media (min-width: 768px) {
-            header.scrolled .header-logo {
-                height: 60px !important;  /* Ukuran logo di desktop saat scroll */
-            }
         /* SweetAlert2: Pastikan popup selalu di atas semua modal */
         .swal2-container {
             z-index: 99999 !important;
@@ -160,14 +151,14 @@
          z-50 = di atas semua elemen lain (z-index tinggi)
          backdrop-blur-sm = efek blur transparan di belakang header
          ============================================================ -->
-    <header id="main-header" class="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-sm shadow-md transition-all duration-300">
-        <div class="container mx-auto px-3 sm:px-4 lg:px-6 py-2 md:py-3 flex justify-between items-center">
+    <header id="main-header" class="fixed top-0 left-0 w-full z-50 overflow-visible bg-white/95 backdrop-blur-sm shadow-md transition-all duration-300">
+        <div class="container mx-auto px-3 sm:px-4 lg:px-6 py-2 md:py-3 flex justify-between items-center overflow-visible">
 
-            <!-- Logo (Kiri) - Menggunakan helper asset() dari Laravel -->
-            <!-- asset() menghasilkan URL lengkap ke file di folder /public -->
-            <a href="#home" class="flex-shrink-0 flex items-center">
+            <!-- Logo: slot tinggi navbar tetap (h-12…h-16), gambar lebih besar di dalam → bar tidak memanjang -->
+            <a href="#home"
+                class="logo-slot flex-shrink-0 flex items-center justify-center overflow-visible h-12 sm:h-14 md:h-14 lg:h-16 pr-1 sm:pr-2 md:pr-4">
                 <img src="{{ asset('asset/logo merah.png') }}" alt="Chi-Pok Logo"
-                    class="header-logo h-[60px] sm:h-[70px] md:h-[80px] lg:h-[90px] max-w-none object-contain z-10 transition-all duration-300 drop-shadow-sm">
+                    class="header-logo w-auto max-h-none h-[72px] sm:h-[82px] md:h-[96px] lg:h-[112px] object-contain object-left z-10 transition-all duration-300 drop-shadow-sm">
             </a>
 
             <!-- Link Navigasi (Tengah) - Tersembunyi di mobile (hidden md:flex) -->
@@ -280,7 +271,7 @@
              prev/next dan dots. Dikelola oleh hero-slider.js.
              mt-[64px] dst = margin top sebesar tinggi header
              ======================================================== -->
-        <section id="home" class="hero relative w-full overflow-hidden mt-[64px] sm:mt-[74px] md:mt-[86px]">
+        <section id="home" class="hero relative w-full overflow-hidden mt-[64px] sm:mt-[72px] md:mt-[80px] lg:mt-[88px]">
 
             <!-- Container Slider -->
             <div id="hero-slider" class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px]">
@@ -427,12 +418,12 @@
 
                         <div class="contact-details space-y-6">
                             <div class="detail-item">
-                                <h4 class="font-heading text-xl tracking-wide mb-1">IKUTI KAMI</h4>
-                                <p class="text-gray-100">Jl. Merdeka No. 123, Jakarta</p>
+                                <h4 class="font-heading text-xl tracking-wide mb-1">ALAMAT OUTLET</h4>
+                                <p class="text-gray-100" id="display-outlet-address"><i class="fas fa-map-marker-alt mr-2"></i> {{ $settings['outlet_address'] ?? 'Jl. Merdeka No. 123, Jakarta' }}</p>
                             </div>
                             <div class="detail-item">
-                                <h4 class="font-heading text-xl tracking-wide mb-1">ALAMAT OUTLET</h4>
-                                <p class="text-gray-100"><i class="fas fa-map-marker-alt mr-2"></i> Setiap Hari, 10.00 -
+                                <h4 class="font-heading text-xl tracking-wide mb-1">JAM BUKA</h4>
+                                <p class="text-gray-100"><i class="fas fa-clock mr-2"></i> Setiap Hari, 10.00 -
                                     22.00</p>
                             </div>
                         </div>
@@ -979,7 +970,7 @@
                                             class="block text-sm font-medium text-gray-700">Komentar</label>
                                         <textarea id="review_comment" rows="3"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"
-                                            placeholder="Ceritakan pengalamanmu..."></textarea>
+                                            placeholder="Ceritakan pengalamanmu..."></textarea>P
                                     </div>
                                     <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                                         <button type="submit"
@@ -1120,6 +1111,7 @@
                     <div id="settings-tab-slider" class="flex p-1 bg-gray-100 rounded-xl mb-6 hidden border border-gray-200">
                         <button id="btn-tab-profile" type="button" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all">Profil Saya</button>
                         <button id="btn-tab-banner" type="button" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Edit Banner</button>
+                        <button id="btn-tab-outlet" type="button" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Alamat Outlet</button>
                     </div>
 
                     <!-- Container Profil -->
@@ -1244,6 +1236,32 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
+                    </div>
+
+                    <!-- Container Outlet -->
+                    <div id="container-outlet" class="hidden">
+                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">ALAMAT OUTLET</h3>
+                        <p class="text-gray-400 text-sm mb-6">Ubah alamat outlet yang ditampilkan di website</p>
+
+                        <form id="form-edit-outlet" class="space-y-4">
+                            <div>
+                                <label for="input_outlet_address" class="block text-sm font-semibold text-gray-600 mb-1">Alamat Outlet</label>
+                                <div class="relative group">
+                                    <span class="absolute left-4 top-3 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                        <i class="fas fa-map-marker-alt text-sm"></i>
+                                    </span>
+                                    <textarea id="input_outlet_address" name="outlet_address" rows="3" placeholder="Masukkan alamat outlet..."
+                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none">{{ $settings['outlet_address'] ?? '' }}</textarea>
+                                </div>
+                            </div>
+
+                            <!-- Tombol Simpan -->
+                            <button type="submit"
+                                class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide mt-4">
+                                <i class="fas fa-save"></i> SIMPAN ALAMAT
+                            </button>
+                        </form>
                     </div>
 
                 </div>

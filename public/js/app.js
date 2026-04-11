@@ -2114,27 +2114,34 @@ document.addEventListener("DOMContentLoaded", () => {
     // ====================================================================
     const btnTabProfile = document.getElementById('btn-tab-profile');
     const btnTabBanner = document.getElementById('btn-tab-banner');
+    const btnTabOutlet = document.getElementById('btn-tab-outlet');
     const containerProfile = document.getElementById('container-profile');
     const containerBanner = document.getElementById('container-banner');
+    const containerOutlet = document.getElementById('container-outlet');
 
-    if (btnTabProfile && btnTabBanner) {
+    if (btnTabProfile && btnTabBanner && btnTabOutlet) {
+        const resetTabs = () => {
+            [btnTabProfile, btnTabBanner, btnTabOutlet].forEach(btn => btn.className = 'flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all');
+            [containerProfile, containerBanner, containerOutlet].forEach(c => c.classList.add('hidden'));
+        };
+
         btnTabProfile.addEventListener('click', () => {
+            resetTabs();
             btnTabProfile.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all';
-            btnTabBanner.className = 'flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all';
             containerProfile.classList.remove('hidden');
-            containerBanner.classList.add('hidden');
         });
 
         btnTabBanner.addEventListener('click', () => {
+            resetTabs();
             btnTabBanner.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all';
-            btnTabProfile.className = 'flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all';
-            containerProfile.classList.add('hidden');
             containerBanner.classList.remove('hidden');
-            
-            // Render banners if they click the banner tab
-            if (typeof renderAdminBanners === 'function') {
-                renderAdminBanners();
-            }
+            if (typeof renderAdminBanners === 'function') renderAdminBanners();
+        });
+
+        btnTabOutlet.addEventListener('click', () => {
+            resetTabs();
+            btnTabOutlet.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all';
+            containerOutlet.classList.remove('hidden');
         });
     }
 
@@ -2174,6 +2181,27 @@ document.addEventListener("DOMContentLoaded", () => {
             Swal.fire({icon: 'error', title: 'Oops!', text: 'Terjadi kesalahan sistem saat ngerombak profilmu!', confirmButtonColor: '#D20000'});
         }
     });
+
+    const formEditOutlet = document.getElementById('form-edit-outlet');
+    if (formEditOutlet) {
+        formEditOutlet.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const outlet_address = document.getElementById('input_outlet_address').value;
+
+            try {
+                const result = await apiRequest('/admin/settings', 'POST', { outlet_address });
+                if (result.success) {
+                    Swal.fire({icon: 'success', title: 'Berhasil!', text: result.message, confirmButtonColor: '#D20000'});
+                    // Update tampilan di kontak
+                    document.getElementById('display-outlet-address').innerHTML = `<i class="fas fa-map-marker-alt mr-2"></i> ${outlet_address}`;
+                } else {
+                    Swal.fire({icon: 'error', title: 'Gagal', text: result.message || 'Gagal mengubah alamat outlet.', confirmButtonColor: '#D20000'});
+                }
+            } catch (err) {
+                Swal.fire({icon: 'error', title: 'Error', text: 'Terjadi kesalahan jaringan.', confirmButtonColor: '#D20000'});
+            }
+        });
+    }
 
     // Offset header untuk smooth scroll (tinggi header fixed dalam px)
     const HEADER_OFFSET = 100;
@@ -2298,23 +2326,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.scrollTo({ top: targetPosition, behavior: 'smooth' });
             }
         });
-    });
-
-    // ====================================================================
-    // HEADER MENGECIL SAAT SCROLL
-    // ====================================================================
-    // Saat user scroll ke bawah > 50px, header mendapat class 'scrolled'
-    // yang membuat logo lebih kecil (didefinisikan di CSS)
-
-    const mainHeader = document.getElementById('main-header');
-    window.addEventListener('scroll', () => {
-        if (mainHeader) {
-            if (window.scrollY > 50) {
-                mainHeader.classList.add('scrolled');    // Header mengecil
-            } else {
-                mainHeader.classList.remove('scrolled'); // Header ukuran normal
-            }
-        }
     });
 
     // ====================================================================

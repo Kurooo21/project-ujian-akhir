@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Banner;
+use App\Models\Setting;
 
 class HomeController extends Controller
 {
@@ -11,6 +12,7 @@ class HomeController extends Controller
     {
         $products = Product::with('reviews.user')->get();
         $banners = Banner::all();
+        $settings = Setting::pluck('value', 'key');
 
         // Transform for JS consumption
         $productsData = $products->map(function ($product) {
@@ -33,7 +35,7 @@ class HomeController extends Controller
             ];
         })->values()->toArray();
 
-        return view('home', compact('products', 'productsData', 'banners'));
+        return view('home', compact('products', 'productsData', 'banners', 'settings'));
     }
 
     public function menu()
