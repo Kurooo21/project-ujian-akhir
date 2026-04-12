@@ -36,6 +36,31 @@ function formatRupiah(number) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
 }
 
+/**
+ * resolveAppUrl(path) - Normalisasi URL agar tetap benar meski aplikasi dijalankan di subfolder.
+ * (APP_BASE_URL diinjek oleh Blade di `resources/views/menu.blade.php`)
+ */
+function resolveAppUrl(path) {
+    if (!path) return path;
+    if (/^https?:\/\//i.test(path)) return path;
+
+    const base = (typeof APP_BASE_URL !== 'undefined' && APP_BASE_URL)
+        ? String(APP_BASE_URL).replace(/\/+$/, '')
+        : '';
+
+    if (!base) return path;
+
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return base + normalizedPath;
+}
+
+function resolveAssetUrl(path) {
+    if (!path) return path;
+    if (/^https?:\/\//i.test(path)) return path;
+    const normalized = String(path).startsWith('/') ? String(path) : `/${path}`;
+    return resolveAppUrl(normalized);
+}
+
 // ========================================================================
 // MULAI SAAT HALAMAN SIAP (DOM Content Loaded)
 // ========================================================================
@@ -159,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // ============================================================
             // Jika gambar mulai dengan 'http' = URL eksternal (langsung pakai)
             // Jika tidak = path lokal (tambahkan '/' di depan)
-            const imgSrc = product.image.startsWith('http') ? product.image : '/' + product.image;
+            const imgSrc = resolveAssetUrl(product.image);
 
             // ============================================================
             // ISI HTML CARD PRODUK

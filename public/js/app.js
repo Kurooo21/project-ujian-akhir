@@ -201,6 +201,45 @@ function formatRupiah(number) {
 }
 
 /**
+ * resolveAppUrl(path) - Normalisasi URL agar tetap benar meski aplikasi dijalankan di subfolder.
+ *
+ * Contoh kasus error yang sering terjadi:
+ * - Aplikasi dibuka lewat: http://localhost/nama-folder/public
+ * - Tetapi JavaScript memanggil endpoint absolut: /login
+ *   -> jadi menuju http://localhost/login (SALAH) dan akhirnya error.
+ *
+ * Solusi: prefix semua request/asset dengan APP_BASE_URL yang di-inject dari Blade.
+ */
+function resolveAppUrl(path) {
+    if (!path) return path;
+
+    // Absolute URL (http/https) -> langsung pakai
+    if (/^https?:\/\//i.test(path)) return path;
+
+    const base = (typeof APP_BASE_URL !== 'undefined' && APP_BASE_URL)
+        ? String(APP_BASE_URL).replace(/\/+$/, '')
+        : '';
+
+    // Jika tidak ada base URL (fallback), gunakan path apa adanya
+    if (!base) return path;
+
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return base + normalizedPath;
+}
+
+/**
+ * resolveAssetUrl(path) - Khusus untuk path asset (gambar, dll).
+ * Memastikan path relatif selalu berubah jadi path absolut (diawali '/')
+ * sebelum diprefix APP_BASE_URL.
+ */
+function resolveAssetUrl(path) {
+    if (!path) return path;
+    if (/^https?:\/\//i.test(path)) return path;
+    const normalized = String(path).startsWith('/') ? String(path) : `/${path}`;
+    return resolveAppUrl(normalized);
+}
+
+/**
  * apiRequest(url, method, data) - Fungsi untuk mengirim AJAX request ke server
  * @param {string} url - URL endpoint API (contoh: '/login', '/products')
  * @param {string} method - HTTP method ('GET', 'POST', 'PUT', 'DELETE')
@@ -212,12 +251,12 @@ function formatRupiah(number) {
  * - 'credentials: same-origin' agar cookie session ikut dikirim
  * - async/await digunakan agar kode lebih mudah dibaca (tidak callback hell)
  */
-async function apiRequest(url, method = 'GET', data = null) {
+async function apiRequest(url, method = 'GET', data = null, reqOptions = {}) {
     // Ambil CSRF token terbaru dari meta tag (untuk menghindari token expired)
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
     const token = csrfMeta ? csrfMeta.getAttribute('content') : CSRF_TOKEN;
 
-    const options = {
+    const fetchOpts = {
         method,
         headers: {
             'Content-Type': 'application/json',    // Beritahu server bahwa data berformat JSON
@@ -228,19 +267,25 @@ async function apiRequest(url, method = 'GET', data = null) {
     };
 
     // Jika ada data, ubah menjadi string JSON dan masukkan ke body request
-    if (data) options.body = JSON.stringify(data);
+    if (data) fetchOpts.body = JSON.stringify(data);
 
     // Kirim request dan tunggu response
-    const response = await fetch(url, options);
+    const response = await fetch(resolveAppUrl(url), fetchOpts);
 
-    // Jika CSRF token expired (419), reload halaman untuk mendapatkan token baru
+    // Jika CSRF token expired (419), tangani berdasarkan mode silent/tidak
     if (response.status === 419) {
+        // Mode SILENT: untuk request background (polling, dll)
+        // Tidak perlu tampilkan pop-up, cukup throw error agar catch block menangani
+        if (reqOptions.silent) {
+            throw new Error('CSRF token expired');
+        }
+        // Mode NORMAL: tampilkan pop-up dan reload halaman
         Swal.fire({
             icon: 'warning',
-            title: 'Sesi Kedaluwarsa',
-            text: 'Halaman akan dimuat ulang untuk memperbarui sesi.',
+            title: 'Sesi Habis',
+            text: 'Kamu terlalu lama di halaman ini tanpa aktivitas. Halaman akan dimuat ulang, silakan coba lagi.',
             confirmButtonColor: '#D20000',
-            confirmButtonText: 'Oke'
+            confirmButtonText: 'Muat Ulang'
         }).then(() => {
             window.location.reload();
         });
@@ -253,7 +298,10 @@ async function apiRequest(url, method = 'GET', data = null) {
         result = await response.json();
     } catch (e) {
         // Jika response bukan JSON (misalnya HTML error page)
-        throw new Error('Server mengembalikan response yang tidak valid.');
+        return {
+            success: false,
+            message: 'Server mengembalikan response yang tidak valid. Pastikan URL aplikasi benar dan server Laravel berjalan.'
+        };
     }
 
     // Jika response status bukan OK (bukan 2xx), format ulang sebagai error
@@ -378,7 +426,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Loop setiap item di cart dan buat HTML-nya
         cart.forEach(item => {
             // Tentukan path gambar
-            const imgSrc = item.image.startsWith('http') ? item.image : '/' + item.image;
+            const imgSrc = resolveAssetUrl(item.image);
             // Hitung subtotal per item (harga x jumlah)
             const subtotal = item.price * item.qty;
 
@@ -880,7 +928,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const categoryLabel = (product.category || 'makanan') === 'minuman' ? 'Minuman' : 'Makanan';
 
             // Path gambar: URL eksternal (http) atau path lokal
-            const imgSrc = product.image.startsWith('http') ? product.image : '/' + product.image;
+            const imgSrc = resolveAssetUrl(product.image);
 
             // ============================================================
             // TAMPILAN CARD: MODE GRID (Kotak/Card)
@@ -1005,6 +1053,9 @@ document.addEventListener("DOMContentLoaded", () => {
         // RESET: Hapus semua class icon terlebih dahulu
         const isAdmin = currentUser && currentUser.role === 'admin';
 
+        // Ambil referensi tab slider sekali di luar blok if/else
+        const tabSlider = document.getElementById('settings-tab-slider');
+
         if (currentUser) {
             // USER SUDAH LOGIN
             loginIcon.className = 'fas fa-user';
@@ -1019,10 +1070,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnCartHeader.title = 'Lihat Pesanan Masuk';
                 
                 // Tampilkan tab switcher di settings
-                const tabSlider = document.getElementById('settings-tab-slider');
                 if(tabSlider) tabSlider.classList.remove('hidden');
-
-                startOrderPolling(); // Mulai polling pesanan
             } else {
                 // === USER BIASA (PELANGGAN) ===
                 navAdmin.classList.add('hidden');
@@ -1052,14 +1100,21 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Sembunyikan tab switcher di settings
             if(tabSlider) tabSlider.classList.add('hidden');
-            
+
+            // PENTING: Hentikan polling & sembunyikan badge saat belum login
             stopOrderPolling();
+            // Pastikan badge benar-benar tersembunyi
+            if (cartBadgeEl) {
+                cartBadgeEl.classList.add('hidden');
+                cartBadgeEl.classList.remove('animate-bounce');
+                cartBadgeEl.textContent = '0';
+            }
         }
 
         updateMobileDrawerUI();
         renderProducts();
 
-        // Mulai/hentikan polling notifikasi pesanan
+        // Mulai/hentikan polling notifikasi pesanan (SATU TEMPAT SAJA)
         if (isAdmin) {
             startOrderPolling();
         } else {
@@ -1084,7 +1139,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const password = document.getElementById('password').value;
 
         try {
-            const result = await apiRequest('/login', 'POST', { username, password });
+            // Gunakan silent: true agar jika CSRF expired, tidak tampil pop-up menakutkan
+            // Kita akan handle sendiri dengan pesan yang lebih ramah
+            const result = await apiRequest('/login', 'POST', { username, password }, { silent: true });
             if (result.success) {
                 // Update CSRF Token dari response (karena session diregenerate)
                 if (result.csrf_token) {
@@ -1102,9 +1159,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 Swal.fire({icon: 'error', title: 'Oops!', text: result.message || 'Username atau password salah!', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
-            // Jangan tampilkan error jika CSRF expired (sudah di-handle di apiRequest)
-            if (err.message === 'CSRF token expired') return;
-            Swal.fire({icon: 'error', title: 'Koneksi Bermasalah!', text: 'Gagal terhubung ke server. Periksa koneksi internetmu ya!', confirmButtonColor: '#D20000'});
+            if (err.message === 'CSRF token expired') {
+                // CSRF token basi (biasanya karena halaman dibuka lama atau server restart)
+                // Reload halaman otomatis untuk mendapatkan token baru
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Memperbarui Halaman...',
+                    text: 'Halaman perlu dimuat ulang sebentar. Silakan login kembali ya!',
+                    confirmButtonColor: '#D20000',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.reload();
+                });
+                return;
+            }
+
+            const message = (err && err.message) ? String(err.message) : '';
+            const isNetworkError =
+                err instanceof TypeError ||
+                /failed to fetch|networkerror|network error|fetch/i.test(message);
+
+            Swal.fire({
+                icon: 'error',
+                title: isNetworkError ? 'Koneksi Bermasalah!' : 'Terjadi Kesalahan!',
+                text: isNetworkError
+                    ? 'Gagal terhubung ke server. Pastikan server Laravel berjalan dan kamu membuka website dari server tersebut.'
+                    : (message || 'Terjadi kesalahan saat login. Silakan coba lagi.'),
+                confirmButtonColor: '#D20000'
+            });
         }
     });
 
@@ -1127,7 +1209,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const no_hp = document.getElementById('signup_no_hp').value;
 
         try {
-            const result = await apiRequest('/register', 'POST', { name, username, password, alamat, no_hp });
+            const result = await apiRequest('/register', 'POST', { name, username, password, alamat, no_hp }, { silent: true });
             if (result.success) {
                 Swal.fire({icon: 'success', title: 'Pendaftaran Sukses!', text: result.message || 'Yeay! Akun barumu sudah siap. Yuk, langsung login!', confirmButtonColor: '#D20000'}).then(() => {
                     signupModal.classList.add('hidden');   // Tutup modal signup
@@ -1138,7 +1220,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 Swal.fire({icon: 'error', title: 'Yah Gagal!', text: result.message || 'Aduh, pendaftaran gagal. Pastikan semua datamu unik ya.', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
-            if (err.message === 'CSRF token expired') return;
+            if (err.message === 'CSRF token expired') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Memperbarui Halaman...',
+                    text: 'Halaman perlu dimuat ulang sebentar. Silakan coba daftar lagi ya!',
+                    confirmButtonColor: '#D20000',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.reload();
+                });
+                return;
+            }
             Swal.fire({icon: 'error', title: 'Aduh..', text: 'Terjadi kesalahan sistem saat mendaftar. Sabar ya, coba lagi nanti.', confirmButtonColor: '#D20000'});
         }
     });
@@ -1165,15 +1258,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 cancelButtonText: 'Batal'
             }).then(async (result) => {
                 if (result.isConfirmed) {
+                    // PENTING: Hentikan polling DAN null-kan user SEBELUM kirim logout
+                    // Ini mencegah race condition: polling kirim request → server sudah
+                    // invalidasi session → polling dapat 419 → muncul pop-up error
+                    stopOrderPolling();
+                    currentUser = null;
+
                     try {
-                        const res = await apiRequest('/logout', 'POST');
+                        // Gunakan silent: true karena kita intentional logout
+                        // Jika session sudah expired (419), tidak perlu pop-up error
+                        const res = await apiRequest('/logout', 'POST', null, { silent: true });
                         if (res.csrf_token) {
                             const m = document.querySelector('meta[name="csrf-token"]');
                             if(m) m.setAttribute('content', res.csrf_token);
                             if(typeof CSRF_TOKEN !== 'undefined') CSRF_TOKEN = res.csrf_token;
                         }
-                    } catch(e) {}
-                    currentUser = null;
+                    } catch(e) {
+                        // Jika logout gagal (misal session sudah expired), tidak masalah
+                        // User tetap di-logout di sisi client
+                    }
                     Swal.fire({icon: 'success', title: 'Sampai Jumpa!', text: 'Kamu berhasil logout. Ditunggu kedatangannya lagi ya!', confirmButtonColor: '#D20000'});
                     updateLoginUI();
                 }
@@ -1212,7 +1315,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const card = document.createElement('div');
                     card.className = 'relative bg-white border rounded shadow-sm overflow-hidden group';
                     card.innerHTML = `
-                        <img src="/${banner.image_path}" class="w-full h-24 object-cover" alt="Banner">
+                        <img src="${resolveAssetUrl(banner.image_path)}" class="w-full h-24 object-cover" alt="Banner">
                         <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center text-white p-2 text-center">
                             <span class="text-xs mb-2 font-medium truncate w-full">${banner.description || 'Tidak ada deskripsi'}</span>
                             <button onclick="window.deleteBanner(${banner.id})" class="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 text-xs transition">
@@ -1246,12 +1349,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 const csrfMeta = document.querySelector('meta[name="csrf-token"]');
                 const token = csrfMeta ? csrfMeta.getAttribute('content') : CSRF_TOKEN;
 
-                const response = await fetch('/admin/banners', {
+                const response = await fetch(resolveAppUrl('/admin/banners'), {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                     credentials: 'same-origin',
                     body: formData
                 });
+
+                // Handle sesi kedaluwarsa (419) - sama seperti apiRequest
+                if (response.status === 419) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Sesi Habis',
+                        text: 'Kamu terlalu lama di halaman ini tanpa aktivitas. Halaman akan dimuat ulang, silakan coba lagi.',
+                        confirmButtonColor: '#D20000',
+                        confirmButtonText: 'Muat Ulang'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                    throw new Error('CSRF token expired');
+                }
 
                 const result = await response.json();
                 if (result.success) {
@@ -1262,11 +1379,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     formAddBanner.reset();
                     renderAdminBanners(); // refresh list
                 } else {
-                    Swal.fire({icon: 'error', title: 'Gagal!', text: result.message || 'Mungkin ukuran file > 5MB.'});
+                    Swal.fire({icon: 'error', title: 'Upload Gagal!', text: result.message || 'Pastikan file gambar tidak lebih dari 5MB dan formatnya JPG/PNG.', confirmButtonColor: '#D20000'});
                 }
             } catch (err) {
                 if (err.message === 'CSRF token expired') return;
-                Swal.fire({icon: 'error', title: 'Aduh..', text: 'Koneksi gagal saat unggah banner.'});
+                Swal.fire({icon: 'error', title: 'Koneksi Terputus', text: 'Tidak bisa mengunggah banner. Periksa koneksi internet kamu, lalu coba lagi.', confirmButtonColor: '#D20000'});
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -1500,7 +1617,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!currentUser || currentUser.role !== 'admin') return;
 
         try {
-            const result = await apiRequest('/admin/pesanan');
+            // SILENT MODE: polling di background tidak boleh tampilkan pop-up error
+            // Jika session expired/server restart, polling cukup diam saja
+            const result = await apiRequest('/admin/pesanan', 'GET', null, { silent: true });
+
+            // CEK ULANG setelah await — user mungkin sudah logout saat request berlangsung
+            if (!currentUser || currentUser.role !== 'admin') return;
+
             if (result.success) {
                 const currentCount = result.data.length;
 
@@ -1769,7 +1892,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const token = csrfMeta ? csrfMeta.getAttribute('content') : CSRF_TOKEN;
 
             // Kirim dengan fetch (FormData, tanpa Content-Type header agar browser set boundary)
-            const response = await fetch('/products', {
+            const response = await fetch(resolveAppUrl('/products'), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': token,

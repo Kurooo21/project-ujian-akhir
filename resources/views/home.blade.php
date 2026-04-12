@@ -63,7 +63,7 @@
                     },
                     backgroundImage: {
                         // Gambar background kustom untuk section menu
-                        'menu-pattern': "url('/asset/bg menu.png')",
+                        'menu-pattern': "url('{{ asset('asset/bg menu.png') }}')",
                     }
                 }
             }
@@ -377,7 +377,7 @@
 
                 <!-- Tombol "Lihat Semua Menu" - mengarah ke halaman /menu -->
                 <div class="text-center mt-10">
-                    <a href="/menu"
+                    <a href="{{ route('menu') }}"
                         class="inline-flex items-center gap-2 px-8 py-3 rounded-full font-bold text-primary-red border-2 border-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm uppercase tracking-wide group">
                         Lihat Semua Menu
                         <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
@@ -1278,8 +1278,9 @@
     {{-- @json() = helper Blade yang mengkonversi array PHP menjadi JSON --}}
     {{-- Sehingga variabel PRODUCTS_DATA bisa diakses di app.js --}}
     <script>
-        const PRODUCTS_DATA = @json($productsData);   // Data produk dari database
-        const CSRF_TOKEN = '{{ csrf_token() }}';       // Token CSRF untuk keamanan
+        const PRODUCTS_DATA = @json($productsData);                 // Data produk dari database
+        const APP_BASE_URL = @json(rtrim(url('/'), '/'));           // Base URL aplikasi (support subfolder)
+        let CSRF_TOKEN = @json(csrf_token());                       // Token CSRF untuk keamanan (mutable)
     </script>
 
     <!-- JavaScript Files -->

@@ -7,6 +7,19 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Menjalankan Project (Local)
+
+1. Pastikan PHP 8.2+, Composer, dan Node.js terpasang.
+2. Atur `.env` (DB, dll), lalu jalankan migrasi.
+3. Jalankan server Laravel (pilih salah satu):
+   - `php artisan serve`
+   - `composer run dev`
+4. Buka website dari URL server Laravel (contoh: `http://localhost:8000`).
+
+### Troubleshooting: Modal “Koneksi Bermasalah!” saat Login
+
+Modal itu muncul ketika JavaScript gagal memanggil endpoint login (misalnya server Laravel belum jalan, atau aplikasi dibuka dari URL yang berbeda/subfolder sehingga request seperti `/login` mengarah ke alamat yang salah). Pastikan akses website dari server Laravel, bukan dari Live Server / membuka file langsung.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

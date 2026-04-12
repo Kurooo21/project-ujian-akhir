@@ -75,13 +75,13 @@
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-md">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <!-- Logo + Nama Brand (klik untuk kembali ke home) -->
-            <a href="/" class="flex items-center gap-3 group">
+            <a href="{{ route('home') }}" class="flex items-center gap-3 group">
                 <img src="{{ asset('asset/logo merah.png') }}" alt="Chi-Pok Logo"
                     class="h-14 object-contain transition-transform group-hover:scale-105">
                 <span class="font-heading text-2xl text-primary-red uppercase tracking-wide">Chi-Pok</span>
             </a>
             <!-- Tombol "Kembali ke Home" -->
-            <a href="/"
+            <a href="{{ route('home') }}"
                 class="inline-flex items-center gap-2 px-6 py-2 rounded-full font-bold text-sm text-primary-red border-2 border-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-105">
                 <i class="fas fa-arrow-left"></i> Kembali ke Home
             </a>
@@ -137,7 +137,8 @@
     {{-- Meneruskan data produk dari Laravel (PHP) ke JavaScript --}}
     {{-- @json() mengkonversi array PHP menjadi JSON untuk diakses oleh JS --}}
     <script>
-        const PRODUCTS_DATA = @json($productsData);   // Data produk dari database
+        const PRODUCTS_DATA = @json($productsData);                 // Data produk dari database
+        const APP_BASE_URL = @json(rtrim(url('/'), '/'));           // Base URL aplikasi (support subfolder)
     </script>
     <!-- File JavaScript untuk halaman menu (rendering produk, filter, animasi) -->
     <script src="{{ asset('js/menu-page.js') }}"></script>
