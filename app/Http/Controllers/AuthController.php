@@ -30,6 +30,7 @@ class AuthController extends Controller
                 'csrf_token' => csrf_token(),
                 'user' => [
                     'name' => Auth::user()->name,
+                    'email' => Auth::user()->email,
                     'username' => Auth::user()->username,
                     'role' => Auth::user()->role,
                     'alamat' => Auth::user()->alamat,
@@ -52,15 +53,16 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:50|unique:users',
+            'email' => 'required|email|max:255|unique:users,email',
+            'username' => 'required|string|max:50|unique:users,username',
+            'no_hp' => 'required|string|max:20',
             'password' => 'required|string|min:4',
             'alamat' => 'nullable|string',
-            'no_hp' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'name' => $request->username,
+            'email' => $request->email,
             'username' => $request->username,
             'password' => Hash::make($request->password),
             'role' => 'pelanggan',
@@ -94,6 +96,7 @@ class AuthController extends Controller
                 'logged_in' => true,
                 'user' => [
                     'name' => Auth::user()->name,
+                    'email' => Auth::user()->email,
                     'username' => Auth::user()->username,
                     'role' => Auth::user()->role,
                     'alamat' => Auth::user()->alamat,
@@ -135,6 +138,7 @@ class AuthController extends Controller
             'message' => 'Profil berhasil diperbarui!',
             'user' => [
                 'name' => $user->name,
+                'email' => $user->email,
                 'username' => $user->username,
                 'role' => $user->role,
                 'alamat' => $user->alamat,

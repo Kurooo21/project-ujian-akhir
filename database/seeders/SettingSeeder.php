@@ -17,5 +17,10 @@ class SettingSeeder extends Seeder
             ['key' => 'outlet_address'],
             ['value' => 'Jl. Merdeka No. 123, Jakarta']
         );
+
+        Setting::updateOrCreate(
+            ['key' => 'admin_whatsapp_number'],
+            ['value' => '6281336441994']
+        );
     }
 }

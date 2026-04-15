@@ -608,6 +608,23 @@ document.addEventListener("DOMContentLoaded", () => {
     checkoutForm.addEventListener('submit', async (e) => {
         e.preventDefault(); // Cegah form submit biasa (reload halaman)
 
+        // Buka tab baru sejak awal agar browser tidak memblokir auto-redirect ke WhatsApp.
+        const pendingWaTab = window.open('', '_blank');
+        if (pendingWaTab) {
+            pendingWaTab.document.write(`
+                <html>
+                    <head><title>Membuka WhatsApp...</title></head>
+                    <body style="font-family: Arial, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; color:#444;">
+                        <div style="text-align:center;">
+                            <h2 style="margin-bottom:12px;">Menyiapkan WhatsApp...</h2>
+                            <p>Tab ini akan diarahkan otomatis setelah pesanan berhasil dibuat.</p>
+                        </div>
+                    </body>
+                </html>
+            `);
+            pendingWaTab.document.close();
+        }
+
         // Kumpulkan data dari form checkout
         const data = {
             nama: document.getElementById('checkout_nama').value,
@@ -626,18 +643,53 @@ document.addEventListener("DOMContentLoaded", () => {
             // Kirim data pesanan ke server via POST
             const result = await apiRequest('/pesanan', 'POST', data);
             if (result.success) {
-                Swal.fire({icon: 'success', title: 'Pesanan Berhasil!', text: result.message || 'Hore! Makanan enakmu segera disiapkan!', confirmButtonColor: '#D20000'}).then(() => {
+                const adminWhatsapp = result.admin_whatsapp || '-';
+                const waUrl = result.whatsapp_url || '';
+
+                if (pendingWaTab && waUrl) {
+                    pendingWaTab.location.href = waUrl;
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Pesanan Tersimpan!',
+                    html: `
+                        <div class="text-sm text-gray-600 leading-6 text-left">
+                            <p class="mb-3">Pesanan kamu sudah masuk ke sistem. Halaman ini tetap terbuka, dan WhatsApp dibuka di tab baru untuk lanjut pembayaran/chat admin.</p>
+                            <p><b>Kode Order:</b> ${result.order_code || '-'}</p>
+                            <p><b>WA Admin:</b> ${adminWhatsapp}</p>
+                            <p class="mt-3">Silakan transfer lalu kirim bukti pembayaran ke WhatsApp admin dengan menyebut kode order di atas.</p>
+                            ${(!pendingWaTab && waUrl) ? '<p class="mt-3 text-red-600">Browser memblokir tab otomatis. Klik tombol buka WhatsApp di bawah.</p>' : ''}
+                        </div>
+                    `,
+                    confirmButtonColor: '#D20000',
+                    confirmButtonText: 'Saya Mengerti',
+                    showDenyButton: !pendingWaTab && !!waUrl,
+                    denyButtonText: 'Buka WhatsApp',
+                    denyButtonColor: '#16a34a'
+                }).then((swalResult) => {
                     clearCart();                                      // Kosongkan keranjang
                     cartModal.classList.add('hidden');               // Tutup modal cart
                     checkoutForm.reset();                            // Reset form
                     cartCheckoutSection.classList.add('hidden');     // Sembunyikan form checkout
                     cartActionButtons.classList.remove('hidden');    // Tampilkan tombol cart
+
+                    if (swalResult.isDenied && waUrl) {
+                        window.open(waUrl, '_blank');
+                    }
                 });
             } else {
+                if (pendingWaTab) pendingWaTab.close();
                 Swal.fire({icon: 'error', title: 'Gagal Pesan', text: result.message || 'Waduh, pesananmu gagal gaes. Coba lagi yuk!', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
-            Swal.fire({icon: 'error', title: 'Periksa Datanya!', text: 'Wah, sepertinya ada data yang belum lengkap nih. Yuk cek lagi!', confirmButtonColor: '#D20000'});
+            if (pendingWaTab) pendingWaTab.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Periksa Datanya!',
+                text: (err && err.message) ? err.message : 'Wah, sepertinya ada data yang belum lengkap nih. Yuk cek lagi!',
+                confirmButtonColor: '#D20000'
+            });
         }
     });
 
@@ -1201,20 +1253,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /**
      * Saat form signup di-submit:
-     * 1. Ambil semua data dari input (nama, username, password, alamat, no HP)
+     * 1. Ambil semua data dari input (email, username, no WA, password)
      * 2. Kirim ke server via AJAX POST ke '/register'
      * 3. Jika berhasil → tutup modal signup, buka modal login
      */
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('signup_name').value;
+        const email = document.getElementById('signup_email').value;
         const username = document.getElementById('signup_username').value;
-        const password = document.getElementById('signup_password').value;
-        const alamat = document.getElementById('signup_alamat').value;
         const no_hp = document.getElementById('signup_no_hp').value;
+        const password = document.getElementById('signup_password').value;
 
         try {
-            const result = await apiRequest('/register', 'POST', { name, username, password, alamat, no_hp }, { silent: true });
+            const result = await apiRequest('/register', 'POST', { email, username, no_hp, password }, { silent: true });
             if (result.success) {
                 Swal.fire({icon: 'success', title: 'Pendaftaran Sukses!', text: result.message || 'Yeay! Akun barumu sudah siap. Yuk, langsung login!', confirmButtonColor: '#D20000'}).then(() => {
                     signupModal.classList.add('hidden');   // Tutup modal signup
@@ -1749,7 +1800,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     // Beri warna status menarik
                     let statusColor = 'bg-gray-100 text-gray-800 border-gray-200';
                     let statusIcon = 'fa-clock';
-                    if (order.status === 'Sedang Disiapkan') {
+                    if (order.status === 'Menunggu Pembayaran') {
+                        statusColor = 'bg-amber-50 text-amber-700 border border-amber-200';
+                        statusIcon = 'fa-hourglass-half';
+                    }
+                    if (order.status === 'Diproses' || order.status === 'Sedang Disiapkan') {
                         statusColor = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
                         statusIcon = 'fa-fire-burner';
                     }
@@ -1765,18 +1820,26 @@ document.addEventListener("DOMContentLoaded", () => {
                         statusColor = 'bg-green-50 text-green-700 border border-green-200';
                         statusIcon = 'fa-check-circle';
                     }
+                    if (order.status === 'Dibatalkan') {
+                        statusColor = 'bg-red-50 text-red-700 border border-red-200';
+                        statusIcon = 'fa-circle-xmark';
+                    }
 
                     card.innerHTML = `
                         <div class="flex justify-between items-start mb-3 border-b pb-3">
                             <div>
                                 <p class="text-xs text-gray-500 font-medium mb-1"><i class="fas fa-calendar-alt opacity-70"></i> ${order.date}</p>
+                                ${order.order_code ? `<p class="text-[11px] font-bold text-red-600 mb-2">${order.order_code}</p>` : ''}
                                 <span class="px-2 py-1 inline-flex text-[10px] font-bold rounded-md ${order.jenis === 'delivery' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'} uppercase">
                                     ${order.jenis || '-'}
                                 </span>
                             </div>
-                            <span class="px-3 py-1.5 inline-flex items-center gap-1.5 text-xs font-bold rounded-full ${statusColor}">
-                                <i class="fas ${statusIcon}"></i> ${order.status}
-                            </span>
+                            <div class="flex flex-col items-end gap-2">
+                                ${order.payment_status ? `<span class="px-3 py-1 inline-flex items-center gap-1.5 text-[11px] font-bold rounded-full ${order.payment_status === 'Lunas' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">${order.payment_status}</span>` : ''}
+                                <span class="px-3 py-1.5 inline-flex items-center gap-1.5 text-xs font-bold rounded-full ${statusColor}">
+                                    <i class="fas ${statusIcon}"></i> ${order.status}
+                                </span>
+                            </div>
                         </div>
                         <div class="flex items-center gap-3 mb-3">
                             <div class="w-12 h-12 bg-red-50 text-red-500 rounded-lg flex items-center justify-center shrink-0">
@@ -2315,9 +2378,10 @@ document.addEventListener("DOMContentLoaded", () => {
         formEditOutlet.addEventListener('submit', async (e) => {
             e.preventDefault();
             const outlet_address = document.getElementById('input_outlet_address').value;
+            const admin_whatsapp_number = document.getElementById('input_admin_whatsapp').value;
 
             try {
-                const result = await apiRequest('/admin/settings', 'POST', { outlet_address });
+                const result = await apiRequest('/admin/settings', 'POST', { outlet_address, admin_whatsapp_number });
                 if (result.success) {
                     Swal.fire({icon: 'success', title: 'Berhasil!', text: result.message, confirmButtonColor: '#D20000'});
                     // Update tampilan di kontak

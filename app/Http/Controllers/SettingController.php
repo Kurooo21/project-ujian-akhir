@@ -19,17 +19,29 @@ class SettingController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'outlet_address' => 'required|string|max:500'
+            'outlet_address' => 'nullable|string|max:500',
+            'admin_whatsapp_number' => 'nullable|string|max:30',
         ]);
 
-        Setting::updateOrCreate(
-            ['key' => 'outlet_address'],
-            ['value' => $request->outlet_address]
-        );
+        if ($request->filled('outlet_address')) {
+            Setting::updateOrCreate(
+                ['key' => 'outlet_address'],
+                ['value' => $request->outlet_address]
+            );
+        }
+
+        if ($request->has('admin_whatsapp_number')) {
+            $digits = preg_replace('/\D+/', '', (string) $request->admin_whatsapp_number);
+
+            Setting::updateOrCreate(
+                ['key' => 'admin_whatsapp_number'],
+                ['value' => $digits]
+            );
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Alamat outlet berhasil diperbarui!',
+            'message' => 'Pengaturan outlet berhasil diperbarui!',
             'data' => Setting::pluck('value', 'key')
         ]);
     }

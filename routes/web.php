@@ -45,13 +45,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Rute Web untuk Dashboard & Halaman Admin (Return HTML/View)
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/pesanan', [\App\Http\Controllers\AdminPesananController::class, 'index'])->name('admin.pesanan');
+    Route::put('/admin/pesanan/status', [\App\Http\Controllers\AdminPesananController::class, 'updateStatus'])->name('admin.pesanan.status');
+    Route::put('/admin/pesanan/confirm-payment', [\App\Http\Controllers\AdminPesananController::class, 'confirmPayment'])->name('admin.pesanan.confirm-payment');
     Route::get('/admin/produk', [\App\Http\Controllers\AdminProdukController::class, 'index'])->name('admin.produk');
     Route::get('/admin/pelanggan', [\App\Http\Controllers\AdminPelangganController::class, 'index'])->name('admin.pelanggan');
     Route::get('/admin/laporan', [\App\Http\Controllers\AdminLaporanController::class, 'index'])->name('admin.laporan');
 
     // Rute API Backend (Return JSON) yang dipakai oleh app.js di halaman frontend
     Route::get('/admin/api/pesanan', [PesananController::class, 'index']);
-    Route::put('/admin/api/pesanan/status', [PesananController::class, 'updateStatus']);
+    Route::put('/admin/api/pesanan/status', [PesananController::class, 'updateStatus'])->name('admin.api.pesanan.status');
     
     // Rute Produk API
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');

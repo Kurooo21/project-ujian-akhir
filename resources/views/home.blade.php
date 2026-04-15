@@ -404,11 +404,15 @@
 
                 <div class="contact-grid flex flex-col lg:flex-row justify-between gap-12 pt-10">
                     <div class="contact-left flex-1 min-w-[300px]">
+                        @php
+                            $contactWaNumber = preg_replace('/\D+/', '', $settings['admin_whatsapp_number'] ?? '');
+                        @endphp
                         <div class="social-icons flex gap-5 my-8">
                             <a href="#"
                                 class="w-12 h-12 border-2 border-white rounded-full flex items-center justify-center text-xl transition-all duration-300 hover:bg-white hover:text-[#B30000] transform hover:scale-110"><i
                                     class="fab fa-instagram"></i></a>
-                            <a href="#"
+                            <a href="{{ $contactWaNumber ? 'https://wa.me/' . $contactWaNumber : '#' }}"
+                                @if($contactWaNumber) target="_blank" rel="noopener" @endif
                                 class="w-12 h-12 border-2 border-white rounded-full flex items-center justify-center text-xl transition-all duration-300 hover:bg-white hover:text-[#B30000] transform hover:scale-110"><i
                                     class="fab fa-whatsapp"></i></a>
                             <a href="#"
@@ -540,13 +544,16 @@
                                     <div class="pt-2 flex gap-3">
                                         <button type="submit"
                                             class="flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 transition flex items-center gap-2">
-                                            <i class="fas fa-paper-plane"></i> Kirim Pesanan
+                                            <i class="fas fa-receipt"></i> Buat Pesanan
                                         </button>
                                         <button type="button" id="btn-back-to-cart"
                                             class="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
                                             Kembali
                                         </button>
                                     </div>
+                                    <p class="text-xs text-gray-500 leading-relaxed bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                                        Pesanan akan disimpan dulu. Setelah itu WhatsApp akan terbuka di tab baru, sementara halaman web ini tetap terbuka untuk kamu lanjut melihat pesanan.
+                                    </p>
                                 </form>
                             </div>
                         </div>
@@ -720,14 +727,14 @@
                     <p class="text-gray-400 text-sm mb-6">Buat akun baru di Chi-Pok</p>
 
                     <form id="signupForm" class="space-y-4">
-                        <!-- Nama Lengkap -->
+                        <!-- Email -->
                         <div>
-                            <label for="signup_name" class="block text-sm font-semibold text-gray-600 mb-1">Nama Lengkap</label>
+                            <label for="signup_email" class="block text-sm font-semibold text-gray-600 mb-1">Email</label>
                             <div class="relative group">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                    <i class="fas fa-id-card text-sm"></i>
+                                    <i class="fas fa-envelope text-sm"></i>
                                 </span>
-                                <input type="text" id="signup_name" name="signup_name" required placeholder="Nama lengkapmu"
+                                <input type="email" id="signup_email" name="signup_email" required placeholder="nama@email.com"
                                     class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
                             </div>
                         </div>
@@ -740,6 +747,18 @@
                                     <i class="fas fa-user text-sm"></i>
                                 </span>
                                 <input type="text" id="signup_username" name="signup_username" required placeholder="Pilih username"
+                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                            </div>
+                        </div>
+
+                        <!-- No. WhatsApp Aktif -->
+                        <div>
+                            <label for="signup_no_hp" class="block text-sm font-semibold text-gray-600 mb-1">No. WhatsApp Aktif</label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                    <i class="fab fa-whatsapp text-sm"></i>
+                                </span>
+                                <input type="tel" id="signup_no_hp" name="signup_no_hp" required placeholder="08xxxxxxxxxx"
                                     class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
                             </div>
                         </div>
@@ -757,30 +776,6 @@
                                     class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
                                     <i class="fas fa-eye text-sm"></i>
                                 </button>
-                            </div>
-                        </div>
-
-                        <!-- Two columns: No HP + Alamat -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="signup_no_hp" class="block text-sm font-semibold text-gray-600 mb-1">No. HP</label>
-                                <div class="relative group">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                        <i class="fas fa-phone text-sm"></i>
-                                    </span>
-                                    <input type="tel" id="signup_no_hp" name="signup_no_hp" placeholder="08xxxxxxxxxx"
-                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                </div>
-                            </div>
-                            <div>
-                                <label for="signup_alamat" class="block text-sm font-semibold text-gray-600 mb-1">Alamat</label>
-                                <div class="relative group">
-                                    <span class="absolute left-4 top-3 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                        <i class="fas fa-map-marker-alt text-sm"></i>
-                                    </span>
-                                    <textarea id="signup_alamat" name="signup_alamat" rows="1" placeholder="Alamat lengkap"
-                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none"></textarea>
-                                </div>
                             </div>
                         </div>
 
@@ -1241,8 +1236,8 @@
 
                     <!-- Container Outlet -->
                     <div id="container-outlet" class="hidden">
-                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">ALAMAT OUTLET</h3>
-                        <p class="text-gray-400 text-sm mb-6">Ubah alamat outlet yang ditampilkan di website</p>
+                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">PENGATURAN OUTLET</h3>
+                        <p class="text-gray-400 text-sm mb-6">Ubah alamat outlet dan nomor WhatsApp admin yang dipakai untuk pembayaran</p>
 
                         <form id="form-edit-outlet" class="space-y-4">
                             <div>
@@ -1256,10 +1251,23 @@
                                 </div>
                             </div>
 
+                            <div>
+                                <label for="input_admin_whatsapp" class="block text-sm font-semibold text-gray-600 mb-1">Nomor WhatsApp Admin</label>
+                                <div class="relative group">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                                        <i class="fab fa-whatsapp text-sm"></i>
+                                    </span>
+                                    <input type="tel" id="input_admin_whatsapp" name="admin_whatsapp_number" placeholder="628xxxxxxxxxx"
+                                        value="{{ $settings['admin_whatsapp_number'] ?? '' }}"
+                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2">Gunakan format angka aktif WhatsApp, misalnya 6281336441994.</p>
+                            </div>
+
                             <!-- Tombol Simpan -->
                             <button type="submit"
                                 class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide mt-4">
-                                <i class="fas fa-save"></i> SIMPAN ALAMAT
+                                <i class="fas fa-save"></i> SIMPAN PENGATURAN
                             </button>
                         </form>
                     </div>

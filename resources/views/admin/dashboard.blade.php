@@ -118,6 +118,9 @@
                             <div>
                                 <div class="font-semibold text-slate-900">{{ $trx->nama_pelanggan }}</div>
                                 <div class="text-[11px] text-slate-400">{{ $trx->no_hp }}</div>
+                                @if(!empty($trx->order_code))
+                                    <div class="text-[11px] font-bold text-red-600 mt-0.5">{{ $trx->order_code }}</div>
+                                @endif
                             </div>
                         </div>
                     </td>
@@ -125,15 +128,23 @@
                     <td class="py-3.5 px-6 font-semibold text-slate-900">Rp {{ number_format($trx->total_harga, 0, ',', '.') }}</td>
                     <td class="py-3.5 px-6">{{ $trx->jenis_belanja }}</td>
                     <td class="py-3.5 px-6">
-                        @if($trx->status == 'Sedang Disiapkan')
+                        @if($trx->status == 'Menunggu Pembayaran')
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-100">
+                                <span class="w-1.5 h-1.5 rounded-full bg-current"></span> {{ $trx->status }}
+                            </span>
+                        @elseif($trx->status == 'Diproses' || $trx->status == 'Sedang Disiapkan')
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-600 border border-amber-100">
+                                <span class="w-1.5 h-1.5 rounded-full bg-current"></span> {{ $trx->status }}
+                            </span>
+                        @elseif($trx->status == 'Pesanan Siap')
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100">
                                 <span class="w-1.5 h-1.5 rounded-full bg-current"></span> {{ $trx->status }}
                             </span>
                         @elseif($trx->status == 'Selesai')
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-green-600 border border-green-100">
                                 <span class="w-1.5 h-1.5 rounded-full bg-current"></span> {{ $trx->status }}
                             </span>
-                        @elseif($trx->status == 'Dikirim')
+                        @elseif($trx->status == 'Dikirim' || $trx->status == 'Sedang Diantar')
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-600 border border-blue-100">
                                 <span class="w-1.5 h-1.5 rounded-full bg-current"></span> {{ $trx->status }}
                             </span>
@@ -145,7 +156,7 @@
                     </td>
                     <td class="py-3.5 px-6 text-slate-500">{{ $trx->created_at->format('d/m/Y H:i') }}</td>
                     <td class="py-3.5 px-6">
-                        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white transition-colors" onclick="alert('Detail pesanan ID: {{ $trx->id }}')">
+                        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white transition-colors" onclick="alert('Order ID: {{ $trx->order_code ?? 'LEGACY' }}\nPembayaran: {{ $trx->payment_status ?? 'Lunas' }}\nStatus: {{ $trx->status }}')">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                 <circle cx="12" cy="12" r="3"/>

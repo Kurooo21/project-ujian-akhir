@@ -22,29 +22,33 @@ class AdminDashboardController extends Controller
      */
     public function index()
     {
+        $pesananHariIni = Pesanan::whereDate('created_at', Carbon::today())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         // ============================================================
         // 1. Total Pendapatan Hari Ini
-        //    Menjumlahkan kolom total_harga dari semua pesanan hari ini
-        //    yang statusnya bukan 'Dibatalkan'.
+        //    Hanya menghitung pesanan yang sudah lunas dan tidak dibatalkan.
         // ============================================================
-        $totalPendapatanHariIni = Pesanan::whereDate('created_at', Carbon::today())
+        $totalPendapatanHariIni = $pesananHariIni
+            ->where('payment_status', 'Lunas')
             ->where('status', '!=', 'Dibatalkan')
             ->sum('total_harga');
 
         // ============================================================
         // 2. Jumlah Transaksi Hari Ini
-        //    Menghitung jumlah unik transaksi (grouped by user + timestamp).
+        //    Menghitung jumlah checkout unik berdasarkan order_code.
         // ============================================================
-        $jumlahTransaksi = Pesanan::whereDate('created_at', Carbon::today())
-            ->select(DB::raw('DISTINCT user_id, DATE_FORMAT(created_at, "%Y-%m-%d %H:%i:%s") as trx_time'))
-            ->get()
+        $jumlahTransaksi = $pesananHariIni
+            ->groupBy(fn ($item) => $this->buildGroupId($item))
             ->count();
 
         // ============================================================
         // 3. Produk Terlaris
-        //    Produk dengan jumlah pembelian terbanyak (all-time).
+        //    Produk dengan jumlah pembelian terbanyak dari pesanan lunas.
         // ============================================================
-        $produkTerlaris = Pesanan::select('pesanan', DB::raw('SUM(jumlah) as total_terjual'))
+        $produkTerlaris = Pesanan::where('payment_status', 'Lunas')
+            ->select('pesanan', DB::raw('SUM(jumlah) as total_terjual'))
             ->groupBy('pesanan')
             ->orderByDesc('total_terjual')
             ->first();
@@ -60,11 +64,31 @@ class AdminDashboardController extends Controller
 
         // ============================================================
         // 5. Transaksi Terkini
-        //    Ambil 10 pesanan terbaru beserta relasinya.
+        //    Ambil 10 checkout terbaru dan gabungkan itemnya.
         // ============================================================
         $transaksiTerkini = Pesanan::orderBy('created_at', 'desc')
-            ->take(10)
             ->get();
+
+        $transaksiTerkini = $transaksiTerkini
+            ->groupBy(fn ($item) => $this->buildGroupId($item))
+            ->map(function ($items) {
+                $first = $items->first();
+
+                return (object) [
+                    'id' => $first->id,
+                    'order_code' => $first->order_code,
+                    'nama_pelanggan' => $first->nama_pelanggan,
+                    'no_hp' => $first->no_hp,
+                    'pesanan' => $items->map(fn ($item) => $item->pesanan . ' (x' . $item->jumlah . ')')->implode(', '),
+                    'total_harga' => $items->sum('total_harga'),
+                    'jenis_belanja' => $first->jenis_belanja,
+                    'payment_status' => $first->payment_status ?? 'Lunas',
+                    'status' => $first->status,
+                    'created_at' => $first->created_at,
+                ];
+            })
+            ->take(10)
+            ->values();
 
         return view('admin.dashboard', compact(
             'totalPendapatanHariIni',
@@ -73,5 +97,14 @@ class AdminDashboardController extends Controller
             'stokTipis',
             'transaksiTerkini'
         ));
+    }
+
+    private function buildGroupId(Pesanan $pesanan): string
+    {
+        if ($pesanan->order_code) {
+            return $pesanan->order_code;
+        }
+
+        return $pesanan->user_id . '|' . $pesanan->created_at->format('Y-m-d H:i:s');
     }
 }

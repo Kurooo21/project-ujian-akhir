@@ -10,6 +10,7 @@ class Pesanan extends Model
 
     protected $fillable = [
         'user_id',
+        'order_code',
         'nama_pelanggan',
         'no_hp',
         'alamat',
@@ -18,7 +19,14 @@ class Pesanan extends Model
         'harga_satuan',
         'total_harga',
         'jenis_belanja',
+        'payment_method',
+        'payment_status',
+        'paid_at',
         'status',
+    ];
+
+    protected $casts = [
+        'paid_at' => 'datetime',
     ];
 
     public function user()
