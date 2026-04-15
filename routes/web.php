@@ -7,6 +7,7 @@ use App\Http\Controllers\PesananController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\AdminDashboardController;
 
 // ========================================================================
 // HALAMAN UTAMA
@@ -41,8 +42,18 @@ Route::get('/reviews/{productId}', [ReviewController::class, 'show'])->name('rev
 // ADMIN (perlu login + role admin)
 // ========================================================================
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/pesanan', [PesananController::class, 'index'])->name('admin.pesanan');
-    Route::put('/admin/pesanan/status', [PesananController::class, 'updateStatus'])->name('admin.pesanan.status');
+    // Rute Web untuk Dashboard & Halaman Admin (Return HTML/View)
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/pesanan', [\App\Http\Controllers\AdminPesananController::class, 'index'])->name('admin.pesanan');
+    Route::get('/admin/produk', [\App\Http\Controllers\AdminProdukController::class, 'index'])->name('admin.produk');
+    Route::get('/admin/pelanggan', [\App\Http\Controllers\AdminPelangganController::class, 'index'])->name('admin.pelanggan');
+    Route::get('/admin/laporan', [\App\Http\Controllers\AdminLaporanController::class, 'index'])->name('admin.laporan');
+
+    // Rute API Backend (Return JSON) yang dipakai oleh app.js di halaman frontend
+    Route::get('/admin/api/pesanan', [PesananController::class, 'index']);
+    Route::put('/admin/api/pesanan/status', [PesananController::class, 'updateStatus']);
+    
+    // Rute Produk API
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');

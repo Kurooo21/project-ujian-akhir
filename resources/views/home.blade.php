@@ -63,7 +63,7 @@
                     },
                     backgroundImage: {
                         // Gambar background kustom untuk section menu
-                        'menu-pattern': "url('{{ asset('asset/bg menu.png') }}')",
+                        'menu-pattern': "url('{{ asset('asset/bg menu.jpg') }}')",
                     }
                 }
             }
@@ -277,8 +277,8 @@
             <div id="hero-slider" class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px]">
                 
                 <!-- Slide Default 1: Gambar promosi utama -->
-                <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out" style="opacity:1;">
-                    <img src="{{ asset('asset/ledakan kelezatan.jpg') }}" alt="Ledakan Kelezatan"
+                <div class="hero-slide absolute inset-0 w-full h-100 transition-opacity duration-700 ease-in-out" style="opacity:1;">
+                    <img src="{{ asset('asset/ledakan kelezatan.png') }}" alt="Ledakan Kelezatan"
                         class="w-full h-full object-cover block">
                 </div>
 

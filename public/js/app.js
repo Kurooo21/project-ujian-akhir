@@ -1151,6 +1151,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 currentUser = result.user;        // Simpan data user
                 Swal.fire({icon: 'success', title: 'Yeay Berhasil!', text: result.message || 'Selamat datang di dunia penuh kelezatan, Chi-Pok!', confirmButtonColor: '#D20000'}).then(() => {
+                    // Jika admin → redirect ke halaman dashboard admin terpisah
+                    if (currentUser && currentUser.role === 'admin') {
+                        window.location.href = resolveAppUrl('/admin/dashboard');
+                        return;
+                    }
                     updateLoginUI();                   // Update tampilan
                     loginModal.classList.add('hidden'); // Tutup modal login
                     loginForm.reset();                 // Kosongkan form
@@ -1422,7 +1427,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /**
      * renderOrdersTable() - Muat dan tampilkan data pesanan di tabel admin
      *
-     * Mengambil data pesanan dari server ('/admin/pesanan')
+     * Mengambil data pesanan dari server ('/admin/api/pesanan')
      * dan menampilkannya dalam bentuk tabel HTML
      */
     async function renderOrdersTable() {
@@ -1431,7 +1436,7 @@ document.addEventListener("DOMContentLoaded", () => {
         listContainer.innerHTML = '<div class="col-span-full p-6 text-center text-sm text-gray-500">Memuat data pesanan...</div>';
 
         try {
-            const result = await apiRequest('/admin/pesanan');
+            const result = await apiRequest('/admin/api/pesanan');
             if (result.success && result.data.length > 0) {
                 listContainer.innerHTML = '';
                 result.data.forEach(order => {
@@ -1515,7 +1520,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Expose updateOrderStatus to window
     window.updateOrderStatus = async function(groupId, newStatus) {
         try {
-            const result = await apiRequest('/admin/pesanan/status', 'PUT', {
+            const result = await apiRequest('/admin/api/pesanan/status', 'PUT', {
                 group_id: groupId,
                 status: newStatus
             });
@@ -1619,7 +1624,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             // SILENT MODE: polling di background tidak boleh tampilkan pop-up error
             // Jika session expired/server restart, polling cukup diam saja
-            const result = await apiRequest('/admin/pesanan', 'GET', null, { silent: true });
+            const result = await apiRequest('/admin/api/pesanan', 'GET', null, { silent: true });
 
             // CEK ULANG setelah await — user mungkin sudah logout saat request berlangsung
             if (!currentUser || currentUser.role !== 'admin') return;

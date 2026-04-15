@@ -5,11 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Banner;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
     public function index()
     {
+        // Jika user yang login adalah admin, redirect ke dashboard admin
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
         $products = Product::with('reviews.user')->get();
         $banners = Banner::all();
         $settings = Setting::pluck('value', 'key');
