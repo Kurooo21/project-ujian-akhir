@@ -42,25 +42,24 @@
     <!-- ============================================================
          SIDEBAR
          ============================================================ -->
-    <aside class="fixed inset-y-0 left-0 bg-slate-900 text-white w-[260px] flex flex-col z-[1000] transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out" id="sidebar">
+    <aside class="fixed inset-y-0 left-0 bg-red-900 text-white w-[260px] flex flex-col z-[1000] transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out" id="sidebar">
         <!-- Brand -->
-        <div class="flex items-center gap-3 p-5 border-b border-slate-700">
-            <div class="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center font-extrabold text-lg">CP</div>
+        <div>
+            <img src="{{ asset('asset/logo putih.png') }}" alt="Logo" class="w-15 h-15">
             <div>
-                <h2 class="text-base font-bold tracking-tight">Chi-Pok</h2>
-                <span class="text-[11px] text-slate-400 uppercase tracking-widest">Admin Panel</span>
+                <span class="text-[15px] font-bold text-white uppercase tracking-widest ml-16 ">Admin Panel</span>
             </div>
         </div>
 
         <!-- Navigation -->
         <nav class="flex-1 px-3 py-4 overflow-y-auto sidebar-scroll">
-            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 pt-4 pb-2">Menu Utama</div>
+            <div class="text-[13px] font-semibold text-white uppercase tracking-widest px-3 pt-4 pb-2">Menu Utama</div>
 
             @php
                 $currentRoute = Route::currentRouteName();
             @endphp
 
-            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.dashboard' ? 'bg-blue-600 text-white shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.dashboard' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
                     <rect x="3" y="3" width="7" height="7" rx="1"/>
                     <rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -70,7 +69,7 @@
                 Dashboard
             </a>
 
-            <a href="{{ route('admin.pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.pesanan' ? 'bg-blue-600 text-white shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+            <a href="{{ route('admin.pesanan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.pesanan' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
                     <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
                     <line x1="3" y1="6" x2="21" y2="6"/>
@@ -79,9 +78,9 @@
                 Pesanan
             </a>
 
-            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 pt-4 pb-2">Manajemen</div>
+            <div class="text-[13px] font-semibold text-white uppercase tracking-widest px-3 pt-4 pb-2">Manajemen</div>
 
-            <a href="{{ route('admin.produk') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.produk' ? 'bg-blue-600 text-white shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+            <a href="{{ route('admin.produk') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.produk' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
                     <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
                     <line x1="7" y1="7" x2="7.01" y2="7"/>
@@ -89,7 +88,7 @@
                 Produk
             </a>
 
-            <a href="{{ route('admin.pelanggan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.pelanggan' ? 'bg-blue-600 text-white shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+            <a href="{{ route('admin.pelanggan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.pelanggan' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
                     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/>
                     <circle cx="9" cy="7" r="4"/>
@@ -99,7 +98,7 @@
                 Pelanggan
             </a>
 
-            <a href="{{ route('admin.laporan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.laporan' ? 'bg-blue-600 text-white shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+            <a href="{{ route('admin.laporan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.laporan' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
                     <line x1="18" y1="20" x2="18" y2="10"/>
                     <line x1="12" y1="20" x2="12" y2="4"/>
@@ -112,8 +111,8 @@
         <!-- Sidebar Footer -->
         <div class="p-4 border-t border-slate-700">
             <div class="flex items-center gap-3 px-3 py-2 rounded-md">
-                <div class="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
-                    {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
+                <div class="w-9 h-9 bg-white rounded-full flex items-center justify-center font-bold text-sm">
+                    <img src="{{ asset('asset/logo merah.png') }}" alt="Logo" class="w-10 h-13">
                 </div>
                 <div>
                     <h4 class="text-[13px] font-semibold">{{ Auth::user()->name ?? 'Admin' }}</h4>

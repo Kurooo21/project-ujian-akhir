@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Pesanan;
 use App\Models\Product;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Collection;
 
 class AdminDashboardController extends Controller
 {
@@ -22,80 +23,70 @@ class AdminDashboardController extends Controller
      */
     public function index()
     {
-        $pesananHariIni = Pesanan::whereDate('created_at', Carbon::today())
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $dashboardTimezone = config('app.dashboard_timezone', env('APP_DASHBOARD_TIMEZONE', 'Asia/Jakarta'));
+        $today = Carbon::now($dashboardTimezone);
+        $allOrders = Pesanan::orderBy('created_at', 'desc')->get();
 
-        // ============================================================
-        // 1. Total Pendapatan Hari Ini
-        //    Hanya menghitung pesanan yang sudah lunas dan tidak dibatalkan.
-        // ============================================================
-        $totalPendapatanHariIni = $pesananHariIni
-            ->where('payment_status', 'Lunas')
-            ->where('status', '!=', 'Dibatalkan')
-            ->sum('total_harga');
+        [$pesananRingkasan, $summaryDate, $isTodaySummary] = $this->resolveSummaryOrders($today, $allOrders);
 
-        // ============================================================
-        // 2. Jumlah Transaksi Hari Ini
-        //    Menghitung jumlah checkout unik berdasarkan order_code.
-        // ============================================================
-        $jumlahTransaksi = $pesananHariIni
-            ->groupBy(fn ($item) => $this->buildGroupId($item))
-            ->count();
+        $ringkasanPesanan = $this->mapGroupedOrders(
+            $pesananRingkasan->groupBy(fn ($item) => $this->buildGroupId($item))
+        );
 
-        // ============================================================
-        // 3. Produk Terlaris
-        //    Produk dengan jumlah pembelian terbanyak dari pesanan lunas.
-        // ============================================================
-        $produkTerlaris = Pesanan::where('payment_status', 'Lunas')
+        $transaksiValid = $ringkasanPesanan
+            ->reject(fn ($order) => $this->isCancelledStatus($order->status));
+
+        $transaksiLunas = $transaksiValid
+            ->filter(fn ($order) => $this->isPaid($order->payment_status));
+
+        $totalPendapatan = $transaksiLunas->sum('total_harga');
+        $jumlahTransaksi = $transaksiValid->count();
+
+        $produkTerlaris = Pesanan::query()
+            ->where(function ($query) {
+                $query->where('payment_status', 'Lunas')
+                    ->orWhereNull('payment_status');
+            })
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', '!=', 'Dibatalkan');
+            })
             ->select('pesanan', DB::raw('SUM(jumlah) as total_terjual'))
             ->groupBy('pesanan')
             ->orderByDesc('total_terjual')
             ->first();
 
-        // ============================================================
-        // 4. Stok Tipis
-        //    Catatan: Tabel products saat ini belum memiliki kolom 'stock'.
-        //    Jika Anda sudah menambahkan kolom 'stock', uncomment baris di bawah.
-        //    Untuk sementara, nilainya di-set 0.
-        // ============================================================
-        // $stokTipis = Product::where('stock', '<=', 10)->count();
-        $stokTipis = 0;
+        $stokTipis = Schema::hasColumn('products', 'stock')
+            ? Product::where('stock', '<=', 10)->count()
+            : null;
 
-        // ============================================================
-        // 5. Transaksi Terkini
-        //    Ambil 10 checkout terbaru dan gabungkan itemnya.
-        // ============================================================
-        $transaksiTerkini = Pesanan::orderBy('created_at', 'desc')
-            ->get();
-
-        $transaksiTerkini = $transaksiTerkini
-            ->groupBy(fn ($item) => $this->buildGroupId($item))
-            ->map(function ($items) {
-                $first = $items->first();
-
-                return (object) [
-                    'id' => $first->id,
-                    'order_code' => $first->order_code,
-                    'nama_pelanggan' => $first->nama_pelanggan,
-                    'no_hp' => $first->no_hp,
-                    'pesanan' => $items->map(fn ($item) => $item->pesanan . ' (x' . $item->jumlah . ')')->implode(', '),
-                    'total_harga' => $items->sum('total_harga'),
-                    'jenis_belanja' => $first->jenis_belanja,
-                    'payment_status' => $first->payment_status ?? 'Lunas',
-                    'status' => $first->status,
-                    'created_at' => $first->created_at,
-                ];
-            })
+        $transaksiTerkini = $this->mapGroupedOrders(
+            $allOrders->groupBy(fn ($item) => $this->buildGroupId($item))
+        )
             ->take(10)
             ->values();
 
+        $hasSummaryData = $ringkasanPesanan->isNotEmpty();
+        $summaryBadge = $hasSummaryData
+            ? ($isTodaySummary ? 'Hari Ini' : 'Data Terakhir')
+            : 'Belum Ada Data';
+        $summaryDateLabel = $hasSummaryData
+            ? $summaryDate->locale('id')->translatedFormat('d F Y')
+            : 'Belum ada transaksi masuk';
+        $summaryDescription = $hasSummaryData
+            ? ($isTodaySummary ? 'Ringkasan transaksi hari ini' : 'Ringkasan pada tanggal transaksi terakhir')
+            : 'Dashboard akan otomatis terisi saat sudah ada pesanan.';
+
         return view('admin.dashboard', compact(
-            'totalPendapatanHariIni',
+            'totalPendapatan',
             'jumlahTransaksi',
             'produkTerlaris',
             'stokTipis',
-            'transaksiTerkini'
+            'transaksiTerkini',
+            'summaryBadge',
+            'summaryDateLabel',
+            'summaryDescription',
+            'hasSummaryData'
         ));
     }
 
@@ -106,5 +97,73 @@ class AdminDashboardController extends Controller
         }
 
         return $pesanan->user_id . '|' . $pesanan->created_at->format('Y-m-d H:i:s');
+    }
+
+    private function resolveSummaryOrders(Carbon $today, Collection $allOrders): array
+    {
+        $pesananRingkasan = $this->filterOrdersByLocalDate($allOrders, $today);
+
+        if ($pesananRingkasan->isNotEmpty()) {
+            return [$pesananRingkasan, $today, true];
+        }
+
+        $latestOrder = $allOrders->first();
+
+        if (! $latestOrder) {
+            return [collect(), $today, true];
+        }
+
+        $summaryDate = $latestOrder->created_at->copy()->timezone($today->getTimezone());
+
+        return [
+            $this->filterOrdersByLocalDate($allOrders, $summaryDate),
+            $summaryDate,
+            false,
+        ];
+    }
+
+    private function filterOrdersByLocalDate(Collection $orders, Carbon $date): Collection
+    {
+        return $orders
+            ->filter(fn ($order) => $order->created_at->copy()->timezone($date->getTimezone())->isSameDay($date))
+            ->values();
+    }
+
+    private function mapGroupedOrders(Collection $groupedOrders): Collection
+    {
+        return $groupedOrders->map(function ($items) {
+            $first = $items->first();
+
+            return (object) [
+                'id' => $first->id,
+                'order_code' => $first->order_code,
+                'nama_pelanggan' => $first->nama_pelanggan,
+                'no_hp' => $first->no_hp,
+                'pesanan' => $items->map(fn ($item) => $item->pesanan . ' (x' . $item->jumlah . ')')->implode(', '),
+                'total_harga' => $items->sum('total_harga'),
+                'jenis_belanja' => $first->jenis_belanja,
+                'payment_status' => $first->payment_status ?? 'Lunas',
+                'status' => $first->status,
+                'created_at' => $first->created_at,
+            ];
+        });
+    }
+
+    private function isPaid(?string $paymentStatus): bool
+    {
+        if ($paymentStatus === null) {
+            return true;
+        }
+
+        return strcasecmp(trim($paymentStatus), 'Lunas') === 0;
+    }
+
+    private function isCancelledStatus(?string $status): bool
+    {
+        if ($status === null) {
+            return false;
+        }
+
+        return strcasecmp(trim($status), 'Dibatalkan') === 0;
     }
 }

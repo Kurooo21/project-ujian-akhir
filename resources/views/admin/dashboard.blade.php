@@ -2,10 +2,10 @@
 @section('page_title', 'Dashboard')
 
 @section('content')
-<!-- RINGKASAN — Grid 4 Kolom -->
+<!-- RINGKASAN - Grid 4 Kolom -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-7">
 
-    <!-- 1. Total Pendapatan Hari Ini -->
+    <!-- 1. Total Pendapatan -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-blue-600 before:to-blue-400">
         <div class="flex items-center justify-between mb-4">
             <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -14,10 +14,11 @@
                     <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
                 </svg>
             </div>
-            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-600">▲ 12%</span>
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">{{ $summaryBadge }}</span>
         </div>
-        <div class="text-[28px] font-extrabold text-slate-900 tracking-tight mb-1">Rp {{ number_format($totalPendapatanHariIni ?? 0, 0, ',', '.') }}</div>
-        <div class="text-[13px] font-medium text-slate-400">Total Pendapatan Hari Ini</div>
+        <div class="text-[28px] font-extrabold text-slate-900 tracking-tight mb-1">Rp {{ number_format($totalPendapatan ?? 0, 0, ',', '.') }}</div>
+        <div class="text-[13px] font-medium text-slate-400">Total Pendapatan</div>
+        <div class="text-[11px] text-slate-400 mt-1">{{ $summaryDateLabel }}</div>
     </div>
 
     <!-- 2. Jumlah Transaksi -->
@@ -29,10 +30,11 @@
                     <line x1="1" y1="10" x2="23" y2="10"/>
                 </svg>
             </div>
-            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">Hari Ini</span>
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-600">{{ $summaryBadge }}</span>
         </div>
         <div class="text-[28px] font-extrabold text-slate-900 tracking-tight mb-1">{{ $jumlahTransaksi ?? 0 }}</div>
         <div class="text-[13px] font-medium text-slate-400">Jumlah Transaksi</div>
+        <div class="text-[11px] text-slate-400 mt-1">{{ $summaryDescription }}</div>
     </div>
 
     <!-- 3. Produk Terlaris -->
@@ -45,8 +47,11 @@
             </div>
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600">Top #1</span>
         </div>
-        <div class="text-xl font-extrabold text-slate-900 tracking-tight mb-1 truncate">{{ $produkTerlaris->pesanan ?? '—' }}</div>
+        <div class="text-xl font-extrabold text-slate-900 tracking-tight mb-1 truncate">{{ optional($produkTerlaris)->pesanan ?: '-' }}</div>
         <div class="text-[13px] font-medium text-slate-400">Produk Terlaris</div>
+        <div class="text-[11px] text-slate-400 mt-1">
+            {{ $produkTerlaris ? number_format($produkTerlaris->total_terjual, 0, ',', '.') . ' item terjual' : 'Menunggu transaksi pertama' }}
+        </div>
     </div>
 
     <!-- 4. Stok Tipis -->
@@ -61,8 +66,15 @@
             </div>
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-50 text-red-600">Peringatan</span>
         </div>
-        <div class="text-[28px] font-extrabold text-slate-900 tracking-tight mb-1">{{ $stokTipis ?? 0 }}</div>
+        @if($stokTipis === null)
+        <div class="text-[24px] font-extrabold text-slate-900 tracking-tight mb-1">Belum diatur</div>
+        @else
+        <div class="text-[28px] font-extrabold text-slate-900 tracking-tight mb-1">{{ $stokTipis }}</div>
+        @endif
         <div class="text-[13px] font-medium text-slate-400">Produk Stok Tipis</div>
+        <div class="text-[11px] text-slate-400 mt-1">
+            {{ $stokTipis === null ? 'Tambahkan kolom stock pada tabel produk agar kartu ini aktif.' : 'Jumlah produk dengan stok 10 atau kurang.' }}
+        </div>
     </div>
 
 </div>
@@ -167,7 +179,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center py-10 text-slate-400">Belum ada transaksi hari ini.</td>
+                    <td colspan="8" class="text-center py-10 text-slate-400">Belum ada transaksi tersimpan.</td>
                 </tr>
                 @endforelse
             </tbody>
