@@ -8,9 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\AdminDashboardController;
-use App\Http\Controllers\AdminIngredientController;
 use App\Http\Controllers\AdminOutletController;
-use App\Http\Controllers\AdminRecipeController;
 
 // ========================================================================
 // HALAMAN UTAMA
@@ -52,14 +50,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/pesanan/status', [\App\Http\Controllers\AdminPesananController::class, 'updateStatus'])->name('admin.pesanan.status');
     Route::put('/admin/pesanan/confirm-payment', [\App\Http\Controllers\AdminPesananController::class, 'confirmPayment'])->name('admin.pesanan.confirm-payment');
     Route::get('/admin/produk', [\App\Http\Controllers\AdminProdukController::class, 'index'])->name('admin.produk');
-    Route::get('/admin/bahan-baku', [AdminIngredientController::class, 'index'])->name('admin.ingredients');
-    Route::post('/admin/bahan-baku', [AdminIngredientController::class, 'store'])->name('admin.ingredients.store');
-    Route::put('/admin/bahan-baku/{ingredient}', [AdminIngredientController::class, 'update'])->name('admin.ingredients.update');
-    Route::delete('/admin/bahan-baku/{ingredient}', [AdminIngredientController::class, 'destroy'])->name('admin.ingredients.destroy');
-    Route::get('/admin/resep', [AdminRecipeController::class, 'index'])->name('admin.recipes');
-    Route::post('/admin/resep', [AdminRecipeController::class, 'store'])->name('admin.recipes.store');
-    Route::put('/admin/resep/{recipeItem}', [AdminRecipeController::class, 'update'])->name('admin.recipes.update');
-    Route::delete('/admin/resep/{recipeItem}', [AdminRecipeController::class, 'destroy'])->name('admin.recipes.destroy');
     Route::get('/admin/outlet', [AdminOutletController::class, 'index'])->name('admin.outlet');
     Route::post('/admin/outlet', [AdminOutletController::class, 'store'])->name('admin.outlet.store');
     Route::put('/admin/outlet/{outlet}', [AdminOutletController::class, 'update'])->name('admin.outlet.update');

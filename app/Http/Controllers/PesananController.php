@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class PesananController extends Controller
 {
@@ -18,11 +19,15 @@ class PesananController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'no_hp' => 'required|string|max:20',
-            'alamat' => 'required|string',
             'jenis_belanja' => 'required|string|max:50',
             'outlet_id' => 'required|integer|exists:outlets,id',
             'payment_method' => 'required|string|in:qris,bank_transfer',
             'client_request_id' => 'nullable|string|max:100',
+            'alamat' => [
+                'nullable',
+                'string',
+                Rule::requiredIf(fn () => $this->requiresDeliveryAddress((string) $request->input('jenis_belanja'))),
+            ],
             'items' => 'required|array|min:1',
             'items.*.pesanan_item' => 'required|string|max:255',
             'items.*.jumlah' => 'required|integer|min:1',
@@ -77,13 +82,17 @@ class PesananController extends Controller
             }
 
             $paymentMethod = (string) $request->payment_method;
+            $resolvedAddress = $this->resolveOrderAddress(
+                (string) $request->jenis_belanja,
+                $request->input('alamat')
+            );
 
             $adminWhatsApp = $this->normalizeWhatsAppNumber((string) ($settings['admin_whatsapp_number'] ?? ''));
             $items = $request->items;
             $grandTotal = 0;
             $orderCode = null;
 
-            DB::transaction(function () use ($request, $items, $outlet, $paymentMethod, &$grandTotal, &$orderCode) {
+            DB::transaction(function () use ($request, $items, $outlet, $paymentMethod, $resolvedAddress, &$grandTotal, &$orderCode) {
                 $firstItem = array_shift($items);
                 $firstTotal = $firstItem['jumlah'] * $firstItem['harga_satuan'];
 
@@ -96,7 +105,7 @@ class PesananController extends Controller
                     'outlet_address_snapshot' => $outlet->address,
                     'nama_pelanggan' => $request->nama,
                     'no_hp' => $request->no_hp,
-                    'alamat' => $request->alamat,
+                    'alamat' => $resolvedAddress,
                     'pesanan' => $firstItem['pesanan_item'],
                     'jumlah' => $firstItem['jumlah'],
                     'harga_satuan' => $firstItem['harga_satuan'],
@@ -125,7 +134,7 @@ class PesananController extends Controller
                         'outlet_address_snapshot' => $outlet->address,
                         'nama_pelanggan' => $request->nama,
                         'no_hp' => $request->no_hp,
-                        'alamat' => $request->alamat,
+                        'alamat' => $resolvedAddress,
                         'pesanan' => $item['pesanan_item'],
                         'jumlah' => $item['jumlah'],
                         'harga_satuan' => $item['harga_satuan'],
@@ -144,7 +153,7 @@ class PesananController extends Controller
                 $request->nama,
                 $request->no_hp,
                 $request->jenis_belanja,
-                $request->alamat,
+                $resolvedAddress,
                 $request->items,
                 $grandTotal,
                 $paymentMethod,
@@ -539,6 +548,31 @@ class PesananController extends Controller
         return filled($settings[$key] ?? null)
             ? (string) $settings[$key]
             : $default;
+    }
+
+    private function requiresDeliveryAddress(string $shoppingType): bool
+    {
+        return $this->normalizeShoppingType($shoppingType) === 'delivery';
+    }
+
+    private function resolveOrderAddress(string $shoppingType, mixed $address): string
+    {
+        $normalizedAddress = trim((string) $address);
+
+        if ($this->requiresDeliveryAddress($shoppingType)) {
+            return $normalizedAddress;
+        }
+
+        return match ($this->normalizeShoppingType($shoppingType)) {
+            'dine in' => 'Makan di tempat',
+            'take away', 'take-away', 'takeaway' => 'Ambil di outlet',
+            default => $normalizedAddress !== '' ? $normalizedAddress : '-',
+        };
+    }
+
+    private function normalizeShoppingType(string $shoppingType): string
+    {
+        return strtolower(trim(preg_replace('/\s+/', ' ', $shoppingType)));
     }
 
     private function checkoutLockKey(?int $userId, string $clientRequestId): string

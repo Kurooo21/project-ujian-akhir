@@ -944,40 +944,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // Reset dan sesuaikan field alamat dengan jenis belanja yang dipilih saat ini
         toggleAlamatField();
 
-        // Opsi alamat tersimpan
-        const addressOptions = document.getElementById('address-options');       // Container opsi alamat
-        const savedAddressPreview = document.getElementById('saved-address-preview'); // Preview teks alamat
-        const useAddressCheckbox = document.getElementById('use_saved_address');  // Checkbox "gunakan alamat tersimpan"
-        const alamatField = document.getElementById('checkout_alamat');           // Text area alamat
-
-        // Jika user memiliki alamat tersimpan di akun
-        if (currentUser.alamat) {
-            addressOptions.classList.remove('hidden'); // Tampilkan opsi alamat
-
-            // Tampilkan preview alamat (potong jika terlalu panjang)
-            savedAddressPreview.textContent = currentUser.alamat.length > 50
-                ? currentUser.alamat.substring(0, 50) + '...'
-                : currentUser.alamat;
-
-            // Otomatis centang dan isi alamat tersimpan
-            useAddressCheckbox.checked = true;
-            alamatField.value = currentUser.alamat;
-
-            // Event: saat checkbox diubah, toggle isi alamat
-            useAddressCheckbox.onchange = () => {
-                if (useAddressCheckbox.checked) {
-                    alamatField.value = currentUser.alamat; // Isi alamat dari akun
-                } else {
-                    alamatField.value = '';                  // Kosongkan untuk input manual
-                }
-                tryRecommendOutlet(alamatField.value);
-            };
-        } else {
-            // User tidak punya alamat tersimpan
-            addressOptions.classList.add('hidden');
-            alamatField.value = '';
-        }
-        tryRecommendOutlet(alamatField.value || currentUser.alamat || '');
+        tryRecommendOutlet(
+            checkoutJenis && checkoutJenis.value === 'Delivery'
+                ? (alamatField.value || currentUser.alamat || '')
+                : ''
+        );
     });
 
     // Tombol "Kembali" dari checkout → tampilkan cart lagi
@@ -1001,6 +972,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const checkoutJenis = document.getElementById('checkout_jenis');
     const alamatWrapper = document.getElementById('checkout-alamat-wrapper');
     const alamatField   = document.getElementById('checkout_alamat');
+    const addressOptions = document.getElementById('address-options');
+    const savedAddressPreview = document.getElementById('saved-address-preview');
+    const useAddressCheckbox = document.getElementById('use_saved_address');
+
+    function populateSavedAddressState() {
+        if (!addressOptions || !savedAddressPreview || !useAddressCheckbox || !alamatField) return;
+
+        if (currentUser && currentUser.alamat) {
+            addressOptions.classList.remove('hidden');
+            savedAddressPreview.textContent = currentUser.alamat.length > 50
+                ? currentUser.alamat.substring(0, 50) + '...'
+                : currentUser.alamat;
+            useAddressCheckbox.checked = true;
+            alamatField.value = currentUser.alamat;
+            return;
+        }
+
+        addressOptions.classList.add('hidden');
+        useAddressCheckbox.checked = false;
+        alamatField.value = '';
+    }
 
     function toggleAlamatField() {
         if (!checkoutJenis || !alamatWrapper || !alamatField) return;
@@ -1009,16 +1001,30 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!needsAddress) {
             alamatWrapper.classList.add('hidden');
             alamatField.removeAttribute('required');
-            alamatField.value = '-'; // Isi default agar tidak kosong di server
+            alamatField.value = '';
+            if (addressOptions) addressOptions.classList.add('hidden');
+            if (useAddressCheckbox) useAddressCheckbox.checked = false;
         } else {
             alamatWrapper.classList.remove('hidden');
             alamatField.setAttribute('required', 'required');
-            if (alamatField.value === '-') alamatField.value = '';
+            populateSavedAddressState();
         }
     }
 
     if (checkoutJenis) {
         checkoutJenis.addEventListener('change', toggleAlamatField);
+    }
+
+    if (useAddressCheckbox && alamatField) {
+        useAddressCheckbox.onchange = () => {
+            if (useAddressCheckbox.checked && currentUser && currentUser.alamat) {
+                alamatField.value = currentUser.alamat;
+            } else {
+                alamatField.value = '';
+            }
+
+            tryRecommendOutlet(alamatField.value);
+        };
     }
 
     if (checkoutOutletSearch) {

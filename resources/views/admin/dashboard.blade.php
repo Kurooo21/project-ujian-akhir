@@ -2,8 +2,8 @@
 @section('page_title', 'Dashboard')
 
 @section('content')
-<!-- RINGKASAN - Grid 4 Kolom -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-7">
+<!-- RINGKASAN - Grid 3 Kolom -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-7">
 
     <!-- 1. Total Pendapatan -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-blue-600 before:to-blue-400">
@@ -52,39 +52,6 @@
         <div class="text-[11px] text-slate-400 mt-1">
             {{ $produkTerlaris ? number_format($produkTerlaris->total_terjual, 0, ',', '.') . ' item terjual' : 'Menunggu transaksi pertama' }}
         </div>
-    </div>
-
-    <!-- 4. Stok Tipis -->
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-red-600 before:to-red-400">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-11 h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-            </div>
-            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-50 text-red-600">Peringatan</span>
-        </div>
-        @if($stokTipis === null)
-        <div class="text-[24px] font-extrabold text-slate-900 tracking-tight mb-1">Belum diatur</div>
-        @else
-        <div class="text-[28px] font-extrabold text-slate-900 tracking-tight mb-1">{{ $stokTipis }}</div>
-        @endif
-        <div class="text-[13px] font-medium text-slate-400">Produk Stok Tipis</div>
-        <div class="text-[11px] text-slate-400 mt-1">
-            {{ $stokTipisDescription }}
-        </div>
-        @if($stokTipis === null)
-        <div class="flex flex-wrap gap-2 mt-4">
-            <a href="{{ route('admin.ingredients') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
-                Isi Stok Bahan
-            </a>
-            <a href="{{ route('admin.recipes') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
-                Atur Resep
-            </a>
-        </div>
-        @endif
     </div>
 
 </div>

@@ -9,7 +9,7 @@ class AdminProdukController extends Controller
 {
     public function index()
     {
-        $products = Product::with('recipeItems.ingredient')
+        $products = Product::query()
             ->orderBy('created_at', 'desc')
             ->get();
 

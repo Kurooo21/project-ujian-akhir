@@ -27,15 +27,12 @@
                     <th class="py-3 px-6">Produk</th>
                     <th class="py-3 px-6">Kategori</th>
                     <th class="py-3 px-6">Harga</th>
-                    <th class="py-3 px-6">Stok Menu</th>
-                    <th class="py-3 px-6">Status Stok</th>
                     <th class="py-3 px-6">Deskripsi</th>
                     <th class="py-3 px-6 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="text-[13px] text-slate-600 divide-y divide-slate-100">
                 @forelse($products as $index => $produk)
-                @php($inventorySnapshot = $produk->inventory_snapshot)
                 <tr class="hover:bg-blue-50/50 transition-colors">
                     <td class="py-3.5 px-6">{{ $index + 1 }}</td>
                     <td class="py-3.5 px-6">
@@ -56,40 +53,9 @@
                         </span>
                     </td>
                     <td class="py-3.5 px-6 font-semibold text-slate-900">Rp {{ number_format($produk->price, 0, ',', '.') }}</td>
-                    <td class="py-3.5 px-6">
-                        @if($inventorySnapshot)
-                            <div class="font-semibold text-slate-900">{{ $inventorySnapshot['available_portions'] }} porsi</div>
-                            <div class="text-[11px] text-slate-400">Min. {{ $inventorySnapshot['minimum_portions'] }} porsi</div>
-                            <div class="text-[11px] text-slate-400">Pembatas: {{ $inventorySnapshot['limiting_ingredient_name'] }}</div>
-                        @else
-                            <div class="font-medium text-slate-500">Belum ada resep</div>
-                            <div class="text-[11px] text-slate-400">Atur bahan baku per porsi.</div>
-                        @endif
-                    </td>
-                    <td class="py-3.5 px-6">
-                        @if(!$inventorySnapshot)
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
-                                Belum diatur
-                            </span>
-                        @elseif($inventorySnapshot['is_low_stock'])
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-red-50 text-red-600 border border-red-100">
-                                Kurang {{ $inventorySnapshot['shortage_portions'] }} porsi
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-green-600 border border-green-100">
-                                Aman
-                            </span>
-                        @endif
-                    </td>
                     <td class="py-3.5 px-6 truncate max-w-[200px]" title="{{ $produk->description }}">{{ Str::limit($produk->description, 50) }}</td>
                     <td class="py-3.5 px-6 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('admin.recipes', ['product' => $produk->id]) }}" class="p-2 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-md transition-colors" title="Atur Resep">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-                                    <path d="M6.5 17A2.5 2.5 0 014 14.5V5a2 2 0 012-2h14v14"/>
-                                </svg>
-                            </a>
                             <form action="{{ route('products.destroy', $produk->id) }}" method="POST" onsubmit="return confirm('Hapus produk ini?');">
                                 @csrf
                                 @method('DELETE')
@@ -107,7 +73,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center py-10 text-slate-400">Belum ada data produk.</td>
+                    <td colspan="6" class="text-center py-10 text-slate-400">Belum ada data produk.</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -154,11 +120,6 @@
                             <option value="minuman">Minuman</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-[13px] font-semibold text-slate-700 mb-1">Batas Minimum Porsi</label>
-                        <input type="number" id="new_menu_minimum_portions" min="0" value="5" class="block w-full rounded-md border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm border p-2.5">
-                        <p class="mt-1 text-xs text-slate-400">Dipakai untuk warning stok tipis pada dashboard.</p>
-                    </div>
                     <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" class="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50" onclick="closeAddMenuModal()">Batal</button>
                         <button type="submit" id="btnSubmitMenu" class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Simpan Menu</button>
@@ -193,7 +154,6 @@
         formData.append('price', document.getElementById('new_menu_price').value);
         formData.append('description', document.getElementById('new_menu_desc').value);
         formData.append('category', document.getElementById('new_menu_category').value);
-        formData.append('minimum_portions', document.getElementById('new_menu_minimum_portions').value);
         
         const imageFile = document.getElementById('new_menu_img').files[0];
         if (imageFile) {

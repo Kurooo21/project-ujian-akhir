@@ -12,7 +12,7 @@ class PesananCheckoutTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_checkout_with_same_client_request_id_only_creates_one_order(): void
+    private function createUserAndOutlet(): array
     {
         $user = User::create([
             'name' => 'Man',
@@ -31,6 +31,13 @@ class PesananCheckoutTest extends TestCase
             'is_active' => true,
             'sort_order' => 1,
         ]);
+
+        return [$user, $outlet];
+    }
+
+    public function test_checkout_with_same_client_request_id_only_creates_one_order(): void
+    {
+        [$user, $outlet] = $this->createUserAndOutlet();
 
         $payload = [
             'nama' => 'man',
@@ -62,5 +69,36 @@ class PesananCheckoutTest extends TestCase
 
         $this->assertDatabaseCount('pesanan', 1);
         $this->assertSame($firstResponse->json('order_code'), Pesanan::query()->value('order_code'));
+    }
+
+    public function test_dine_in_checkout_does_not_require_address(): void
+    {
+        [$user, $outlet] = $this->createUserAndOutlet();
+
+        $response = $this->actingAs($user)->postJson(route('pesanan.store'), [
+            'nama' => 'man',
+            'no_hp' => '082345632',
+            'alamat' => '',
+            'jenis_belanja' => 'Dine In',
+            'outlet_id' => $outlet->id,
+            'payment_method' => 'qris',
+            'client_request_id' => 'checkout-req-dine-in',
+            'items' => [
+                [
+                    'pesanan_item' => 'KEJU POKPOK',
+                    'jumlah' => 1,
+                    'harga_satuan' => 25000,
+                ],
+            ],
+        ]);
+
+        $response->assertOk()->assertJson([
+            'success' => true,
+        ]);
+
+        $this->assertDatabaseHas('pesanan', [
+            'jenis_belanja' => 'Dine In',
+            'alamat' => 'Makan di tempat',
+        ]);
     }
 }

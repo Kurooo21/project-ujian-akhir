@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Ingredient;
 use App\Models\Pesanan;
+use App\Models\Product;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class AdminPesananController extends Controller
 {
@@ -81,18 +85,61 @@ class AdminPesananController extends Controller
             'group_id' => 'required|string',
         ]);
 
-        $ordersQuery = $this->queryByGroupId($request->group_id);
-        $orders = $ordersQuery->get();
+        $result = DB::transaction(function () use ($request) {
+            $orders = $this->queryByGroupId($request->group_id)
+                ->lockForUpdate()
+                ->get();
 
-        if ($orders->isEmpty()) {
+            if ($orders->isEmpty()) {
+                return [
+                    'status' => 'not_found',
+                ];
+            }
+
+            $firstOrder = $orders->first();
+
+            if (($firstOrder->payment_status ?? 'Lunas') === 'Lunas') {
+                return [
+                    'status' => 'already_paid',
+                ];
+            }
+
+            $inventoryError = $this->deductIngredientsForOrders($orders);
+
+            if ($inventoryError !== null) {
+                return [
+                    'status' => 'inventory_error',
+                    'message' => $inventoryError,
+                ];
+            }
+
+            Pesanan::whereIn('id', $orders->pluck('id'))
+                ->update([
+                    'payment_status' => 'Lunas',
+                    'paid_at' => now(),
+                    'status' => 'Diproses',
+                ]);
+
+            return [
+                'status' => 'success',
+            ];
+        });
+
+        if ($result['status'] === 'not_found') {
             return redirect()->route('admin.pesanan');
         }
 
-        $ordersQuery->update([
-            'payment_status' => 'Lunas',
-            'paid_at' => now(),
-            'status' => 'Diproses',
-        ]);
+        if ($result['status'] === 'already_paid') {
+            return redirect()
+                ->route('admin.pesanan')
+                ->with('success', 'Pembayaran pesanan ini sudah pernah dikonfirmasi sebelumnya.');
+        }
+
+        if ($result['status'] === 'inventory_error') {
+            return redirect()
+                ->route('admin.pesanan')
+                ->with('error', $result['message']);
+        }
 
         return redirect()->route('admin.pesanan');
     }
@@ -149,5 +196,95 @@ class AdminPesananController extends Controller
             ->implode(', ');
 
         return trim(($name ?? 'Outlet') . ($area ? ' - ' . $area : ''));
+    }
+
+    private function deductIngredientsForOrders(Collection $orders): ?string
+    {
+        $ingredientDeductions = $this->buildIngredientDeductions($orders);
+
+        if ($ingredientDeductions->isEmpty()) {
+            return null;
+        }
+
+        $ingredients = Ingredient::query()
+            ->whereIn('id', $ingredientDeductions->keys())
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        foreach ($ingredientDeductions as $ingredientId => $requiredQuantity) {
+            /** @var Ingredient|null $ingredient */
+            $ingredient = $ingredients->get($ingredientId);
+
+            if (! $ingredient) {
+                return 'Ada bahan resep yang tidak ditemukan. Cek ulang data resep produk sebelum konfirmasi pembayaran.';
+            }
+
+            if ((float) $ingredient->stock_quantity < $requiredQuantity) {
+                return sprintf(
+                    'Stok bahan %s tidak cukup. Dibutuhkan %s %s, sisa stok %s %s.',
+                    $ingredient->name,
+                    $this->formatIngredientQuantity($requiredQuantity),
+                    $ingredient->unit,
+                    $this->formatIngredientQuantity((float) $ingredient->stock_quantity),
+                    $ingredient->unit
+                );
+            }
+        }
+
+        foreach ($ingredientDeductions as $ingredientId => $requiredQuantity) {
+            /** @var Ingredient $ingredient */
+            $ingredient = $ingredients->get($ingredientId);
+
+            $ingredient->stock_quantity = max(
+                (float) $ingredient->stock_quantity - $requiredQuantity,
+                0
+            );
+            $ingredient->save();
+        }
+
+        return null;
+    }
+
+    private function buildIngredientDeductions(Collection $orders): Collection
+    {
+        $productsByName = Product::with('recipeItems.ingredient')
+            ->get()
+            ->keyBy(fn (Product $product) => $this->normalizeProductName($product->name));
+
+        return $orders->reduce(function (Collection $carry, Pesanan $order) use ($productsByName) {
+            /** @var Product|null $product */
+            $product = $productsByName->get($this->normalizeProductName((string) $order->pesanan));
+
+            if (! $product) {
+                return $carry;
+            }
+
+            $orderQuantity = max((float) $order->jumlah, 0);
+
+            foreach ($product->recipeItems as $recipeItem) {
+                if (! $recipeItem->ingredient || $recipeItem->quantity_required <= 0) {
+                    continue;
+                }
+
+                $ingredientId = (int) $recipeItem->ingredient_id;
+                $carry->put(
+                    $ingredientId,
+                    (float) $carry->get($ingredientId, 0) + ($orderQuantity * (float) $recipeItem->quantity_required)
+                );
+            }
+
+            return $carry;
+        }, collect())->filter(fn ($quantity) => $quantity > 0);
+    }
+
+    private function normalizeProductName(string $productName): string
+    {
+        return strtolower(trim(preg_replace('/\s+/', ' ', $productName)));
+    }
+
+    private function formatIngredientQuantity(float $quantity): string
+    {
+        return rtrim(rtrim(number_format($quantity, 2, '.', ''), '0'), '.');
     }
 }

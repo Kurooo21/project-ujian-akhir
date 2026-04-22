@@ -94,24 +94,6 @@
                 Produk
             </a>
 
-            <a href="{{ route('admin.ingredients') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.ingredients' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
-                    <path d="M12 2v20"/>
-                    <path d="M5 7h14"/>
-                    <path d="M7 12h10"/>
-                    <path d="M9 17h6"/>
-                </svg>
-                Bahan Baku
-            </a>
-
-            <a href="{{ route('admin.recipes') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.recipes' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
-                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-                    <path d="M6.5 17A2.5 2.5 0 014 14.5V5a2 2 0 012-2h14v14"/>
-                </svg>
-                Resep Produk
-            </a>
-
             <a href="{{ route('admin.outlet') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.outlet' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
                     <path d="M12 21s-6-4.35-6-11a6 6 0 1112 0c0 6.65-6 11-6 11z"/>
