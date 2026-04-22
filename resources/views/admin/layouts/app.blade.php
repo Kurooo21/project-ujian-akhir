@@ -25,11 +25,17 @@
         }
     </script>
     
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         /* Custom scrollbar fallback untuk sidebar */
         .sidebar-scroll::-webkit-scrollbar { width: 4px; }
         .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
         .sidebar-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+
+        /* SweetAlert2 z-index override */
+        .swal2-container { z-index: 99999 !important; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans min-h-screen antialiased flex">
@@ -86,6 +92,32 @@
                     <line x1="7" y1="7" x2="7.01" y2="7"/>
                 </svg>
                 Produk
+            </a>
+
+            <a href="{{ route('admin.ingredients') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.ingredients' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
+                    <path d="M12 2v20"/>
+                    <path d="M5 7h14"/>
+                    <path d="M7 12h10"/>
+                    <path d="M9 17h6"/>
+                </svg>
+                Bahan Baku
+            </a>
+
+            <a href="{{ route('admin.recipes') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.recipes' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                    <path d="M6.5 17A2.5 2.5 0 014 14.5V5a2 2 0 012-2h14v14"/>
+                </svg>
+                Resep Produk
+            </a>
+
+            <a href="{{ route('admin.outlet') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.outlet' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
+                    <path d="M12 21s-6-4.35-6-11a6 6 0 1112 0c0 6.65-6 11-6 11z"/>
+                    <circle cx="12" cy="10" r="2.5"/>
+                </svg>
+                Outlet
             </a>
 
             <a href="{{ route('admin.laporan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.laporan' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
@@ -154,6 +186,29 @@
 
         <!-- PAGE CONTENT -->
         <div class="p-4 lg:p-7">
+            @if(session('success'))
+                <div class="mb-5 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    <div class="font-semibold mb-1">Ada data yang perlu dicek lagi:</div>
+                    <ul class="list-disc pl-5 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @yield('content')
         </div>
     </main>
@@ -195,5 +250,7 @@
             }
         }
     </script>
+
+    @stack('scripts')
 </body>
 </html>

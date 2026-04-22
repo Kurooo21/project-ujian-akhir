@@ -26,14 +26,25 @@ class AdminPesananController extends Controller
                 'nama_pelanggan' => $first->nama_pelanggan,
                 'no_hp' => $first->no_hp,
                 'alamat' => $first->alamat,
+                'outlet_name' => $first->outlet_name,
+                'outlet_city' => $first->outlet_city,
+                'outlet_district' => $first->outlet_district,
+                'outlet_address' => $first->outlet_address_snapshot,
+                'outlet_label' => $this->buildOutletLabel($first->outlet_name, $first->outlet_district, $first->outlet_city),
                 'jenis_belanja' => $first->jenis_belanja,
                 'items_summary' => $itemsList,
                 'total_harga' => $items->sum('total_harga'),
                 'payment_method' => $first->payment_method ?? 'manual',
+                'payment_method_label' => $this->paymentMethodLabel($first->payment_method),
                 'payment_status' => $first->payment_status ?? 'Lunas',
                 'paid_at' => $first->paid_at,
                 'status' => $first->status,
                 'created_at' => $first->created_at,
+                'payment_proof' => $first->payment_proof,
+                'payment_proof_url' => $first->payment_proof
+                    ? asset('storage/' . $first->payment_proof)
+                    : null,
+                'payment_proof_uploaded_at' => $first->payment_proof_uploaded_at,
             ];
         })->values();
 
@@ -118,5 +129,25 @@ class AdminPesananController extends Controller
         }
 
         abort(422, 'Format group_id tidak valid.');
+    }
+
+    private function paymentMethodLabel(?string $paymentMethod): string
+    {
+        return match ($paymentMethod) {
+            'qris' => 'QRIS',
+            'bank_transfer' => 'Transfer Bank',
+            'whatsapp_transfer' => 'Transfer via WhatsApp',
+            'manual', null, '' => 'Manual',
+            default => ucwords(str_replace('_', ' ', $paymentMethod)),
+        };
+    }
+
+    private function buildOutletLabel(?string $name, ?string $district, ?string $city): string
+    {
+        $area = collect([$district, $city])
+            ->filter()
+            ->implode(', ');
+
+        return trim(($name ?? 'Outlet') . ($area ? ' - ' . $area : ''));
     }
 }

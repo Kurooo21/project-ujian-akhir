@@ -274,7 +274,7 @@
         <section id="home" class="hero relative w-full overflow-hidden mt-[64px] sm:mt-[72px] md:mt-[80px] lg:mt-[88px]">
 
             <!-- Container Slider -->
-            <div id="hero-slider" class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[600px]">
+            <div id="hero-slider" class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[700px]">
                 
                 <!-- Slide Default 1: Gambar promosi utama -->
                 <div class="hero-slide absolute inset-0 w-full h-100 transition-opacity duration-700 ease-in-out" style="opacity:1;">
@@ -393,7 +393,22 @@
              dan peta Google Maps embed
              ======================================================== -->
         <section id="contact" class="contact bg-[#B30000] py-20 text-white relative">
-            <div class="container mx-auto px-4 contact-content relative h-[70vh]">
+            @php
+                $contactOutlets = collect($outletsData ?? [])->values();
+                $primaryOutlet = $contactOutlets->first();
+                $primaryOutletQuery = trim(collect([
+                    data_get($primaryOutlet, 'address'),
+                    data_get($primaryOutlet, 'district'),
+                    data_get($primaryOutlet, 'city'),
+                    data_get($primaryOutlet, 'province'),
+                ])->filter()->implode(', '));
+                $primaryMapsLink = data_get($primaryOutlet, 'maps_url')
+                    ?: ($primaryOutletQuery ? 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($primaryOutletQuery) : 'https://maps.google.com');
+                $primaryMapEmbedUrl = $primaryOutletQuery
+                    ? 'https://www.google.com/maps?q=' . rawurlencode($primaryOutletQuery) . '&output=embed'
+                    : 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126932.6288647893!2d106.75628659550778!3d-6.186933566160163!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e945e34b9d%3A0x5371bf0fdad786a2!2sJakarta%2C%20Special%20Capital%20Region%20of%20Jakarta%2C%20Indonesia!5e0!3m2!1sen!2sus!4v1707505296053!5m2!1sen!2sus';
+            @endphp
+            <div class="container mx-auto px-4 contact-content relative min-h-[70vh]">
                 <div
                     class="contact-header absolute top-0 right-0 hidden lg:block opacity-20 hover:opacity-100 transition-opacity duration-300">
                     <div class="footer-logo">
@@ -422,8 +437,61 @@
 
                         <div class="contact-details space-y-6">
                             <div class="detail-item">
-                                <h4 class="font-heading text-xl tracking-wide mb-1">ALAMAT OUTLET</h4>
-                                <p class="text-gray-100" id="display-outlet-address"><i class="fas fa-map-marker-alt mr-2"></i> {{ $settings['outlet_address'] ?? 'Jl. Merdeka No. 123, Jakarta' }}</p>
+                                <h4 class="font-heading text-xl tracking-wide mb-1">OUTLET UTAMA</h4>
+                                <div class="mt-4 space-y-2.5">
+                                    @forelse($contactOutlets as $outlet)
+                                        @php
+                                            $outletQuery = trim(collect([
+                                                $outlet['address'] ?? null,
+                                                $outlet['district'] ?? null,
+                                                $outlet['city'] ?? null,
+                                                $outlet['province'] ?? null,
+                                            ])->filter()->implode(', '));
+                                            $outletMapsLink = $outlet['maps_url'] ?? ($outletQuery ? 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($outletQuery) : 'https://maps.google.com');
+                                            $outletEmbedUrl = $outletQuery
+                                                ? 'https://www.google.com/maps?q=' . rawurlencode($outletQuery) . '&output=embed'
+                                                : $primaryMapEmbedUrl;
+                                        @endphp
+                                        <div
+                                            class="contact-outlet-card rounded-2xl border px-4 py-3 cursor-pointer transition-all duration-300 hover:bg-white/15 {{ $loop->first ? 'border-white/35 bg-white/18 shadow-lg shadow-black/10' : 'border-white/15 bg-white/10' }}"
+                                            data-contact-outlet-card
+                                            data-outlet-name="{{ $outlet['name'] ?? 'Outlet' }}"
+                                            data-outlet-address="{{ $outlet['address'] ?? '-' }}"
+                                            data-outlet-embed-url="{{ $outletEmbedUrl }}"
+                                            data-outlet-maps-url="{{ $outletMapsLink }}"
+                                            aria-pressed="{{ $loop->first ? 'true' : 'false' }}"
+                                            tabindex="0"
+                                            role="button"
+                                        >
+                                            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                <div>
+                                                    <p class="text-sm font-bold text-white">{{ $outlet['name'] ?? 'Outlet' }}</p>
+                                                    <p class="mt-1 text-sm leading-relaxed text-white/85">
+                                                        <i class="fas fa-map-marker-alt mr-2 text-white/60"></i>{{ $outlet['address'] ?? '-' }}
+                                                    </p>
+                                                    @if(!empty($outlet['district']) || !empty($outlet['city']))
+                                                        <p class="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/60">
+                                                            {{ collect([$outlet['district'] ?? null, $outlet['city'] ?? null])->filter()->implode(' • ') }}
+                                                        </p>
+                                                    @endif
+                                                </div>
+                                                @if(!empty($outletMapsLink))
+                                                    <button
+                                                        type="button"
+                                                        class="inline-flex w-fit items-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#B30000] transition hover:bg-gray-100"
+                                                        data-contact-outlet-trigger
+                                                    >
+                                                        <i class="fas fa-location-arrow mr-2 text-[10px]"></i>Maps
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <p class="rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-3 text-sm text-white/75">
+                                            Outlet aktif belum tersedia.
+                                        </p>
+                                    @endforelse
+                                </div>
                             </div>
                             <div class="detail-item">
                                 <h4 class="font-heading text-xl tracking-wide mb-1">JAM BUKA</h4>
@@ -435,18 +503,70 @@
                         <p class="copyright mt-12 text-sm opacity-80">© 2026 Chi Pok Indonesia. All Rights Reserved!</p>
                     </div>
 
-                    <div class="contact-right flex-1 min-w-[300px]">
+                    <div class="contact-right flex-1 min-w-[300px] space-y-6">
                         <h2 class="section-title text-white font-heading text-4xl mb-6 uppercase">CONTACT</h2>
                         <div
                             class="map-container rounded-[20px] overflow-hidden h-[300px] bg-gray-200 shadow-lg relative group">
                             <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126932.6288647893!2d106.75628659550778!3d-6.186933566160163!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e945e34b9d%3A0x5371bf0fdad786a2!2sJakarta%2C%20Special%20Capital%20Region%20of%20Jakarta%2C%20Indonesia!5e0!3m2!1sen!2sus!4v1707505296053!5m2!1sen!2sus"
+                                id="contact-map-frame"
+                                src="{{ $primaryMapEmbedUrl }}"
                                 width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
                                 referrerpolicy="no-referrer-when-downgrade"
                                 class="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500"></iframe>
-                            <a href="https://maps.google.com" target="_blank"
+                            <a id="contact-map-link" href="{{ $primaryMapsLink }}" target="_blank" rel="noopener"
                                 class="btn btn-white absolute bottom-4 right-4 bg-white text-[#B30000] px-6 py-2 rounded-full font-bold shadow-md hover:bg-gray-100 transition-colors z-10 text-sm">BUKA
                                 DI MAPS</a>
+                        </div>
+
+                        <div class="hidden rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+                                <div>
+                                    <h3 class="font-heading text-2xl text-white uppercase tracking-wide">Outlet Tersedia</h3>
+                                    <p class="text-sm text-white/70">Pilih outlet yang paling dekat dengan area kamu.</p>
+                                </div>
+                                <span class="inline-flex w-fit items-center rounded-full border border-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
+                                    {{ $contactOutlets->count() }} Outlet
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                                @forelse($contactOutlets as $outlet)
+                                    <div class="rounded-2xl border border-white/10 bg-black/10 p-4 text-white">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <h4 class="text-base font-bold leading-tight">{{ $outlet['name'] ?? 'Outlet' }}</h4>
+                                                <p class="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/60">
+                                                    {{ collect([$outlet['district'] ?? null, $outlet['city'] ?? null])->filter()->implode(' • ') ?: 'Area outlet' }}
+                                                </p>
+                                            </div>
+                                            <span class="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-300"></span>
+                                        </div>
+
+                                        <p class="mt-3 text-sm leading-relaxed text-white/85">
+                                            <i class="fas fa-map-marker-alt mr-2 text-white/60"></i>{{ $outlet['address'] ?? '-' }}
+                                        </p>
+
+                                        <div class="mt-4 flex flex-wrap items-center gap-2">
+                                            @if(!empty($outlet['phone']))
+                                                <span class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/85">
+                                                    <i class="fas fa-phone-alt mr-2 text-[10px] text-white/60"></i>{{ $outlet['phone'] }}
+                                                </span>
+                                            @endif
+
+                                            @if(!empty($outlet['maps_url']))
+                                                <a href="{{ $outlet['maps_url'] }}" target="_blank" rel="noopener"
+                                                    class="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#B30000] transition hover:bg-gray-100">
+                                                    <i class="fas fa-location-arrow mr-2 text-[10px]"></i>Lihat Maps
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="xl:col-span-2 rounded-2xl border border-dashed border-white/20 bg-black/10 px-4 py-5 text-sm text-white/75">
+                                        Outlet aktif belum tersedia. Admin bisa menambahkannya dari menu manajemen outlet.
+                                    </div>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -529,6 +649,35 @@
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
                                     </div>
                                     <div>
+                                        <label for="checkout_outlet_search" class="block text-sm font-medium text-gray-700">Cari Area Outlet</label>
+                                        <input type="text" id="checkout_outlet_search"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"
+                                            placeholder="Contoh: Jakarta Barat, Kebon Jeruk, Bandung">
+                                        <p id="checkout-outlet-search-hint" class="mt-2 text-xs text-gray-500">Ketik kota, kecamatan, atau nama outlet agar pilihan outlet lebih mudah dicari.</p>
+                                    </div>
+                                    <div>
+                                        <label for="checkout_outlet_id" class="block text-sm font-medium text-gray-700">Pilih Outlet</label>
+                                        <select id="checkout_outlet_id" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                            <option value="">Pilih outlet terdekat</option>
+                                        </select>
+                                        <p id="checkout-outlet-helper" class="mt-2 text-xs text-gray-500 leading-relaxed bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                                            Pilih outlet yang paling dekat dengan area kamu.
+                                        </p>
+                                    </div>
+                                    <div id="checkout-outlet-preview" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600"></div>
+                                    <div>
+                                        <label for="checkout_payment_method" class="block text-sm font-medium text-gray-700">Metode Pembayaran</label>
+                                        <select id="checkout_payment_method" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                            <option value="qris">QRIS</option>
+                                            <option value="bank_transfer">Transfer Bank</option>
+                                        </select>
+                                        <p id="checkout-payment-hint" class="mt-2 text-xs text-gray-500 leading-relaxed bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                                            Ini mode demo. Pilih QRIS atau transfer bank untuk mensimulasikan alur pembayaran tanpa transaksi sungguhan.
+                                        </p>
+                                    </div>
+                                    <div id="checkout-alamat-wrapper">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
                                         <div id="address-options" class="hidden mb-2">
                                             <label class="flex items-center gap-2 cursor-pointer bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm hover:bg-red-100 transition">
@@ -543,7 +692,7 @@
                                     </div>
                                     <div class="pt-2 flex gap-3">
                                         <button type="submit"
-                                            class="flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 transition flex items-center gap-2">
+                                            class="flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 transition flex items-center gap-2 disabled:cursor-not-allowed disabled:bg-red-400 disabled:opacity-70">
                                             <i class="fas fa-receipt"></i> Buat Pesanan
                                         </button>
                                         <button type="button" id="btn-back-to-cart"
@@ -552,7 +701,7 @@
                                         </button>
                                     </div>
                                     <p class="text-xs text-gray-500 leading-relaxed bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                                        Pesanan akan disimpan dulu. Setelah itu WhatsApp akan terbuka di tab baru, sementara halaman web ini tetap terbuka untuk kamu lanjut melihat pesanan.
+                                        Pesanan akan disimpan dulu. Setelah itu detail pembayaran demo sesuai metode yang dipilih akan langsung ditampilkan di website ini.
                                     </p>
                                 </form>
                             </div>
@@ -853,24 +1002,34 @@
         role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
         <div class="flex min-h-screen items-center justify-center p-4">
-            <div class="relative w-full max-w-4xl bg-white text-left shadow-2xl rounded-2xl overflow-hidden animate-[modalIn_0.3s_ease-out]">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="flex items-center justify-between mb-5 pb-3 border-b">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-receipt text-red-600"></i>
+            <div class="relative w-full max-w-4xl overflow-hidden rounded-[28px] bg-white text-left shadow-2xl ring-1 ring-slate-200 animate-[modalIn_0.3s_ease-out]">
+                <div class="relative px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
+                    <div class="flex items-start justify-between gap-4 mb-5">
+                        <div class="flex items-start gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+                                <i class="fas fa-receipt text-base"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-gray-900">Pesanan Saya</h3>
+                            <div>
+                                <h3 class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">Pesanan Saya</h3>
+                                <p class="text-sm text-slate-500 mt-1">Lihat status pembayaran dan progres pesananmu dengan tampilan yang lebih sederhana.</p>
+                            </div>
                         </div>
                         <button type="button" id="closeUserOrdersModal"
-                            class="text-gray-400 hover:text-red-500 transition-colors w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center">
-                            <i class="fas fa-times text-xl"></i>
+                            class="text-slate-400 hover:text-red-500 transition-colors w-10 h-10 rounded-full hover:bg-slate-50 flex items-center justify-center border border-slate-200 bg-white">
+                            <i class="fas fa-times text-base"></i>
                         </button>
+                    </div>
+
+                    <div id="user-orders-summary" class="flex flex-wrap gap-2 mb-4">
+                        <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                            <span class="font-semibold">Total</span>
+                            <span class="font-bold text-slate-900">0</span>
+                        </div>
                     </div>
 
                     <div class="w-full">
                         <!-- Container untuk List Pesanan (Card Style) -->
-                        <div id="user-orders-list" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                        <div id="user-orders-list" class="space-y-3 max-h-[62vh] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
                             <div class="p-6 text-center text-gray-500">Belum ada riwayat pesanan.</div>
                         </div>
                     </div>
@@ -928,7 +1087,7 @@
                     <div class="sm:flex sm:items-start">
                         <div
                             class="hidden sm:block mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <i class="fas fa-star text-yellow-600"></i>
+                            <i class="fas fa-star text-yellow-500 mt-3 ml-3"></i>
                         </div>
                         <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                             <h3 class="text-xl font-bold leading-6 text-gray-900" id="modal-title">Ulasan Produk</h3>
@@ -965,7 +1124,7 @@
                                             class="block text-sm font-medium text-gray-700">Komentar</label>
                                         <textarea id="review_comment" rows="3"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"
-                                            placeholder="Ceritakan pengalamanmu..."></textarea>P
+                                            placeholder="Ceritakan pengalamanmu..."></textarea>
                                     </div>
                                     <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                                         <button type="submit"
@@ -1106,7 +1265,7 @@
                     <div id="settings-tab-slider" class="flex p-1 bg-gray-100 rounded-xl mb-6 hidden border border-gray-200">
                         <button id="btn-tab-profile" type="button" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all">Profil Saya</button>
                         <button id="btn-tab-banner" type="button" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Edit Banner</button>
-                        <button id="btn-tab-outlet" type="button" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Alamat Outlet</button>
+                        <button id="btn-tab-outlet" type="button" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Outlet & Demo Payment</button>
                     </div>
 
                     <!-- Container Profil -->
@@ -1236,8 +1395,8 @@
 
                     <!-- Container Outlet -->
                     <div id="container-outlet" class="hidden">
-                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">PENGATURAN OUTLET</h3>
-                        <p class="text-gray-400 text-sm mb-6">Ubah alamat outlet dan nomor WhatsApp admin yang dipakai untuk pembayaran</p>
+                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">PENGATURAN OUTLET & DEMO PAYMENT</h3>
+                        <p class="text-gray-400 text-sm mb-6">Kelola alamat outlet, WhatsApp admin, QRIS demo, dan rekening demo untuk checkout pelanggan</p>
 
                         <form id="form-edit-outlet" class="space-y-4">
                             <div>
@@ -1264,6 +1423,59 @@
                                 <p class="text-xs text-gray-400 mt-2">Gunakan format angka aktif WhatsApp, misalnya 6281336441994.</p>
                             </div>
 
+                            <div class="pt-2 border-t border-gray-200">
+                                <h4 class="font-semibold text-gray-800 mb-3">Pengaturan Demo QRIS</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="input_payment_qris_label" class="block text-sm font-semibold text-gray-600 mb-1">Label QRIS Demo</label>
+                                        <input type="text" id="input_payment_qris_label" name="payment_qris_label" placeholder="Contoh: Demo QRIS Chi-Pok"
+                                            value="{{ $settings['payment_qris_label'] ?? '' }}"
+                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                    </div>
+                                    <div>
+                                        <label for="input_payment_qris_image_url" class="block text-sm font-semibold text-gray-600 mb-1">Link / Path Gambar QRIS Demo</label>
+                                        <input type="text" id="input_payment_qris_image_url" name="payment_qris_image_url" placeholder="/asset/qris-chipok.png atau https://..."
+                                            value="{{ $settings['payment_qris_image_url'] ?? '' }}"
+                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                        <p class="text-xs text-gray-400 mt-2">Bisa isi path lokal seperti <span class="font-semibold">/asset/qris-chipok.png</span> atau URL gambar penuh.</p>
+                                    </div>
+                                    <div>
+                                        <label for="input_payment_qris_note" class="block text-sm font-semibold text-gray-600 mb-1">Catatan QRIS Demo</label>
+                                        <textarea id="input_payment_qris_note" name="payment_qris_note" rows="2" placeholder="Contoh: Ini hanya QRIS demo untuk presentasi."
+                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none">{{ $settings['payment_qris_note'] ?? '' }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 border-t border-gray-200">
+                                <h4 class="font-semibold text-gray-800 mb-3">Pengaturan Demo Transfer Bank</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="input_payment_bank_name" class="block text-sm font-semibold text-gray-600 mb-1">Nama Bank Demo</label>
+                                        <input type="text" id="input_payment_bank_name" name="payment_bank_name" placeholder="Contoh: BCA Demo"
+                                            value="{{ $settings['payment_bank_name'] ?? '' }}"
+                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                    </div>
+                                    <div>
+                                        <label for="input_payment_bank_account_number" class="block text-sm font-semibold text-gray-600 mb-1">Nomor Rekening</label>
+                                        <input type="text" id="input_payment_bank_account_number" name="payment_bank_account_number" placeholder="Contoh: 1234567890"
+                                            value="{{ $settings['payment_bank_account_number'] ?? '' }}"
+                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                    </div>
+                                    <div>
+                                        <label for="input_payment_bank_account_name" class="block text-sm font-semibold text-gray-600 mb-1">Nama Pemilik Rekening</label>
+                                        <input type="text" id="input_payment_bank_account_name" name="payment_bank_account_name" placeholder="Contoh: Chi Pok Indonesia"
+                                            value="{{ $settings['payment_bank_account_name'] ?? '' }}"
+                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
+                                    </div>
+                                    <div>
+                                        <label for="input_payment_bank_note" class="block text-sm font-semibold text-gray-600 mb-1">Catatan Transfer Bank Demo</label>
+                                        <textarea id="input_payment_bank_note" name="payment_bank_note" rows="2" placeholder="Contoh: Ini hanya rekening demo untuk simulasi."
+                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none">{{ $settings['payment_bank_note'] ?? '' }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Tombol Simpan -->
                             <button type="submit"
                                 class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide mt-4">
@@ -1287,6 +1499,7 @@
     {{-- Sehingga variabel PRODUCTS_DATA bisa diakses di app.js --}}
     <script>
         const PRODUCTS_DATA = @json($productsData);                 // Data produk dari database
+        const OUTLETS_DATA = @json($outletsData ?? []);            // Data outlet aktif untuk checkout
         const APP_BASE_URL = @json(rtrim(url('/'), '/'));           // Base URL aplikasi (support subfolder)
         let CSRF_TOKEN = @json(csrf_token());                       // Token CSRF untuk keamanan (mutable)
     </script>

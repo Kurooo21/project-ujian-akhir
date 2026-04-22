@@ -6,7 +6,6 @@ use App\Models\Pesanan;
 use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Collection;
 
 class AdminDashboardController extends Controller
@@ -18,7 +17,7 @@ class AdminDashboardController extends Controller
      * - Total pendapatan hari ini
      * - Jumlah transaksi hari ini
      * - Produk terlaris (all-time)
-     * - Jumlah produk dengan stok tipis
+     * - Jumlah menu dengan stok tipis berdasarkan resep
      * - 10 transaksi terkini
      */
     public function index()
@@ -26,6 +25,9 @@ class AdminDashboardController extends Controller
         $dashboardTimezone = config('app.dashboard_timezone', env('APP_DASHBOARD_TIMEZONE', 'Asia/Jakarta'));
         $today = Carbon::now($dashboardTimezone);
         $allOrders = Pesanan::orderBy('created_at', 'desc')->get();
+        $products = Product::with('recipeItems.ingredient')
+            ->orderBy('name')
+            ->get();
 
         [$pesananRingkasan, $summaryDate, $isTodaySummary] = $this->resolveSummaryOrders($today, $allOrders);
 
@@ -56,9 +58,13 @@ class AdminDashboardController extends Controller
             ->orderByDesc('total_terjual')
             ->first();
 
-        $stokTipis = Schema::hasColumn('products', 'stock')
-            ? Product::where('stock', '<=', 10)->count()
+        $productsWithRecipe = $products->filter(fn (Product $product) => $product->has_recipe);
+        $stokTipis = $productsWithRecipe->isNotEmpty()
+            ? $productsWithRecipe->filter(fn (Product $product) => $product->is_low_stock)->count()
             : null;
+        $stokTipisDescription = $productsWithRecipe->isNotEmpty()
+            ? 'Jumlah menu dengan porsi tersedia di bawah batas minimum.'
+            : 'Tambahkan bahan baku dan resep per porsi agar kartu ini aktif.';
 
         $transaksiTerkini = $this->mapGroupedOrders(
             $allOrders->groupBy(fn ($item) => $this->buildGroupId($item))
@@ -82,6 +88,7 @@ class AdminDashboardController extends Controller
             'jumlahTransaksi',
             'produkTerlaris',
             'stokTipis',
+            'stokTipisDescription',
             'transaksiTerkini',
             'summaryBadge',
             'summaryDateLabel',

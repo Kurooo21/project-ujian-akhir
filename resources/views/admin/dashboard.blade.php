@@ -73,8 +73,18 @@
         @endif
         <div class="text-[13px] font-medium text-slate-400">Produk Stok Tipis</div>
         <div class="text-[11px] text-slate-400 mt-1">
-            {{ $stokTipis === null ? 'Tambahkan kolom stock pada tabel produk agar kartu ini aktif.' : 'Jumlah produk dengan stok 10 atau kurang.' }}
+            {{ $stokTipisDescription }}
         </div>
+        @if($stokTipis === null)
+        <div class="flex flex-wrap gap-2 mt-4">
+            <a href="{{ route('admin.ingredients') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors">
+                Isi Stok Bahan
+            </a>
+            <a href="{{ route('admin.recipes') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+                Atur Resep
+            </a>
+        </div>
+        @endif
     </div>
 
 </div>

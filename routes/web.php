@@ -8,6 +8,9 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminIngredientController;
+use App\Http\Controllers\AdminOutletController;
+use App\Http\Controllers\AdminRecipeController;
 
 // ========================================================================
 // HALAMAN UTAMA
@@ -29,6 +32,7 @@ Route::put('/api/user/update', [AuthController::class, 'updateProfile'])->middle
 // ========================================================================
 Route::middleware('auth')->group(function () {
     Route::post('/pesanan', [PesananController::class, 'store'])->name('pesanan.store');
+    Route::post('/pesanan/{orderCode}/upload-proof', [PesananController::class, 'uploadProof'])->name('pesanan.upload-proof');
     Route::get('/pesanan/user', [PesananController::class, 'userOrders'])->name('pesanan.user');
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 });
@@ -48,6 +52,18 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/pesanan/status', [\App\Http\Controllers\AdminPesananController::class, 'updateStatus'])->name('admin.pesanan.status');
     Route::put('/admin/pesanan/confirm-payment', [\App\Http\Controllers\AdminPesananController::class, 'confirmPayment'])->name('admin.pesanan.confirm-payment');
     Route::get('/admin/produk', [\App\Http\Controllers\AdminProdukController::class, 'index'])->name('admin.produk');
+    Route::get('/admin/bahan-baku', [AdminIngredientController::class, 'index'])->name('admin.ingredients');
+    Route::post('/admin/bahan-baku', [AdminIngredientController::class, 'store'])->name('admin.ingredients.store');
+    Route::put('/admin/bahan-baku/{ingredient}', [AdminIngredientController::class, 'update'])->name('admin.ingredients.update');
+    Route::delete('/admin/bahan-baku/{ingredient}', [AdminIngredientController::class, 'destroy'])->name('admin.ingredients.destroy');
+    Route::get('/admin/resep', [AdminRecipeController::class, 'index'])->name('admin.recipes');
+    Route::post('/admin/resep', [AdminRecipeController::class, 'store'])->name('admin.recipes.store');
+    Route::put('/admin/resep/{recipeItem}', [AdminRecipeController::class, 'update'])->name('admin.recipes.update');
+    Route::delete('/admin/resep/{recipeItem}', [AdminRecipeController::class, 'destroy'])->name('admin.recipes.destroy');
+    Route::get('/admin/outlet', [AdminOutletController::class, 'index'])->name('admin.outlet');
+    Route::post('/admin/outlet', [AdminOutletController::class, 'store'])->name('admin.outlet.store');
+    Route::put('/admin/outlet/{outlet}', [AdminOutletController::class, 'update'])->name('admin.outlet.update');
+    Route::delete('/admin/outlet/{outlet}', [AdminOutletController::class, 'destroy'])->name('admin.outlet.destroy');
     Route::get('/admin/pelanggan', [\App\Http\Controllers\AdminPelangganController::class, 'index'])->name('admin.pelanggan');
     Route::get('/admin/laporan', [\App\Http\Controllers\AdminLaporanController::class, 'index'])->name('admin.laporan');
 

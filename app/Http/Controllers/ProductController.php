@@ -15,6 +15,7 @@ class ProductController extends Controller
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'category' => 'nullable|string|in:makanan,minuman',
+            'minimum_portions' => 'nullable|integer|min:0|max:1000',
         ]);
 
         // Handle upload gambar
@@ -33,6 +34,9 @@ class ProductController extends Controller
             'description' => $request->description,
             'image' => $imagePath,
             'category' => $request->category ?: 'makanan',
+            'minimum_portions' => $request->filled('minimum_portions')
+                ? $request->integer('minimum_portions')
+                : 5,
         ]);
 
         return response()->json([
@@ -50,11 +54,13 @@ class ProductController extends Controller
             'price' => 'nullable|numeric|min:0',
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'minimum_portions' => 'nullable|integer|min:0|max:1000',
         ]);
 
         if ($request->has('price')) $product->price = $request->price;
         if ($request->has('name')) $product->name = $request->name;
         if ($request->has('description')) $product->description = $request->description;
+        if ($request->has('minimum_portions')) $product->minimum_portions = $request->integer('minimum_portions');
         $product->save();
 
         return response()->json([

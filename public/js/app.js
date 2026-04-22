@@ -239,6 +239,135 @@ function resolveAssetUrl(path) {
     return resolveAppUrl(normalized);
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatPaymentMethodLabel(paymentMethod) {
+    const labels = {
+        qris: 'QRIS',
+        bank_transfer: 'Transfer Bank',
+        whatsapp_transfer: 'Transfer via WhatsApp',
+        manual: 'Manual'
+    };
+
+    return labels[paymentMethod] || String(paymentMethod || '-').replace(/_/g, ' ');
+}
+
+function generateCheckoutRequestId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+    }
+
+    return `checkout-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function getCheckoutPaymentHint(paymentMethod) {
+    if (paymentMethod === 'bank_transfer') {
+        return 'Mode demo transfer bank: tampilkan rekening simulasi tanpa transaksi sungguhan.';
+    }
+
+    return 'Mode demo QRIS: tampilkan QRIS simulasi tanpa transaksi sungguhan.';
+}
+
+function normalizeOrderType(orderType) {
+    return String(orderType || '').trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+function normalizeSearchText(value) {
+    return String(value || '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function buildOutletArea(outlet) {
+    return [outlet?.district, outlet?.city, outlet?.province]
+        .filter(Boolean)
+        .join(', ');
+}
+
+function buildOutletLabel(outlet) {
+    const area = buildOutletArea(outlet);
+    return area ? `${outlet.name} - ${area}` : (outlet?.name || 'Outlet');
+}
+
+function buildPaymentDetailsHtml(result) {
+    const method = result.payment_method || '';
+    const methodLabel = escapeHtml(result.payment_method_label || formatPaymentMethodLabel(method));
+    const orderCode = escapeHtml(result.order_code || '-');
+    const total = formatRupiah(Number(result.payment_total || 0));
+    const details = result.payment_details || {};
+    const instructions = Array.isArray(result.payment_instructions) ? result.payment_instructions : [];
+    const adminWhatsapp = escapeHtml(result.admin_whatsapp || '-');
+    const selectedOutlet = result.outlet || null;
+    const outletLabel = selectedOutlet ? escapeHtml(selectedOutlet.label || buildOutletLabel(selectedOutlet)) : '';
+    const outletAddress = selectedOutlet?.address ? escapeHtml(selectedOutlet.address) : '';
+    let detailBlock = '';
+
+    if (method === 'qris') {
+        const qrisLabel = escapeHtml(details.label || 'QRIS');
+        const qrisNote = details.note ? `<p class="mt-2 text-xs text-gray-500 leading-5">${escapeHtml(details.note)}</p>` : '';
+        const qrisImageUrl = details.image_url ? resolveAssetUrl(details.image_url) : '';
+
+        detailBlock = `
+            <div class="mt-4 rounded-xl border border-red-100 bg-red-50 p-4">
+                <p class="text-xs font-bold uppercase tracking-widest text-red-500 mb-2">${qrisLabel}</p>
+                ${qrisImageUrl
+                    ? `<img src="${qrisImageUrl}" alt="${qrisLabel}" class="mx-auto w-full max-w-[240px] rounded-xl border border-red-100 bg-white p-3">`
+                    : '<div class="rounded-xl border border-dashed border-red-200 bg-white px-4 py-6 text-center text-sm text-gray-500"><div class="mx-auto mb-2 flex h-24 w-24 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-xs font-bold text-red-500">QRIS DEMO</div>Tampilan ini adalah placeholder QRIS demo untuk simulasi pembayaran.</div>'}
+                ${qrisNote}
+            </div>
+        `;
+    }
+
+    if (method === 'bank_transfer') {
+        detailBlock = `
+            <div class="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-left">
+                <div class="grid gap-2 text-sm text-gray-700">
+                    <p><b>Bank:</b> ${escapeHtml(details.bank_name || '-')}</p>
+                    <p><b>No. Rekening:</b> ${escapeHtml(details.account_number || '-')}</p>
+                    <p><b>Atas Nama:</b> ${escapeHtml(details.account_name || '-')}</p>
+                </div>
+                ${details.note ? `<p class="mt-3 text-xs text-gray-500 leading-5">${escapeHtml(details.note)}</p>` : ''}
+            </div>
+        `;
+    }
+
+    return `
+        <div class="text-sm text-gray-600 leading-6 text-left">
+            <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                <b>Mode Demo:</b> pembayaran ini hanya simulasi dan belum terhubung ke gateway live.
+            </div>
+            <p><b>Kode Order:</b> ${orderCode}</p>
+            <p><b>Metode Pembayaran:</b> ${methodLabel}</p>
+            <p><b>Total Bayar:</b> ${total}</p>
+            ${selectedOutlet ? `
+                <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Outlet Pesanan</p>
+                    <p class="text-sm font-semibold text-slate-900">${outletLabel}</p>
+                    ${outletAddress ? `<p class="mt-1 text-xs text-slate-500 leading-5">${outletAddress}</p>` : ''}
+                </div>
+            ` : ''}
+            ${result.admin_whatsapp ? `<p><b>WA Admin:</b> ${adminWhatsapp}</p>` : ''}
+            ${detailBlock}
+            ${instructions.length ? `
+                <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Instruksi Pembayaran</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        ${instructions.map((instruction) => `<li>${escapeHtml(instruction)}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
 /**
  * apiRequest(url, method, data) - Fungsi untuk mengirim AJAX request ke server
  * @param {string} url - URL endpoint API (contoh: '/login', '/products')
@@ -357,11 +486,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const cartCheckoutSection = document.getElementById('cart-checkout-section'); // Section form checkout
     const cartActionButtons = document.getElementById('cart-action-buttons');     // Tombol aksi cart (checkout/kosongkan)
     const btnBackToCart = document.getElementById('btn-back-to-cart');            // Tombol kembali ke cart dari checkout
+    const checkoutPaymentMethod = document.getElementById('checkout_payment_method');
+    const checkoutPaymentHint = document.getElementById('checkout-payment-hint');
+    const checkoutOutletSearch = document.getElementById('checkout_outlet_search');
+    const checkoutOutletSelect = document.getElementById('checkout_outlet_id');
+    const checkoutOutletHelper = document.getElementById('checkout-outlet-helper');
+    const checkoutOutletPreview = document.getElementById('checkout-outlet-preview');
+    const checkoutSubmitButton = checkoutForm ? checkoutForm.querySelector('button[type="submit"]') : null;
+    const contactMapFrame = document.getElementById('contact-map-frame');
+    const contactMapLink = document.getElementById('contact-map-link');
+    const contactOutletCards = Array.from(document.querySelectorAll('[data-contact-outlet-card]'));
 
     // Elemen-elemen carousel (slider produk)
     const carouselPrev = document.getElementById('carousel-prev');    // Tombol prev carousel
     const carouselNext = document.getElementById('carousel-next');    // Tombol next carousel
     const carouselDots = document.getElementById('carousel-dots');    // Dots navigasi carousel
+    let isCheckoutSubmitting = false;
+    let activeCheckoutRequestId = null;
+
+    if (checkoutSubmitButton) {
+        checkoutSubmitButton.dataset.defaultLabel = checkoutSubmitButton.innerHTML;
+    }
+
+    function setCheckoutSubmittingState(isSubmitting) {
+        isCheckoutSubmitting = isSubmitting;
+
+        if (!checkoutSubmitButton) return;
+
+        checkoutSubmitButton.disabled = isSubmitting;
+        checkoutSubmitButton.innerHTML = isSubmitting
+            ? '<i class="fas fa-spinner fa-spin"></i> Mengirim...'
+            : (checkoutSubmitButton.dataset.defaultLabel || '<i class="fas fa-receipt"></i> Buat Pesanan');
+    }
 
     // ====================================================================
     // UPDATE BADGE KERANJANG
@@ -388,6 +544,66 @@ document.addEventListener("DOMContentLoaded", () => {
     // Buat fungsi ini bisa diakses dari luar scope DOMContentLoaded
     // (diperlukan oleh fungsi addToCart() yang ada di scope global)
     window.updateCartBadge = updateCartBadge;
+
+    function setActiveContactOutlet(card) {
+        if (!card || !contactMapFrame || !contactMapLink) return;
+
+        const embedUrl = card.dataset.outletEmbedUrl || contactMapFrame.src;
+        const mapsUrl = card.dataset.outletMapsUrl || contactMapLink.href;
+        const activeClasses = ['border-white/35', 'bg-white/18', 'shadow-lg', 'shadow-black/10'];
+        const inactiveClasses = ['border-white/15', 'bg-white/10'];
+
+        if (embedUrl) {
+            contactMapFrame.src = embedUrl;
+        }
+
+        if (mapsUrl) {
+            contactMapLink.href = mapsUrl;
+        }
+
+        contactOutletCards.forEach((item) => {
+            const isActive = item === card;
+
+            item.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            item.classList.remove(...activeClasses, ...inactiveClasses);
+
+            if (isActive) {
+                item.classList.add(...activeClasses);
+            } else {
+                item.classList.add(...inactiveClasses);
+            }
+        });
+    }
+
+    if (contactOutletCards.length > 0 && contactMapFrame && contactMapLink) {
+        contactOutletCards.forEach((card) => {
+            const triggerButton = card.querySelector('[data-contact-outlet-trigger]');
+
+            card.addEventListener('click', () => {
+                setActiveContactOutlet(card);
+            });
+
+            card.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setActiveContactOutlet(card);
+                }
+            });
+
+            if (triggerButton) {
+                triggerButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setActiveContactOutlet(card);
+                });
+            }
+        });
+
+        const initialContactOutlet = contactOutletCards.find((card) => card.getAttribute('aria-pressed') === 'true')
+            || contactOutletCards[0];
+
+        setActiveContactOutlet(initialContactOutlet);
+    }
 
     // Inisialisasi badge saat halaman pertama kali dimuat
     updateCartBadge();
@@ -542,6 +758,159 @@ document.addEventListener("DOMContentLoaded", () => {
     // ====================================================================
     // Alur: Klik Checkout → Cek Login → Tampilkan Form → Isi Data → Kirim Pesanan
 
+    const availableOutlets = Array.isArray(typeof OUTLETS_DATA !== 'undefined' ? OUTLETS_DATA : [])
+        ? OUTLETS_DATA
+        : [];
+    let hasManualOutletSelection = false;
+
+    function getOutletMatchScore(outlet, queryText) {
+        const query = normalizeSearchText(queryText);
+        if (!query) return 0;
+
+        const fields = [
+            { value: normalizeSearchText(outlet.district), weight: 7 },
+            { value: normalizeSearchText(outlet.city), weight: 5 },
+            { value: normalizeSearchText(outlet.province), weight: 3 },
+            { value: normalizeSearchText(outlet.name), weight: 2 },
+            { value: normalizeSearchText(outlet.address), weight: 1 },
+        ];
+
+        return fields.reduce((score, field) => {
+            if (!field.value) return score;
+            if (query.includes(field.value)) return score + field.weight;
+            if (query.length >= 3 && field.value.includes(query)) return score + Math.max(1, field.weight - 1);
+            return score;
+        }, 0);
+    }
+
+    function getRecommendedOutlet(queryText) {
+        let bestOutlet = null;
+        let bestScore = 0;
+
+        availableOutlets.forEach((outlet) => {
+            const score = getOutletMatchScore(outlet, queryText);
+            if (score > bestScore) {
+                bestScore = score;
+                bestOutlet = outlet;
+            }
+        });
+
+        return bestScore > 0 ? bestOutlet : null;
+    }
+
+    function getSelectedOutlet() {
+        if (!checkoutOutletSelect) return null;
+        const selectedId = Number(checkoutOutletSelect.value || 0);
+        return availableOutlets.find((outlet) => outlet.id === selectedId) || null;
+    }
+
+    function renderOutletPreview(outlet) {
+        if (!checkoutOutletPreview) return;
+
+        if (!outlet) {
+            checkoutOutletPreview.classList.add('hidden');
+            checkoutOutletPreview.innerHTML = '';
+            return;
+        }
+
+        const areaLabel = escapeHtml(buildOutletArea(outlet) || '-');
+        const outletName = escapeHtml(outlet.name || 'Outlet');
+        const outletAddress = escapeHtml(outlet.address || '-');
+        const outletPhone = outlet.phone ? `<p class="mt-1 text-xs text-slate-500"><span class="font-semibold text-slate-600">Kontak:</span> ${escapeHtml(outlet.phone)}</p>` : '';
+        const outletMaps = outlet.maps_url
+            ? `<a href="${escapeHtml(outlet.maps_url)}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700">Buka Maps</a>`
+            : '';
+
+        checkoutOutletPreview.classList.remove('hidden');
+        checkoutOutletPreview.innerHTML = `
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 mb-1">Outlet Terpilih</p>
+            <p class="text-sm font-bold text-slate-900">${outletName}</p>
+            <p class="mt-1 text-xs text-slate-500">${areaLabel}</p>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">${outletAddress}</p>
+            ${outletPhone}
+            ${outletMaps}
+        `;
+    }
+
+    function updateOutletHelperText({ filterText = '', recommendedOutlet = null, filteredCount = 0 } = {}) {
+        if (!checkoutOutletHelper) return;
+
+        if (availableOutlets.length === 0) {
+            checkoutOutletHelper.textContent = 'Belum ada outlet aktif yang tersedia. Silakan hubungi admin.';
+            return;
+        }
+
+        if (filterText && filteredCount === 0) {
+            checkoutOutletHelper.textContent = 'Tidak ada outlet yang cocok dengan pencarian. Coba kata kunci kota, kecamatan, atau nama outlet lain.';
+            return;
+        }
+
+        if (recommendedOutlet) {
+            checkoutOutletHelper.textContent = `Rekomendasi area kamu: ${buildOutletLabel(recommendedOutlet)}. Kamu tetap bisa memilih outlet lain jika mau.`;
+            return;
+        }
+
+        checkoutOutletHelper.textContent = 'Pilih outlet yang paling dekat dengan area kamu.';
+    }
+
+    function renderOutletOptions(filterText = '', autoSelectRecommendation = false) {
+        if (!checkoutOutletSelect) return;
+
+        const normalizedFilter = normalizeSearchText(filterText);
+        const previousValue = checkoutOutletSelect.value;
+        const filteredOutlets = normalizedFilter
+            ? availableOutlets.filter((outlet) => getOutletMatchScore(outlet, normalizedFilter) > 0)
+            : availableOutlets;
+
+        const displayedOutlets = filteredOutlets.length > 0 ? filteredOutlets : availableOutlets;
+        const recommendedOutlet = getRecommendedOutlet(filterText);
+
+        checkoutOutletSelect.disabled = availableOutlets.length === 0;
+        checkoutOutletSelect.innerHTML = '<option value="">Pilih outlet terdekat</option>';
+
+        displayedOutlets.forEach((outlet) => {
+            const option = document.createElement('option');
+            option.value = String(outlet.id);
+            option.textContent = buildOutletLabel(outlet);
+            checkoutOutletSelect.appendChild(option);
+        });
+
+        if (previousValue && displayedOutlets.some((outlet) => String(outlet.id) === previousValue)) {
+            checkoutOutletSelect.value = previousValue;
+        } else if (autoSelectRecommendation && recommendedOutlet) {
+            checkoutOutletSelect.value = String(recommendedOutlet.id);
+        } else {
+            checkoutOutletSelect.value = '';
+        }
+
+        updateOutletHelperText({
+            filterText,
+            recommendedOutlet,
+            filteredCount: filteredOutlets.length
+        });
+        renderOutletPreview(getSelectedOutlet());
+    }
+
+    function tryRecommendOutlet(sourceText) {
+        if (!checkoutOutletSelect || hasManualOutletSelection) return;
+
+        const recommendedOutlet = getRecommendedOutlet(sourceText);
+        if (!recommendedOutlet) return;
+
+        const optionExists = Array.from(checkoutOutletSelect.options).some((option) => option.value === String(recommendedOutlet.id));
+        if (!optionExists) {
+            renderOutletOptions(checkoutOutletSearch ? checkoutOutletSearch.value : '', false);
+        }
+
+        checkoutOutletSelect.value = String(recommendedOutlet.id);
+        updateOutletHelperText({
+            filterText: checkoutOutletSearch ? checkoutOutletSearch.value : '',
+            recommendedOutlet,
+            filteredCount: availableOutlets.length
+        });
+        renderOutletPreview(recommendedOutlet);
+    }
+
     // Saat tombol "Checkout" diklik
     btnCheckout.addEventListener('click', () => {
         // Cek apakah user sudah login
@@ -560,6 +929,20 @@ document.addEventListener("DOMContentLoaded", () => {
         // Pre-fill (isi otomatis) data user yang sudah login
         document.getElementById('checkout_nama').value = currentUser.name || '';
         document.getElementById('checkout_no_hp').value = currentUser.no_hp || '';
+        if (checkoutPaymentMethod) {
+            checkoutPaymentMethod.value = checkoutPaymentMethod.value || 'qris';
+        }
+        if (checkoutPaymentHint) {
+            checkoutPaymentHint.textContent = getCheckoutPaymentHint(checkoutPaymentMethod ? checkoutPaymentMethod.value : 'qris');
+        }
+        hasManualOutletSelection = false;
+        if (checkoutOutletSearch) {
+            checkoutOutletSearch.value = '';
+        }
+        renderOutletOptions('', true);
+
+        // Reset dan sesuaikan field alamat dengan jenis belanja yang dipilih saat ini
+        toggleAlamatField();
 
         // Opsi alamat tersimpan
         const addressOptions = document.getElementById('address-options');       // Container opsi alamat
@@ -587,12 +970,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     alamatField.value = '';                  // Kosongkan untuk input manual
                 }
+                tryRecommendOutlet(alamatField.value);
             };
         } else {
             // User tidak punya alamat tersimpan
             addressOptions.classList.add('hidden');
             alamatField.value = '';
         }
+        tryRecommendOutlet(alamatField.value || currentUser.alamat || '');
     });
 
     // Tombol "Kembali" dari checkout → tampilkan cart lagi
@@ -601,6 +986,62 @@ document.addEventListener("DOMContentLoaded", () => {
         cartActionButtons.classList.remove('hidden');     // Tampilkan tombol cart
     });
 
+    if (checkoutPaymentMethod && checkoutPaymentHint) {
+        checkoutPaymentMethod.addEventListener('change', () => {
+            checkoutPaymentHint.textContent = getCheckoutPaymentHint(checkoutPaymentMethod.value);
+        });
+    }
+
+    // ====================================================================
+    // TOGGLE FIELD ALAMAT BERDASARKAN JENIS BELANJA
+    // ====================================================================
+    // Dine In (Makan di Tempat) → alamat tidak perlu diisi
+    // Take Away / Delivery → alamat wajib diisi
+
+    const checkoutJenis = document.getElementById('checkout_jenis');
+    const alamatWrapper = document.getElementById('checkout-alamat-wrapper');
+    const alamatField   = document.getElementById('checkout_alamat');
+
+    function toggleAlamatField() {
+        if (!checkoutJenis || !alamatWrapper || !alamatField) return;
+        // Alamat hanya wajib diisi untuk Delivery; Dine In & Take Away tidak perlu
+        const needsAddress = checkoutJenis.value === 'Delivery';
+        if (!needsAddress) {
+            alamatWrapper.classList.add('hidden');
+            alamatField.removeAttribute('required');
+            alamatField.value = '-'; // Isi default agar tidak kosong di server
+        } else {
+            alamatWrapper.classList.remove('hidden');
+            alamatField.setAttribute('required', 'required');
+            if (alamatField.value === '-') alamatField.value = '';
+        }
+    }
+
+    if (checkoutJenis) {
+        checkoutJenis.addEventListener('change', toggleAlamatField);
+    }
+
+    if (checkoutOutletSearch) {
+        checkoutOutletSearch.addEventListener('input', () => {
+            hasManualOutletSelection = false;
+            renderOutletOptions(checkoutOutletSearch.value, true);
+        });
+    }
+
+    if (checkoutOutletSelect) {
+        checkoutOutletSelect.addEventListener('change', () => {
+            hasManualOutletSelection = !!checkoutOutletSelect.value;
+            renderOutletPreview(getSelectedOutlet());
+        });
+    }
+
+    const checkoutAlamatField = document.getElementById('checkout_alamat');
+    if (checkoutAlamatField) {
+        checkoutAlamatField.addEventListener('input', () => {
+            tryRecommendOutlet(checkoutAlamatField.value);
+        });
+    }
+
     // ====================================================================
     // KIRIM PESANAN (Submit Form Checkout)
     // ====================================================================
@@ -608,22 +1049,36 @@ document.addEventListener("DOMContentLoaded", () => {
     checkoutForm.addEventListener('submit', async (e) => {
         e.preventDefault(); // Cegah form submit biasa (reload halaman)
 
-        // Buka tab baru sejak awal agar browser tidak memblokir auto-redirect ke WhatsApp.
-        const pendingWaTab = window.open('', '_blank');
-        if (pendingWaTab) {
-            pendingWaTab.document.write(`
-                <html>
-                    <head><title>Membuka WhatsApp...</title></head>
-                    <body style="font-family: Arial, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; color:#444;">
-                        <div style="text-align:center;">
-                            <h2 style="margin-bottom:12px;">Menyiapkan WhatsApp...</h2>
-                            <p>Tab ini akan diarahkan otomatis setelah pesanan berhasil dibuat.</p>
-                        </div>
-                    </body>
-                </html>
-            `);
-            pendingWaTab.document.close();
+        if (isCheckoutSubmitting) {
+            return;
         }
+
+        if (!checkoutForm.reportValidity()) {
+            return;
+        }
+
+        if (availableOutlets.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Outlet Belum Tersedia',
+                text: 'Saat ini belum ada outlet aktif yang bisa dipilih. Silakan hubungi admin dulu ya.',
+                confirmButtonColor: '#D20000'
+            });
+            return;
+        }
+
+        if (checkoutOutletSelect && !checkoutOutletSelect.value) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Outlet Belum Dipilih',
+                text: 'Pilih outlet terlebih dahulu sebelum membuat pesanan ya.',
+                confirmButtonColor: '#D20000'
+            });
+            return;
+        }
+
+        activeCheckoutRequestId = activeCheckoutRequestId || generateCheckoutRequestId();
+        setCheckoutSubmittingState(true);
 
         // Kumpulkan data dari form checkout
         const data = {
@@ -631,6 +1086,9 @@ document.addEventListener("DOMContentLoaded", () => {
             no_hp: document.getElementById('checkout_no_hp').value,
             alamat: document.getElementById('checkout_alamat').value,
             jenis_belanja: document.getElementById('checkout_jenis').value,
+            outlet_id: checkoutOutletSelect ? checkoutOutletSelect.value : '',
+            payment_method: checkoutPaymentMethod ? checkoutPaymentMethod.value : 'qris',
+            client_request_id: activeCheckoutRequestId,
             // Ubah format cart item menjadi format yang dimengerti server
             items: cart.map(item => ({
                 pesanan_item: item.name,
@@ -643,47 +1101,208 @@ document.addEventListener("DOMContentLoaded", () => {
             // Kirim data pesanan ke server via POST
             const result = await apiRequest('/pesanan', 'POST', data);
             if (result.success) {
-                const adminWhatsapp = result.admin_whatsapp || '-';
-                const waUrl = result.whatsapp_url || '';
+                const waUrl   = result.whatsapp_url || '';
+                const orderCode = result.order_code || '';
 
-                if (pendingWaTab && waUrl) {
-                    pendingWaTab.location.href = waUrl;
+                // ---- Fungsi untuk membersihkan state cart setelah selesai ----
+                function resetAfterCheckout() {
+                    clearCart();
+                    cartModal.classList.add('hidden');
+                    checkoutForm.reset();
+                    cartCheckoutSection.classList.add('hidden');
+                    cartActionButtons.classList.remove('hidden');
+                    hasManualOutletSelection = false;
+                    activeCheckoutRequestId = null;
+                    setCheckoutSubmittingState(false);
+                    if (checkoutOutletSearch) checkoutOutletSearch.value = '';
+                    renderOutletOptions('', false);
+                    if (checkoutPaymentHint) checkoutPaymentHint.textContent = getCheckoutPaymentHint('qris');
                 }
 
+                // ---- Fungsi untuk membuka dialog upload bukti ----
+                function openUploadProofDialog() {
+                    Swal.fire({
+                        title: '<span style="font-size:1rem;font-weight:800;color:#1e293b;">Upload Bukti Pembayaran</span>',
+                        html: `
+                            <div style="text-align:left;font-family:'Poppins',sans-serif;">
+                                <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Foto bukti transfer/QRIS kamu (JPG, PNG, WEBP · maks. 5MB)</p>
+                                <label for="proof-file-input"
+                                    style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+                                           border:2px dashed #cbd5e1;border-radius:16px;padding:28px 16px;cursor:pointer;
+                                           background:#f8fafc;transition:border-color 0.2s,background 0.2s;"
+                                    id="proof-drop-label"
+                                    onmouseover="this.style.borderColor='#94a3b8';this.style.background='#f1f5f9';"
+                                    onmouseout="this.style.borderColor='#cbd5e1';this.style.background='#f8fafc';">
+                                    <svg id="proof-upload-icon" xmlns="http://www.w3.org/2000/svg" width="38" height="38" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                                    </svg>
+                                    <span id="proof-label-text" style="font-size:13px;color:#64748b;font-weight:600;">Klik atau seret gambar ke sini</span>
+                                    <input type="file" id="proof-file-input" accept="image/*" style="display:none;">
+                                </label>
+                                <div id="proof-preview-wrap" style="display:none;margin-top:14px;text-align:center;">
+                                    <img id="proof-preview-img" src="" alt="Preview"
+                                        style="max-width:100%;max-height:220px;object-fit:contain;border-radius:14px;border:2px solid #e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,0.1);">
+                                    <p id="proof-file-name" style="margin-top:8px;font-size:12px;color:#64748b;"></p>
+                                </div>
+                                <div id="proof-error" style="display:none;margin-top:10px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:13px;color:#dc2626;font-weight:600;"></div>
+                                <div id="proof-progress-wrap" style="display:none;margin-top:14px;">
+                                    <div style="height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
+                                        <div id="proof-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#ef4444,#b91c1c);border-radius:99px;transition:width 0.3s ease;"></div>
+                                    </div>
+                                    <p style="text-align:center;font-size:12px;color:#64748b;margin-top:6px;">Mengupload bukti...</p>
+                                </div>
+                            </div>
+                        `,
+                        showConfirmButton: true,
+                        confirmButtonText: 'Upload Sekarang',
+                        confirmButtonColor: '#b91c1c',
+                        showCancelButton: true,
+                        cancelButtonText: 'Nanti Saja',
+                        cancelButtonColor: '#64748b',
+                        didOpen: () => {
+                            const fileInput = document.getElementById('proof-file-input');
+                            const previewWrap = document.getElementById('proof-preview-wrap');
+                            const previewImg  = document.getElementById('proof-preview-img');
+                            const fileName    = document.getElementById('proof-file-name');
+                            const uploadIcon  = document.getElementById('proof-upload-icon');
+                            const labelText   = document.getElementById('proof-label-text');
+                            const errorEl     = document.getElementById('proof-error');
+
+                            fileInput.addEventListener('change', () => {
+                                const file = fileInput.files[0];
+                                errorEl.style.display = 'none';
+                                if (!file) { previewWrap.style.display = 'none'; return; }
+
+                                // Validasi ukuran client-side
+                                if (file.size > 5 * 1024 * 1024) {
+                                    errorEl.textContent = 'Ukuran gambar terlalu besar. Maksimal 5MB.';
+                                    errorEl.style.display = 'block';
+                                    fileInput.value = '';
+                                    previewWrap.style.display = 'none';
+                                    return;
+                                }
+
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    previewImg.src = e.target.result;
+                                    previewWrap.style.display = 'block';
+                                    uploadIcon.style.opacity = '0.4';
+                                    labelText.textContent = 'Ganti gambar';
+                                    fileName.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+                                };
+                                reader.readAsDataURL(file);
+                            });
+                        },
+                        preConfirm: async () => {
+                            const fileInput = document.getElementById('proof-file-input');
+                            const errorEl   = document.getElementById('proof-error');
+                            const progressWrap = document.getElementById('proof-progress-wrap');
+                            const progressBar  = document.getElementById('proof-progress-bar');
+
+                            if (!fileInput.files[0]) {
+                                errorEl.textContent = 'Pilih file gambar terlebih dahulu.';
+                                errorEl.style.display = 'block';
+                                return false;
+                            }
+
+                            progressWrap.style.display = 'block';
+                            Swal.getConfirmButton().disabled = true;
+                            Swal.getCancelButton().disabled  = true;
+
+                            // Simulate progress
+                            let progress = 0;
+                            const progressInterval = setInterval(() => {
+                                progress = Math.min(progress + 15, 85);
+                                progressBar.style.width = progress + '%';
+                            }, 200);
+
+                            try {
+                                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                                const formData = new FormData();
+                                formData.append('payment_proof', fileInput.files[0]);
+
+                                const response = await fetch(resolveAppUrl(`/pesanan/${encodeURIComponent(orderCode)}/upload-proof`), {
+                                    method: 'POST',
+                                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                                    body: formData,
+                                    credentials: 'same-origin',
+                                });
+
+                                clearInterval(progressInterval);
+                                progressBar.style.width = '100%';
+
+                                const result = await response.json();
+                                if (!response.ok || !result.success) {
+                                    const validationMessage = result.errors && result.errors.payment_proof
+                                        ? result.errors.payment_proof[0]
+                                        : '';
+
+                                    errorEl.textContent = validationMessage || result.message || 'Upload gagal. Coba lagi.';
+                                    errorEl.style.display = 'block';
+                                    progressWrap.style.display = 'none';
+                                    Swal.getConfirmButton().disabled = false;
+                                    Swal.getCancelButton().disabled  = false;
+                                    return false;
+                                }
+                                return result;
+                            } catch (err) {
+                                clearInterval(progressInterval);
+                                errorEl.textContent = 'Terjadi kesalahan jaringan. Coba lagi.';
+                                errorEl.style.display = 'block';
+                                progressWrap.style.display = 'none';
+                                Swal.getConfirmButton().disabled = false;
+                                Swal.getCancelButton().disabled  = false;
+                                return false;
+                            }
+                        },
+                        allowOutsideClick: () => !Swal.isLoading(),
+                    }).then((uploadResult) => {
+                        if (uploadResult.isConfirmed && uploadResult.value) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Bukti Terkirim!',
+                                text: 'Bukti pembayaranmu berhasil diupload. Admin akan segera mengonfirmasi ya!',
+                                confirmButtonColor: '#16a34a',
+                                confirmButtonText: 'Tutup',
+                            }).then(resetAfterCheckout);
+                        } else {
+                            resetAfterCheckout();
+                        }
+                    });
+                }
+
+                // ---- Popup utama sukses checkout ----
                 Swal.fire({
                     icon: 'success',
                     title: 'Pesanan Tersimpan!',
-                    html: `
-                        <div class="text-sm text-gray-600 leading-6 text-left">
-                            <p class="mb-3">Pesanan kamu sudah masuk ke sistem. Halaman ini tetap terbuka, dan WhatsApp dibuka di tab baru untuk lanjut pembayaran/chat admin.</p>
-                            <p><b>Kode Order:</b> ${result.order_code || '-'}</p>
-                            <p><b>WA Admin:</b> ${adminWhatsapp}</p>
-                            <p class="mt-3">Silakan transfer lalu kirim bukti pembayaran ke WhatsApp admin dengan menyebut kode order di atas.</p>
-                            ${(!pendingWaTab && waUrl) ? '<p class="mt-3 text-red-600">Browser memblokir tab otomatis. Klik tombol buka WhatsApp di bawah.</p>' : ''}
-                        </div>
-                    `,
+                    html: buildPaymentDetailsHtml(result),
                     confirmButtonColor: '#D20000',
-                    confirmButtonText: 'Saya Mengerti',
-                    showDenyButton: !pendingWaTab && !!waUrl,
-                    denyButtonText: 'Buka WhatsApp',
-                    denyButtonColor: '#16a34a'
+                    confirmButtonText: 'Upload Bukti Bayar',
+                    showDenyButton:  !!waUrl,
+                    denyButtonText:  'Hubungi Admin',
+                    denyButtonColor: '#16a34a',
+                    showCancelButton: true,
+                    cancelButtonText: 'Nanti Saja',
+                    cancelButtonColor: '#64748b',
                 }).then((swalResult) => {
-                    clearCart();                                      // Kosongkan keranjang
-                    cartModal.classList.add('hidden');               // Tutup modal cart
-                    checkoutForm.reset();                            // Reset form
-                    cartCheckoutSection.classList.add('hidden');     // Sembunyikan form checkout
-                    cartActionButtons.classList.remove('hidden');    // Tampilkan tombol cart
-
-                    if (swalResult.isDenied && waUrl) {
-                        window.open(waUrl, '_blank');
+                    if (swalResult.isConfirmed) {
+                        // Tombol "Upload Bukti Bayar"
+                        openUploadProofDialog();
+                    } else {
+                        resetAfterCheckout();
+                        if (swalResult.isDenied && waUrl) {
+                            window.open(waUrl, '_blank');
+                        }
                     }
                 });
             } else {
-                if (pendingWaTab) pendingWaTab.close();
+                activeCheckoutRequestId = null;
+                setCheckoutSubmittingState(false);
                 Swal.fire({icon: 'error', title: 'Gagal Pesan', text: result.message || 'Waduh, pesananmu gagal gaes. Coba lagi yuk!', confirmButtonColor: '#D20000'});
             }
         } catch (err) {
-            if (pendingWaTab) pendingWaTab.close();
+            activeCheckoutRequestId = null;
+            setCheckoutSubmittingState(false);
             Swal.fire({
                 icon: 'error',
                 title: 'Periksa Datanya!',
@@ -1493,6 +2112,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 result.data.forEach(order => {
                     const card = document.createElement('div');
                     card.className = 'bg-white border text-left rounded-xl p-4 shadow-sm relative transition hover:shadow-md flex flex-col gap-3';
+                    const orderType = normalizeOrderType(order.jenis);
 
                     // Info Pengguna & Kontak & Label Jenis
                     card.innerHTML = `
@@ -1500,22 +2120,27 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div>
                                 <h4 class="font-bold text-gray-900 leading-tight">${order.customerName}</h4>
                                 <p class="text-xs text-gray-500 mb-1"><i class="fas fa-phone-alt opacity-75"></i> ${order.no_hp || '-'}</p>
-                                <span class="px-2 py-0.5 inline-flex text-[10px] font-bold rounded-md ${order.jenis === 'delivery' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'} uppercase">
+                                <span class="px-2 py-0.5 inline-flex text-[10px] font-bold rounded-md ${orderType === 'delivery' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'} uppercase">
                                     ${order.jenis || '-'}
                                 </span>
                             </div>
                             <div class="text-right">
                                 <p class="text-[10px] text-gray-400 font-medium mb-1"><i class="far fa-clock"></i> ${order.date}</p>
-                                <span class="px-2 py-1 inline-flex text-[10px] sm:text-xs font-bold rounded-full bg-yellow-100 text-yellow-800">
-                                    ${order.status}
-                                </span>
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="px-2 py-1 inline-flex text-[10px] font-bold rounded-full ${order.payment_status === 'Lunas' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">
+                                        ${order.payment_method_label || formatPaymentMethodLabel(order.payment_method)} • ${order.payment_status || '-'}
+                                    </span>
+                                    <span class="px-2 py-1 inline-flex text-[10px] sm:text-xs font-bold rounded-full bg-yellow-100 text-yellow-800">
+                                        ${order.status}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Info Pesanan & Alamat -->
                         <div class="flex-grow">
                             <p class="text-sm text-gray-700 font-medium line-clamp-2 leading-snug"><i class="fas fa-utensils text-red-400 mr-1.5"></i> ${order.items}</p>
-                            ${order.jenis === 'delivery' ? `<p class="text-xs text-gray-500 mt-2 truncate max-w-full" title="${order.alamat || '-'}"><i class="fas fa-map-marker-alt text-gray-400 mr-1.5"></i> ${order.alamat || '-'}</p>` : ''}
+                            ${orderType === 'delivery' ? `<p class="text-xs text-gray-500 mt-2 truncate max-w-full" title="${order.alamat || '-'}"><i class="fas fa-map-marker-alt text-gray-400 mr-1.5"></i> ${order.alamat || '-'}</p>` : ''}
                         </div>
 
                         <!-- Footer: Total Harga & Tombol Aksi -->
@@ -1784,83 +2409,257 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function getUserOrderStatusMeta(status) {
+        const normalizedStatus = String(status || '').trim();
+
+        if (normalizedStatus === 'Menunggu Pembayaran') {
+            return {
+                icon: 'fa-hourglass-half',
+                label: 'Menunggu Pembayaran',
+                badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200'
+            };
+        }
+
+        if (normalizedStatus === 'Diproses' || normalizedStatus === 'Sedang Disiapkan') {
+            return {
+                icon: 'fa-fire-burner',
+                label: 'Sedang Diproses',
+                badgeClass: 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+            };
+        }
+
+        if (normalizedStatus === 'Sedang Diantar') {
+            return {
+                icon: 'fa-motorcycle',
+                label: 'Sedang Diantar',
+                badgeClass: 'bg-blue-50 text-blue-700 border border-blue-200'
+            };
+        }
+
+        if (normalizedStatus === 'Pesanan Siap') {
+            return {
+                icon: 'fa-bag-shopping',
+                label: 'Siap Diambil',
+                badgeClass: 'bg-blue-50 text-blue-700 border border-blue-200'
+            };
+        }
+
+        if (normalizedStatus === 'Selesai') {
+            return {
+                icon: 'fa-check-circle',
+                label: 'Selesai',
+                badgeClass: 'bg-green-50 text-green-700 border border-green-200'
+            };
+        }
+
+        if (normalizedStatus === 'Dibatalkan') {
+            return {
+                icon: 'fa-circle-xmark',
+                label: 'Dibatalkan',
+                badgeClass: 'bg-red-50 text-red-700 border border-red-200'
+            };
+        }
+
+        return {
+            icon: 'fa-clock',
+            label: normalizedStatus || 'Menunggu',
+            badgeClass: 'bg-slate-100 text-slate-700 border border-slate-200'
+        };
+    }
+
+    function getUserPaymentMeta(paymentStatus) {
+        if (String(paymentStatus || '').trim() === 'Lunas') {
+            return {
+                label: 'Sudah Lunas',
+                badgeClass: 'bg-green-50 text-green-700 border border-green-200'
+            };
+        }
+
+        return {
+            label: paymentStatus || 'Menunggu Pembayaran',
+            badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200'
+        };
+    }
+
+    function getUserOrderTypeMeta(orderType) {
+        const normalizedType = normalizeOrderType(orderType);
+
+        if (normalizedType === 'delivery') {
+            return {
+                label: 'Delivery',
+                icon: 'fa-motorcycle',
+                badgeClass: 'bg-sky-50 text-sky-700 border border-sky-200'
+            };
+        }
+
+        if (normalizedType === 'take-away' || normalizedType === 'takeaway') {
+            return {
+                label: 'Take Away',
+                icon: 'fa-bag-shopping',
+                badgeClass: 'bg-orange-50 text-orange-700 border border-orange-200'
+            };
+        }
+
+        return {
+            label: orderType || 'Dine In',
+            icon: 'fa-utensils',
+            badgeClass: 'bg-red-50 text-red-700 border border-red-200'
+        };
+    }
+
+    function renderUserOrdersSummary(orders = []) {
+        const summaryContainer = document.getElementById('user-orders-summary');
+        if (!summaryContainer) return;
+
+        const totalOrders = orders.length;
+        const waitingOrders = orders.filter((order) => {
+            return String(order.payment_status || '').trim() !== 'Lunas'
+                || String(order.status || '').trim() === 'Menunggu Pembayaran';
+        }).length;
+        const processingOrders = orders.filter((order) => {
+            return ['Diproses', 'Sedang Disiapkan', 'Sedang Diantar', 'Pesanan Siap'].includes(String(order.status || '').trim());
+        }).length;
+        const completedOrders = orders.filter((order) => String(order.status || '').trim() === 'Selesai').length;
+
+        summaryContainer.innerHTML = `
+            <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                <i class="fas fa-receipt text-[12px]"></i>
+                <span class="font-semibold">Total</span>
+                <span class="font-bold text-slate-900">${totalOrders}</span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                <i class="fas fa-hourglass-half text-[12px]"></i>
+                <span class="font-semibold">Menunggu</span>
+                <span class="font-bold">${waitingOrders}</span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+                <i class="fas fa-fire-burner text-[12px]"></i>
+                <span class="font-semibold">Diproses</span>
+                <span class="font-bold">${processingOrders}</span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+                <i class="fas fa-check-circle text-[12px]"></i>
+                <span class="font-semibold">Selesai</span>
+                <span class="font-bold">${completedOrders}</span>
+            </div>
+        `;
+    }
+
     async function renderUserOrdersTable() {
         const listContainer = document.getElementById('user-orders-list');
         if (!listContainer) return;
-        listContainer.innerHTML = '<div class="p-6 text-center text-sm text-gray-500">Memuat pesanan...</div>';
+        renderUserOrdersSummary([]);
+        listContainer.innerHTML = `
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse">
+                <div class="h-4 w-28 rounded-full bg-slate-200 mb-3"></div>
+                <div class="h-5 w-40 rounded-full bg-slate-200 mb-4"></div>
+                <div class="h-4 w-full rounded-full bg-slate-100 mb-2"></div>
+                <div class="h-4 w-2/3 rounded-full bg-slate-100 mb-4"></div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <div class="h-8 w-28 rounded-full bg-slate-100"></div>
+                    <div class="h-8 w-36 rounded-full bg-slate-100"></div>
+                </div>
+                <div class="h-px bg-slate-100 mb-3"></div>
+                <div class="flex items-center justify-between">
+                    <div class="h-4 w-24 rounded-full bg-slate-100"></div>
+                    <div class="h-5 w-24 rounded-full bg-slate-200"></div>
+                </div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse">
+                <div class="h-4 w-28 rounded-full bg-slate-200 mb-3"></div>
+                <div class="h-5 w-40 rounded-full bg-slate-200 mb-4"></div>
+                <div class="h-4 w-full rounded-full bg-slate-100 mb-2"></div>
+                <div class="h-4 w-2/3 rounded-full bg-slate-100 mb-4"></div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <div class="h-8 w-28 rounded-full bg-slate-100"></div>
+                    <div class="h-8 w-36 rounded-full bg-slate-100"></div>
+                </div>
+                <div class="h-px bg-slate-100 mb-3"></div>
+                <div class="flex items-center justify-between">
+                    <div class="h-4 w-24 rounded-full bg-slate-100"></div>
+                    <div class="h-5 w-24 rounded-full bg-slate-200"></div>
+                </div>
+            </div>
+        `;
 
         try {
             const result = await apiRequest('/pesanan/user');
             if (result.success && result.data.length > 0) {
+                renderUserOrdersSummary(result.data);
                 listContainer.innerHTML = '';
                 result.data.forEach(order => {
                     const card = document.createElement('div');
-                    card.className = 'bg-white border rounded-xl p-4 shadow-sm relative overflow-hidden transition hover:shadow-md';
-
-                    // Beri warna status menarik
-                    let statusColor = 'bg-gray-100 text-gray-800 border-gray-200';
-                    let statusIcon = 'fa-clock';
-                    if (order.status === 'Menunggu Pembayaran') {
-                        statusColor = 'bg-amber-50 text-amber-700 border border-amber-200';
-                        statusIcon = 'fa-hourglass-half';
-                    }
-                    if (order.status === 'Diproses' || order.status === 'Sedang Disiapkan') {
-                        statusColor = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
-                        statusIcon = 'fa-fire-burner';
-                    }
-                    if (order.status === 'Sedang Diantar') {
-                        statusColor = 'bg-blue-50 text-blue-700 border border-blue-200';
-                        statusIcon = 'fa-motorcycle';
-                    }
-                    if (order.status === 'Pesanan Siap') {
-                        statusColor = 'bg-blue-50 text-blue-700 border border-blue-200';
-                        statusIcon = 'fa-shopping-bag';
-                    }
-                    if (order.status === 'Selesai') {
-                        statusColor = 'bg-green-50 text-green-700 border border-green-200';
-                        statusIcon = 'fa-check-circle';
-                    }
-                    if (order.status === 'Dibatalkan') {
-                        statusColor = 'bg-red-50 text-red-700 border border-red-200';
-                        statusIcon = 'fa-circle-xmark';
-                    }
+                    card.className = 'rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm transition hover:shadow-md';
+                    const orderType = normalizeOrderType(order.jenis);
+                    const statusMeta = getUserOrderStatusMeta(order.status);
+                    const paymentMeta = getUserPaymentMeta(order.payment_status);
+                    const typeMeta = getUserOrderTypeMeta(order.jenis);
+                    const paymentMethodLabel = escapeHtml(order.payment_method_label || formatPaymentMethodLabel(order.payment_method));
+                    const orderCode = escapeHtml(order.order_code || 'Pesanan Tanpa Kode');
+                    const orderDate = escapeHtml(order.date || '-');
+                    const orderItems = escapeHtml(order.items || '-');
+                    const orderAddress = escapeHtml(order.alamat || '-');
+                    const outletLabel = escapeHtml(order.outlet_label || 'Outlet belum dipilih');
+                    const totalBelanja = formatRupiah(order.total);
 
                     card.innerHTML = `
-                        <div class="flex justify-between items-start mb-3 border-b pb-3">
+                        <div class="flex flex-col gap-3">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div class="min-w-0">
+                                    <p class="text-xs font-medium text-slate-500 flex items-center gap-2">
+                                        <i class="fas fa-calendar-alt text-[11px]"></i> ${orderDate}
+                                    </p>
+                                    <h4 class="mt-1 text-lg font-bold text-slate-900">${orderCode}</h4>
+                                </div>
+                                <div class="flex flex-wrap gap-2 sm:justify-end">
+                                    <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold ${statusMeta.badgeClass}">
+                                        <i class="fas ${statusMeta.icon} text-[10px]"></i> ${statusMeta.label}
+                                    </span>
+                                    <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold ${typeMeta.badgeClass}">
+                                        <i class="fas ${typeMeta.icon} text-[10px]"></i> ${escapeHtml(typeMeta.label)}
+                                    </span>
+                                </div>
+                            </div>
+
                             <div>
-                                <p class="text-xs text-gray-500 font-medium mb-1"><i class="fas fa-calendar-alt opacity-70"></i> ${order.date}</p>
-                                ${order.order_code ? `<p class="text-[11px] font-bold text-red-600 mb-2">${order.order_code}</p>` : ''}
-                                <span class="px-2 py-1 inline-flex text-[10px] font-bold rounded-md ${order.jenis === 'delivery' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'} uppercase">
-                                    ${order.jenis || '-'}
+                                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 mb-1">Menu Dipesan</p>
+                                <p class="text-[15px] sm:text-base font-semibold text-slate-800 leading-relaxed">${orderItems}</p>
+                            </div>
+
+                            <p class="text-sm text-slate-500 leading-relaxed">
+                                <span class="font-medium text-slate-600">Outlet:</span> ${outletLabel}
+                            </p>
+
+                            ${orderType === 'delivery' ? `
+                                <p class="text-sm text-slate-500 leading-relaxed">
+                                    <span class="font-medium text-slate-600">Alamat:</span> ${orderAddress}
+                                </p>
+                            ` : ''}
+
+                            <div class="flex flex-wrap gap-2">
+                                <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700">
+                                    <i class="fas fa-credit-card text-[11px] text-slate-400"></i> ${paymentMethodLabel}
+                                </span>
+                                <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${paymentMeta.badgeClass}">
+                                    <i class="fas fa-circle text-[8px]"></i> ${escapeHtml(paymentMeta.label)}
                                 </span>
                             </div>
-                            <div class="flex flex-col items-end gap-2">
-                                ${order.payment_status ? `<span class="px-3 py-1 inline-flex items-center gap-1.5 text-[11px] font-bold rounded-full ${order.payment_status === 'Lunas' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">${order.payment_status}</span>` : ''}
-                                <span class="px-3 py-1.5 inline-flex items-center gap-1.5 text-xs font-bold rounded-full ${statusColor}">
-                                    <i class="fas ${statusIcon}"></i> ${order.status}
-                                </span>
+
+                            <div class="flex items-center justify-between border-t border-slate-100 pt-3">
+                                <span class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Total Belanja</span>
+                                <span class="text-lg sm:text-xl font-bold text-slate-900">${totalBelanja}</span>
                             </div>
-                        </div>
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-lg flex items-center justify-center shrink-0">
-                                <i class="fas fa-utensils text-xl"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">${order.items}</p>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg mt-2">
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Belanja</span>
-                            <span class="text-base font-black text-gray-900">${formatRupiah(order.total)}</span>
                         </div>
                     `;
                     listContainer.appendChild(card);
                 });
             } else {
-                listContainer.innerHTML = '<div class="p-8 text-center text-sm text-gray-500 flex flex-col items-center justify-center"><i class="fas fa-receipt text-4xl text-gray-300 mb-3 block"></i>Belum ada riwayat pesanan aktif. Yuk pesan sekarang!</div>';
+                renderUserOrdersSummary([]);
+                listContainer.innerHTML = '<div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500 flex flex-col items-center justify-center"><div class="w-14 h-14 rounded-2xl bg-white text-slate-400 flex items-center justify-center mb-4 border border-slate-200"><i class="fas fa-receipt text-xl"></i></div><p class="text-base font-semibold text-slate-700 mb-1">Belum ada pesanan aktif</p><p>Yuk pilih menu favoritmu, nanti riwayat pesanan akan muncul di sini.</p></div>';
             }
         } catch (err) {
-            listContainer.innerHTML = '<div class="p-6 text-center text-sm text-red-500">Gagal memuat pesanan.</div>';
+            renderUserOrdersSummary([]);
+            listContainer.innerHTML = '<div class="rounded-2xl border border-red-100 bg-red-50 p-8 text-center text-sm text-red-600">Gagal memuat pesanan. Coba tutup lalu buka lagi jendela ini.</div>';
         }
     }
 
@@ -2379,9 +3178,26 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             const outlet_address = document.getElementById('input_outlet_address').value;
             const admin_whatsapp_number = document.getElementById('input_admin_whatsapp').value;
+            const payment_qris_label = document.getElementById('input_payment_qris_label').value;
+            const payment_qris_image_url = document.getElementById('input_payment_qris_image_url').value;
+            const payment_qris_note = document.getElementById('input_payment_qris_note').value;
+            const payment_bank_name = document.getElementById('input_payment_bank_name').value;
+            const payment_bank_account_number = document.getElementById('input_payment_bank_account_number').value;
+            const payment_bank_account_name = document.getElementById('input_payment_bank_account_name').value;
+            const payment_bank_note = document.getElementById('input_payment_bank_note').value;
 
             try {
-                const result = await apiRequest('/admin/settings', 'POST', { outlet_address, admin_whatsapp_number });
+                const result = await apiRequest('/admin/settings', 'POST', {
+                    outlet_address,
+                    admin_whatsapp_number,
+                    payment_qris_label,
+                    payment_qris_image_url,
+                    payment_qris_note,
+                    payment_bank_name,
+                    payment_bank_account_number,
+                    payment_bank_account_name,
+                    payment_bank_note
+                });
                 if (result.success) {
                     Swal.fire({icon: 'success', title: 'Berhasil!', text: result.message, confirmButtonColor: '#D20000'});
                     // Update tampilan di kontak
