@@ -19,7 +19,7 @@ class PesananController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'no_hp' => 'required|string|max:20',
-            'jenis_belanja' => 'required|string|max:50',
+            'jenis_belanja' => ['required', 'string', 'max:50', Rule::in(['Take Away', 'Delivery'])],
             'outlet_id' => 'required|integer|exists:outlets,id',
             'payment_method' => 'required|string|in:qris,bank_transfer',
             'client_request_id' => 'nullable|string|max:100',
@@ -564,7 +564,6 @@ class PesananController extends Controller
         }
 
         return match ($this->normalizeShoppingType($shoppingType)) {
-            'dine in' => 'Makan di tempat',
             'take away', 'take-away', 'takeaway' => 'Ambil di outlet',
             default => $normalizedAddress !== '' ? $normalizedAddress : '-',
         };

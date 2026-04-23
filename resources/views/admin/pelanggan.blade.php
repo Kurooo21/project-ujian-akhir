@@ -45,7 +45,7 @@
                         </div>
                     </td>
                     <td class="py-3.5 px-6">{{ $user->email }}</td>
-                    <td class="py-3.5 px-6">{{ $user->phone ?? '-' }}</td>
+                    <td class="py-3.5 px-6">{{ $user->no_hp ?? '-' }}</td>
                     <td class="py-3.5 px-6">{{ $user->created_at->format('d M Y') }}</td>
                     <td class="py-3.5 px-6 text-right">
                         <button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 transition-colors" onclick="alert('Riwayat pesanan pelanggan ini (Feature Coming Soon)')">

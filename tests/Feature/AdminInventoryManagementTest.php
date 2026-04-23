@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Ingredient;
+use App\Models\Outlet;
 use App\Models\Pesanan;
 use App\Models\Product;
 use App\Models\RecipeItem;
@@ -14,14 +15,25 @@ class AdminInventoryManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_confirm_payment_reduces_ingredient_stock_based_on_recipe(): void
+    public function test_kasir_confirm_payment_reduces_ingredient_stock_based_on_recipe(): void
     {
-        $admin = User::create([
-            'name' => 'Admin',
-            'email' => 'confirm-payment-admin@example.com',
-            'username' => 'confirm-payment-admin',
+        $outlet = Outlet::create([
+            'name' => 'Chi-Pok Antapani',
+            'province' => 'Jawa Barat',
+            'city' => 'Bandung',
+            'district' => 'Antapani',
+            'address' => 'Jl. Antapani No. 1',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        $kasir = User::create([
+            'name' => 'Kasir Antapani',
+            'email' => 'confirm-payment-kasir@example.com',
+            'username' => 'confirm-payment-kasir',
             'password' => bcrypt('secret'),
-            'role' => 'admin',
+            'role' => 'kasir',
+            'outlet_id' => $outlet->id,
         ]);
 
         $product = Product::create([
@@ -62,8 +74,13 @@ class AdminInventoryManagementTest extends TestCase
         ]);
 
         Pesanan::create([
-            'user_id' => $admin->id,
+            'user_id' => $kasir->id,
             'order_code' => 'ORD-INV-001',
+            'outlet_id' => $outlet->id,
+            'outlet_name' => $outlet->name,
+            'outlet_city' => $outlet->city,
+            'outlet_district' => $outlet->district,
+            'outlet_address_snapshot' => $outlet->address,
             'nama_pelanggan' => 'Faa',
             'no_hp' => '08123456789',
             'alamat' => 'Bandung',
@@ -77,11 +94,11 @@ class AdminInventoryManagementTest extends TestCase
             'status' => 'Menunggu Pembayaran',
         ]);
 
-        $response = $this->actingAs($admin)->put(route('admin.pesanan.confirm-payment'), [
+        $response = $this->actingAs($kasir)->put(route('kasir.pesanan.confirm-payment'), [
             'group_id' => 'ORD-INV-001',
         ]);
 
-        $response->assertRedirect(route('admin.pesanan'));
+        $response->assertRedirect(route('kasir.pesanan'));
         $this->assertDatabaseHas('ingredients', [
             'id' => $ayam->id,
             'stock_quantity' => 2400,
@@ -97,14 +114,25 @@ class AdminInventoryManagementTest extends TestCase
         ]);
     }
 
-    public function test_confirm_payment_is_blocked_when_ingredient_stock_is_not_enough(): void
+    public function test_kasir_confirm_payment_is_blocked_when_ingredient_stock_is_not_enough(): void
     {
-        $admin = User::create([
-            'name' => 'Admin',
+        $outlet = Outlet::create([
+            'name' => 'Chi-Pok Antapani',
+            'province' => 'Jawa Barat',
+            'city' => 'Bandung',
+            'district' => 'Antapani',
+            'address' => 'Jl. Antapani No. 1',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        $kasir = User::create([
+            'name' => 'Kasir Antapani',
             'email' => 'confirm-payment-stock@example.com',
             'username' => 'confirm-payment-stock',
             'password' => bcrypt('secret'),
-            'role' => 'admin',
+            'role' => 'kasir',
+            'outlet_id' => $outlet->id,
         ]);
 
         $product = Product::create([
@@ -131,8 +159,13 @@ class AdminInventoryManagementTest extends TestCase
         ]);
 
         Pesanan::create([
-            'user_id' => $admin->id,
+            'user_id' => $kasir->id,
             'order_code' => 'ORD-INV-002',
+            'outlet_id' => $outlet->id,
+            'outlet_name' => $outlet->name,
+            'outlet_city' => $outlet->city,
+            'outlet_district' => $outlet->district,
+            'outlet_address_snapshot' => $outlet->address,
             'nama_pelanggan' => 'Faa',
             'no_hp' => '08123456789',
             'alamat' => 'Bandung',
@@ -146,11 +179,11 @@ class AdminInventoryManagementTest extends TestCase
             'status' => 'Menunggu Pembayaran',
         ]);
 
-        $response = $this->actingAs($admin)->from(route('admin.pesanan'))->put(route('admin.pesanan.confirm-payment'), [
+        $response = $this->actingAs($kasir)->from(route('kasir.pesanan'))->put(route('kasir.pesanan.confirm-payment'), [
             'group_id' => 'ORD-INV-002',
         ]);
 
-        $response->assertRedirect(route('admin.pesanan'));
+        $response->assertRedirect(route('kasir.pesanan'));
         $response->assertSessionHas('error');
         $this->assertDatabaseHas('ingredients', [
             'id' => $ayam->id,

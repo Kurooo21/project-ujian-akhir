@@ -267,6 +267,22 @@ function generateCheckoutRequestId() {
     return `checkout-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function getBackofficeDashboardPath(user) {
+    if (!user || !user.role) {
+        return null;
+    }
+
+    if (user.role === 'admin') {
+        return '/admin/dashboard';
+    }
+
+    if (user.role === 'kasir') {
+        return '/kasir/dashboard';
+    }
+
+    return null;
+}
+
 function getCheckoutPaymentHint(paymentMethod) {
     if (paymentMethod === 'bank_transfer') {
         return 'Mode demo transfer bank: tampilkan rekening simulasi tanpa transaksi sungguhan.';
@@ -966,8 +982,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // ====================================================================
     // TOGGLE FIELD ALAMAT BERDASARKAN JENIS BELANJA
     // ====================================================================
-    // Dine In (Makan di Tempat) → alamat tidak perlu diisi
-    // Take Away / Delivery → alamat wajib diisi
+    // Take Away → alamat tidak perlu diisi
+    // Delivery → alamat wajib diisi
 
     const checkoutJenis = document.getElementById('checkout_jenis');
     const alamatWrapper = document.getElementById('checkout-alamat-wrapper');
@@ -996,7 +1012,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function toggleAlamatField() {
         if (!checkoutJenis || !alamatWrapper || !alamatField) return;
-        // Alamat hanya wajib diisi untuk Delivery; Dine In & Take Away tidak perlu
+        // Alamat hanya wajib diisi untuk Delivery
         const needsAddress = checkoutJenis.value === 'Delivery';
         if (!needsAddress) {
             alamatWrapper.classList.add('hidden');
@@ -1335,6 +1351,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await apiRequest('/api/user');
             if (result.logged_in) {
                 currentUser = result.user;  // Simpan data user
+                const backofficePath = getBackofficeDashboardPath(currentUser);
+                if (backofficePath) {
+                    window.location.href = resolveAppUrl(backofficePath);
+                    return;
+                }
             } else {
                 currentUser = null;
             }
@@ -1829,8 +1850,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentUser = result.user;        // Simpan data user
                 Swal.fire({icon: 'success', title: 'Yeay Berhasil!', text: result.message || 'Selamat datang di dunia penuh kelezatan, Chi-Pok!', confirmButtonColor: '#D20000'}).then(() => {
                     // Jika admin → redirect ke halaman dashboard admin terpisah
-                    if (currentUser && currentUser.role === 'admin') {
-                        window.location.href = resolveAppUrl('/admin/dashboard');
+                    const backofficePath = getBackofficeDashboardPath(currentUser);
+                    if (backofficePath) {
+                        window.location.href = resolveAppUrl(backofficePath);
                         return;
                     }
                     updateLoginUI();                   // Update tampilan
@@ -2507,7 +2529,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         return {
-            label: orderType || 'Dine In',
+            label: orderType || 'Pesanan',
             icon: 'fa-utensils',
             badgeClass: 'bg-red-50 text-red-700 border border-red-200'
         };

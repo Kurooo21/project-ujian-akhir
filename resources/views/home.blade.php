@@ -626,16 +626,15 @@
                         <div id="cart-checkout-section" class="hidden">
                             <div class="border-t pt-4">
                                 <h4 class="font-bold text-sm text-gray-900 mb-3 flex items-center gap-2">
-                                    <i class="fas fa-truck text-red-500"></i> Detail Pengiriman
+                                    <i class="fas fa-truck text-red-500"></i> Detail Pesanan
                                 </h4>
                                 <form id="checkoutForm" class="space-y-3">
                                     <div>
                                         <label for="checkout_jenis" class="block text-sm font-medium text-gray-700">Jenis Belanja</label>
                                         <select id="checkout_jenis" required
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                            <option value="Dine In">Dine In (Makan di Tempat)</option>
-                                            <option value="Take Away">Take Away (Bungkus)</option>
-                                            <option value="Delivery">Delivery (Antar)</option>
+                                            <option value="Take Away">Take Away</option>
+                                            <option value="Delivery">Delivery</option>
                                         </select>
                                     </div>
                                     <div>

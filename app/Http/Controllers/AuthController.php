@@ -28,14 +28,7 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'Login Berhasil! Selamat datang, ' . Auth::user()->name,
                 'csrf_token' => csrf_token(),
-                'user' => [
-                    'name' => Auth::user()->name,
-                    'email' => Auth::user()->email,
-                    'username' => Auth::user()->username,
-                    'role' => Auth::user()->role,
-                    'alamat' => Auth::user()->alamat,
-                    'no_hp' => Auth::user()->no_hp,
-                ]
+                'user' => $this->buildAuthUserPayload(Auth::user()),
             ]);
         }
 
@@ -94,14 +87,7 @@ class AuthController extends Controller
         if (Auth::check()) {
             return response()->json([
                 'logged_in' => true,
-                'user' => [
-                    'name' => Auth::user()->name,
-                    'email' => Auth::user()->email,
-                    'username' => Auth::user()->username,
-                    'role' => Auth::user()->role,
-                    'alamat' => Auth::user()->alamat,
-                    'no_hp' => Auth::user()->no_hp,
-                ]
+                'user' => $this->buildAuthUserPayload(Auth::user()),
             ]);
         }
         return response()->json(['logged_in' => false]);
@@ -136,14 +122,23 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Profil berhasil diperbarui!',
-            'user' => [
-                'name' => $user->name,
-                'email' => $user->email,
-                'username' => $user->username,
-                'role' => $user->role,
-                'alamat' => $user->alamat,
-                'no_hp' => $user->no_hp,
-            ]
+            'user' => $this->buildAuthUserPayload($user),
         ]);
+    }
+
+    private function buildAuthUserPayload(User $user): array
+    {
+        $user->loadMissing('outlet');
+
+        return [
+            'name' => $user->name,
+            'email' => $user->email,
+            'username' => $user->username,
+            'role' => $user->role,
+            'outlet_id' => $user->outlet_id,
+            'outlet_name' => $user->outlet?->name,
+            'alamat' => $user->alamat,
+            'no_hp' => $user->no_hp,
+        ];
     }
 }

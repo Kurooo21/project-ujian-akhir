@@ -71,7 +71,38 @@ class PesananCheckoutTest extends TestCase
         $this->assertSame($firstResponse->json('order_code'), Pesanan::query()->value('order_code'));
     }
 
-    public function test_dine_in_checkout_does_not_require_address(): void
+    public function test_take_away_checkout_does_not_require_address(): void
+    {
+        [$user, $outlet] = $this->createUserAndOutlet();
+
+        $response = $this->actingAs($user)->postJson(route('pesanan.store'), [
+            'nama' => 'man',
+            'no_hp' => '082345632',
+            'alamat' => '',
+            'jenis_belanja' => 'Take Away',
+            'outlet_id' => $outlet->id,
+            'payment_method' => 'qris',
+            'client_request_id' => 'checkout-req-take-away',
+            'items' => [
+                [
+                    'pesanan_item' => 'KEJU POKPOK',
+                    'jumlah' => 1,
+                    'harga_satuan' => 25000,
+                ],
+            ],
+        ]);
+
+        $response->assertOk()->assertJson([
+            'success' => true,
+        ]);
+
+        $this->assertDatabaseHas('pesanan', [
+            'jenis_belanja' => 'Take Away',
+            'alamat' => 'Ambil di outlet',
+        ]);
+    }
+
+    public function test_dine_in_checkout_is_rejected_after_option_is_removed(): void
     {
         [$user, $outlet] = $this->createUserAndOutlet();
 
@@ -92,13 +123,8 @@ class PesananCheckoutTest extends TestCase
             ],
         ]);
 
-        $response->assertOk()->assertJson([
-            'success' => true,
-        ]);
-
-        $this->assertDatabaseHas('pesanan', [
-            'jenis_belanja' => 'Dine In',
-            'alamat' => 'Makan di tempat',
+        $response->assertStatus(422)->assertJsonValidationErrors([
+            'jenis_belanja',
         ]);
     }
 }

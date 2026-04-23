@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -15,6 +17,7 @@ class User extends Authenticatable
         'username',
         'password',
         'role',
+        'outlet_id',
         'alamat',
         'no_hp',
     ];
@@ -24,18 +27,28 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public function pesanan()
+    public function pesanan(): HasMany
     {
         return $this->hasMany(Pesanan::class);
     }
 
-    public function reviews()
+    public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
     }
 
-    public function isAdmin()
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class);
+    }
+
+    public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function isKasir(): bool
+    {
+        return $this->role === 'kasir';
     }
 }

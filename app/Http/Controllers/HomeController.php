@@ -12,9 +12,14 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // Jika user yang login adalah admin, redirect ke dashboard admin
-        if (Auth::check() && Auth::user()->role === 'admin') {
-            return redirect()->route('admin.dashboard');
+        if (Auth::check()) {
+            if (Auth::user()->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+
+            if (Auth::user()->role === 'kasir') {
+                return redirect()->route('kasir.dashboard');
+            }
         }
 
         $products = Product::with('reviews.user')->get();
