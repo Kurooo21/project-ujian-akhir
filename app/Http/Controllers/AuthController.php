@@ -24,18 +24,29 @@ class AuthController extends Controller
         // remember = true agar session tetap aktif setelah browser refresh
         if (Auth::attempt(['username' => $request->username, 'password' => $request->password], true)) {
             $request->session()->regenerate();
-            return response()->json([
-                'success' => true,
-                'message' => 'Login Berhasil! Selamat datang, ' . Auth::user()->name,
-                'csrf_token' => csrf_token(),
-                'user' => $this->buildAuthUserPayload(Auth::user()),
-            ]);
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login Berhasil! Selamat datang, ' . Auth::user()->name,
+                    'csrf_token' => csrf_token(),
+                    'user' => $this->buildAuthUserPayload(Auth::user()),
+                ]);
+            }
+            // Jika login dari form biasa, redirect ke halaman utama
+            if (Auth::user()->role === 'admin') return redirect()->route('admin.dashboard');
+            if (Auth::user()->role === 'kasir') return redirect()->route('kasir.dashboard');
+            return redirect()->route('home')->with('success', 'Login berhasil!');
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Username atau Password salah!'
-        ], 401);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Username atau Password salah!'
+            ], 401);
+        }
+        
+        // Kembalikan ke halaman login dengan error
+        return back()->withErrors(['username' => 'Username atau Password salah!'])->withInput();
     }
 
     public function showRegister()
@@ -63,10 +74,14 @@ class AuthController extends Controller
             'no_hp' => $request->no_hp,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Pendaftaran Berhasil! Silakan Login.'
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pendaftaran Berhasil! Silakan Login.'
+            ]);
+        }
+
+        return redirect()->route('login')->with('success', 'Pendaftaran Berhasil! Silakan Login.');
     }
 
     public function logout(Request $request)
@@ -119,11 +134,15 @@ class AuthController extends Controller
 
         $user->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Profil berhasil diperbarui!',
-            'user' => $this->buildAuthUserPayload($user),
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profil berhasil diperbarui!',
+                'user' => $this->buildAuthUserPayload($user),
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Profil berhasil diperbarui!');
     }
 
     private function buildAuthUserPayload(User $user): array

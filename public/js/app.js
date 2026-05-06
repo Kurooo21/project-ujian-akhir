@@ -27,7 +27,9 @@
 let products = PRODUCTS_DATA;
 
 // Data user yang sedang login (null = belum login)
-let currentUser = null;
+let currentUser = (typeof CURRENT_USER_DATA !== 'undefined' && CURRENT_USER_DATA)
+    ? CURRENT_USER_DATA
+    : null;
 
 // Kategori menu yang sedang aktif ('semua', 'makanan', 'minuman')
 let currentCategory = 'semua';
@@ -72,8 +74,8 @@ function saveCart() {
  *
  * Cara kerja:
  * 1. Cari produk berdasarkan ID
- * 2. Jika produk sudah ada di cart → tambah qty (jumlah) +1
- * 3. Jika belum ada → buat item baru dengan qty = 1
+ * 2. Jika produk sudah ada di cart â†’ tambah qty (jumlah) +1
+ * 3. Jika belum ada â†’ buat item baru dengan qty = 1
  * 4. Simpan cart, update badge, dan tampilkan notifikasi
  */
 function addToCart(productId) {
@@ -85,10 +87,10 @@ function addToCart(productId) {
     const existing = cart.find(item => item.id === productId);
 
     if (existing) {
-        // Produk sudah ada → tambah jumlahnya saja
+        // Produk sudah ada â†’ tambah jumlahnya saja
         existing.qty += 1;
     } else {
-        // Produk belum ada → tambahkan sebagai item baru
+        // Produk belum ada â†’ tambahkan sebagai item baru
         cart.push({
             id: product.id,
             name: product.name,
@@ -137,9 +139,9 @@ function updateCartQty(productId, newQty) {
 
 /**
  * getCartTotal() - Hitung total harga semua item di keranjang
- * @returns {number} - Total harga (harga × jumlah untuk setiap item)
+ * @returns {number} - Total harga (harga Ã— jumlah untuk setiap item)
  *
- * reduce() menjumlahkan semua (price × qty) dari setiap item
+ * reduce() menjumlahkan semua (price Ã— qty) dari setiap item
  */
 function getCartTotal() {
     return cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -324,6 +326,7 @@ function buildPaymentDetailsHtml(result) {
     const selectedOutlet = result.outlet || null;
     const outletLabel = selectedOutlet ? escapeHtml(selectedOutlet.label || buildOutletLabel(selectedOutlet)) : '';
     const outletAddress = selectedOutlet?.address ? escapeHtml(selectedOutlet.address) : '';
+    const showProofComingSoon = ['qris', 'bank_transfer', 'whatsapp_transfer', 'manual'].includes(method);
     let detailBlock = '';
 
     if (method === 'qris') {
@@ -356,7 +359,7 @@ function buildPaymentDetailsHtml(result) {
     }
 
     return `
-        <div class="text-sm text-gray-600 leading-6 text-left">
+        <div class="text-sm text-red-700 leading-6 text-left">
             <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
                 <b>Mode Demo:</b> pembayaran ini hanya simulasi dan belum terhubung ke gateway live.
             </div>
@@ -364,14 +367,20 @@ function buildPaymentDetailsHtml(result) {
             <p><b>Metode Pembayaran:</b> ${methodLabel}</p>
             <p><b>Total Bayar:</b> ${total}</p>
             ${selectedOutlet ? `
-                <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Outlet Pesanan</p>
-                    <p class="text-sm font-semibold text-slate-900">${outletLabel}</p>
-                    ${outletAddress ? `<p class="mt-1 text-xs text-slate-500 leading-5">${outletAddress}</p>` : ''}
+                <div class="mt-4 rounded-xl border border-red-100 bg-red-50/40 px-4 py-3">
+                    <p class="text-xs font-bold uppercase tracking-widest text-red-400 mb-1">Outlet Pesanan</p>
+                    <p class="text-sm font-semibold text-red-900">${outletLabel}</p>
+                    ${outletAddress ? `<p class="mt-1 text-xs text-red-700 leading-5">${outletAddress}</p>` : ''}
                 </div>
             ` : ''}
             ${result.admin_whatsapp ? `<p><b>WA Admin:</b> ${adminWhatsapp}</p>` : ''}
             ${detailBlock}
+            ${showProofComingSoon ? `
+                <div class="mt-4 rounded-xl border border-dashed border-amber-200 bg-amber-50 p-4">
+                    <p class="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">Upload Bukti Bayar</p>
+                    <p class="text-sm text-amber-900 leading-6">Fitur upload gambar sedang coming soon. Untuk sementara, konfirmasi pembayaran lewat admin dulu ya.</p>
+                </div>
+            ` : ''}
             ${instructions.length ? `
                 <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
                     <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Instruksi Pembayaran</p>
@@ -535,6 +544,98 @@ document.addEventListener("DOMContentLoaded", () => {
             : (checkoutSubmitButton.dataset.defaultLabel || '<i class="fas fa-receipt"></i> Buat Pesanan');
     }
 
+    function promptLoginRequired({
+        title = 'Login Dulu',
+        text = 'Masuk ke akunmu dulu ya supaya kamu bisa lanjut ke keranjang dan checkout.',
+        confirmText = 'Login Sekarang'
+    } = {}) {
+        return Swal.fire({
+            icon: 'info',
+            title,
+            text,
+            showCancelButton: true,
+            confirmButtonText: confirmText,
+            cancelButtonText: 'Nanti Dulu',
+            confirmButtonColor: '#D20000',
+            cancelButtonColor: '#64748b'
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return result;
+            }
+
+            if (cartModal) {
+                cartModal.classList.add('hidden');
+            }
+
+            if (loginModal) {
+                loginModal.classList.remove('hidden');
+            } else {
+                window.location.href = resolveAppUrl('/login');
+            }
+
+            return result;
+        });
+    }
+
+    function openCheckoutPage() {
+        window.location.href = (typeof CHECKOUT_URL !== 'undefined' && CHECKOUT_URL)
+            ? CHECKOUT_URL
+            : resolveAppUrl('/checkout');
+    }
+
+    function openUserOrdersPage() {
+        window.location.href = (typeof USER_ORDERS_PAGE_URL !== 'undefined' && USER_ORDERS_PAGE_URL)
+            ? USER_ORDERS_PAGE_URL
+            : resolveAppUrl('/pesanan/saya');
+    }
+
+    function openUserOrdersHub() {
+        if (cartModal) {
+            cartModal.classList.add('hidden');
+        }
+        openUserOrdersPage();
+    }
+
+    function openOrdersHub() {
+        if (!currentUser) {
+            promptLoginRequired({
+                title: 'Login Dulu untuk Membuka Pesanan',
+                text: 'Masuk ke akunmu dulu ya supaya kamu bisa membuka keranjang dan riwayat pesanan.',
+                confirmText: 'Login Sekarang'
+            });
+            return;
+        }
+
+        if (currentUser.role === 'admin') {
+            adminModal.classList.remove('hidden');
+            renderOrdersTable();
+            return;
+        }
+
+        Swal.fire({
+            title: 'Pesanan',
+            text: 'Pilih yang ingin kamu buka dulu.',
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: 'Keranjang',
+            denyButtonText: 'Riwayat',
+            cancelButtonText: 'Tutup',
+            confirmButtonColor: '#D20000',
+            denyButtonColor: '#F97316',
+            cancelButtonColor: '#64748b'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                openCheckoutPage();
+                return;
+            }
+
+            if (result.isDenied) {
+                openUserOrdersHub();
+            }
+        });
+    }
+
     // ====================================================================
     // UPDATE BADGE KERANJANG
     // ====================================================================
@@ -542,10 +643,12 @@ document.addEventListener("DOMContentLoaded", () => {
     /**
      * updateCartBadge() - Update angka badge di icon keranjang (header)
      *
-     * Jika ada item di cart → tampilkan badge dengan jumlah item
-     * Jika cart kosong → sembunyikan badge
+     * Jika ada item di cart â†’ tampilkan badge dengan jumlah item
+     * Jika cart kosong â†’ sembunyikan badge
      */
     function updateCartBadge() {
+        if (!cartBadge) return;
+
         const count = getCartCount();
         if (count > 0) {
             cartBadge.textContent = count;          // Set angka badge
@@ -595,11 +698,11 @@ document.addEventListener("DOMContentLoaded", () => {
         contactOutletCards.forEach((card) => {
             const triggerButton = card.querySelector('[data-contact-outlet-trigger]');
 
-            card.addEventListener('click', () => {
+            card?.addEventListener('click', () => {
                 setActiveContactOutlet(card);
             });
 
-            card.addEventListener('keydown', (event) => {
+            card?.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
                     setActiveContactOutlet(card);
@@ -607,7 +710,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (triggerButton) {
-                triggerButton.addEventListener('click', (event) => {
+                triggerButton?.addEventListener('click', (event) => {
                     event.preventDefault();
                     event.stopPropagation();
                     setActiveContactOutlet(card);
@@ -641,18 +744,24 @@ document.addEventListener("DOMContentLoaded", () => {
         // Jika keranjang kosong, tampilkan pesan kosong
         if (cart.length === 0) {
             cartItemsContainer.innerHTML = `
-                <div class="text-center py-8">
-                    <i class="fas fa-shopping-basket text-4xl text-gray-300 mb-3 block"></i>
-                    <p class="text-gray-400 text-sm">Keranjang belanja kosong</p>
-                    <p class="text-gray-300 text-xs mt-1">Yuk tambahkan menu favoritmu!</p>
+                <div class="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center">
+                    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-100 bg-white text-red-400">
+                        <i class="fas fa-shopping-basket text-xl"></i>
+                    </div>
+                    <p class="text-base font-semibold text-red-900">Keranjang masih kosong</p>
+                    <p class="mt-2 text-sm leading-6 text-red-700">Pilih menu dulu, nanti item yang kamu tambahkan akan muncul di sini.</p>
+                    <a href="${resolveAppUrl('/menu')}" class="mt-5 inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 hover:text-red-900">
+                        <i class="fas fa-utensils text-xs"></i>
+                        Lihat Menu
+                    </a>
                 </div>`;
-            btnCheckout.disabled = true;                     // Nonaktifkan tombol checkout
-            cartTotalDisplay.textContent = formatRupiah(0);  // Total = Rp 0
+            if (btnCheckout) btnCheckout.disabled = true;           // Nonaktifkan tombol checkout
+            if (cartTotalDisplay) cartTotalDisplay.textContent = formatRupiah(0);  // Total = Rp 0
             return;
         }
 
         // Aktifkan tombol checkout dan kosongkan container
-        btnCheckout.disabled = false;
+        if (btnCheckout) btnCheckout.disabled = false;
         cartItemsContainer.innerHTML = '';
 
         // Loop setiap item di cart dan buat HTML-nya
@@ -664,52 +773,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Buat elemen HTML untuk item cart
             const el = document.createElement('div');
-            el.className = 'flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-100 transition hover:shadow-sm';
+            el.className = 'rounded-[22px] border border-slate-200 bg-white p-4 transition hover:border-slate-300';
             el.innerHTML = `
-                <div class="w-14 h-14 bg-white rounded-lg flex items-center justify-center p-1 shrink-0 border border-gray-100">
-                    <img src="${imgSrc}" alt="${item.name}" class="w-full h-full object-contain">
-                </div>
-                <div class="flex-grow min-w-0">
-                    <h4 class="font-bold text-sm text-gray-800 truncate">${item.name}</h4>
-                    <p class="text-xs text-gray-500">${formatRupiah(item.price)}</p>
-                </div>
-                <div class="flex items-center gap-1 shrink-0">
-                    <button class="cart-qty-btn w-7 h-7 rounded-full bg-gray-200 hover:bg-red-100 text-gray-600 hover:text-red-600 flex items-center justify-center text-xs font-bold transition" data-id="${item.id}" data-action="minus">
-                        <i class="fas fa-minus text-[10px]"></i>
-                    </button>
-                    <span class="w-8 text-center font-bold text-sm">${item.qty}</span>
-                    <button class="cart-qty-btn w-7 h-7 rounded-full bg-gray-200 hover:bg-green-100 text-gray-600 hover:text-green-600 flex items-center justify-center text-xs font-bold transition" data-id="${item.id}" data-action="plus">
-                        <i class="fas fa-plus text-[10px]"></i>
-                    </button>
-                </div>
-                <div class="text-right shrink-0 w-24">
-                    <p class="font-extrabold text-sm text-red-600">${formatRupiah(subtotal)}</p>
-                </div>
-                <button class="cart-remove-btn text-gray-300 hover:text-red-500 transition shrink-0" data-id="${item.id}" title="Hapus">
-                    <i class="fas fa-times"></i>
-                </button>`;
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-[20px] border border-slate-200 bg-slate-50 p-3">
+                        <img src="${imgSrc}" alt="${item.name}" class="h-full w-full object-contain">
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h4 class="text-base font-semibold leading-tight text-red-900">${item.name}</h4>
+                                <p class="mt-1 text-sm text-red-700">${formatRupiah(item.price)} / item</p>
+                            </div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-left sm:text-right">
+                                <p class="text-[11px] font-medium uppercase tracking-[0.16em] text-red-400">Subtotal</p>
+                                <p class="mt-1 text-base font-semibold text-red-700">${formatRupiah(subtotal)}</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-2 py-2">
+                                <button class="cart-qty-btn flex h-9 w-9 items-center justify-center rounded-full bg-white text-red-700 shadow-sm transition hover:bg-red-50 hover:text-red-900" data-id="${item.id}" data-action="minus">
+                                    <i class="fas fa-minus text-[11px]"></i>
+                                </button>
+                                <span class="min-w-[2rem] text-center text-sm font-semibold text-red-900">${item.qty}</span>
+                                <button class="cart-qty-btn flex h-9 w-9 items-center justify-center rounded-full bg-white text-red-700 shadow-sm transition hover:bg-red-50 hover:text-red-900" data-id="${item.id}" data-action="plus">
+                                    <i class="fas fa-plus text-[11px]"></i>
+                                </button>
+                            </div>
+                            <button class="cart-remove-btn inline-flex items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 hover:text-red-900" data-id="${item.id}" title="Hapus">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
             cartItemsContainer.appendChild(el);
         });
 
         // Update tampilan total harga
-        cartTotalDisplay.textContent = formatRupiah(getCartTotal());
+        if (cartTotalDisplay) {
+            cartTotalDisplay.textContent = formatRupiah(getCartTotal());
+        }
 
         // Pasang event listener pada tombol +/- qty
         document.querySelectorAll('.cart-qty-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn?.addEventListener('click', () => {
                 const id = parseInt(btn.dataset.id);       // Ambil ID produk dari data attribute
                 const action = btn.dataset.action;          // 'plus' atau 'minus'
                 const item = cart.find(i => i.id === id);
                 if (!item) return;
-                // Jika 'plus' → qty + 1, jika 'minus' → qty - 1
+                // Jika 'plus' â†’ qty + 1, jika 'minus' â†’ qty - 1
                 updateCartQty(id, action === 'plus' ? item.qty + 1 : item.qty - 1);
                 updateCartBadge();
             });
         });
 
-        // Pasang event listener pada tombol hapus item (×)
+        // Pasang event listener pada tombol hapus item (Ã—)
         document.querySelectorAll('.cart-remove-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn?.addEventListener('click', () => {
                 removeFromCart(parseInt(btn.dataset.id));
             });
         });
@@ -723,27 +844,40 @@ document.addEventListener("DOMContentLoaded", () => {
     // ====================================================================
 
     // Saat tombol keranjang/pesanan di header diklik
-    btnCartHeader.addEventListener('click', () => {
-        // Jika admin → buka panel admin (lihat pesanan)
+    btnCartHeader?.addEventListener('click', (e) => {
+        // Jika admin â†’ buka panel admin (lihat pesanan)
+        e.preventDefault();
+        openOrdersHub();
+        return;
+
+        if (!currentUser) {
+            promptLoginRequired({
+                title: 'Login Dulu untuk Membuka Keranjang',
+                text: 'Masuk ke akunmu dulu ya supaya keranjang belanja dan proses checkout bisa dipakai.',
+                confirmText: 'Login Sekarang'
+            });
+            return;
+        }
+
         if (currentUser && currentUser.role === 'admin') {
             adminModal.classList.remove('hidden');
             renderOrdersTable();
             return;
         }
-        // Jika user biasa → buka modal keranjang
+        // Jika user biasa â†’ buka modal keranjang
         cartCheckoutSection.classList.add('hidden');
         cartActionButtons.classList.remove('hidden');
         renderCartModal();
         cartModal.classList.remove('hidden');
     });
 
-    // Saat tombol × (close) diklik → tutup modal cart
-    document.getElementById('closeCartModal').addEventListener('click', () => {
+    // Saat tombol Ã— (close) diklik â†’ tutup modal cart
+    document.getElementById('closeCartModal')?.addEventListener('click', () => {
         cartModal.classList.add('hidden');
     });
 
-    // Saat tombol "Kosongkan" diklik → konfirmasi lalu kosongkan cart
-    btnClearCart.addEventListener('click', () => {
+    // Saat tombol "Kosongkan" diklik â†’ konfirmasi lalu kosongkan cart
+    btnClearCart?.addEventListener('click', () => {
         if (cart.length === 0) return;
         Swal.fire({
             title: 'Hapus Semua?',
@@ -772,7 +906,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ====================================================================
     // ALUR CHECKOUT (PEMBAYARAN/PEMESANAN)
     // ====================================================================
-    // Alur: Klik Checkout → Cek Login → Tampilkan Form → Isi Data → Kirim Pesanan
+    // Alur: Klik Checkout â†’ Cek Login â†’ Tampilkan Form â†’ Isi Data â†’ Kirim Pesanan
 
     const availableOutlets = Array.isArray(typeof OUTLETS_DATA !== 'undefined' ? OUTLETS_DATA : [])
         ? OUTLETS_DATA
@@ -832,17 +966,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const areaLabel = escapeHtml(buildOutletArea(outlet) || '-');
         const outletName = escapeHtml(outlet.name || 'Outlet');
         const outletAddress = escapeHtml(outlet.address || '-');
-        const outletPhone = outlet.phone ? `<p class="mt-1 text-xs text-slate-500"><span class="font-semibold text-slate-600">Kontak:</span> ${escapeHtml(outlet.phone)}</p>` : '';
+        const outletPhone = outlet.phone ? `<p class="mt-1 text-xs text-red-700"><span class="font-semibold text-red-800">Kontak:</span> ${escapeHtml(outlet.phone)}</p>` : '';
         const outletMaps = outlet.maps_url
-            ? `<a href="${escapeHtml(outlet.maps_url)}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700">Buka Maps</a>`
+            ? `<a href="${escapeHtml(outlet.maps_url)}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-red-700">Buka Maps</a>`
             : '';
 
         checkoutOutletPreview.classList.remove('hidden');
         checkoutOutletPreview.innerHTML = `
-            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 mb-1">Outlet Terpilih</p>
-            <p class="text-sm font-bold text-slate-900">${outletName}</p>
-            <p class="mt-1 text-xs text-slate-500">${areaLabel}</p>
-            <p class="mt-2 text-sm text-slate-600 leading-relaxed">${outletAddress}</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-red-400 mb-1">Outlet Terpilih</p>
+            <p class="text-sm font-bold text-red-900">${outletName}</p>
+            <p class="mt-1 text-xs text-red-500">${areaLabel}</p>
+            <p class="mt-2 text-sm text-red-700 leading-relaxed">${outletAddress}</p>
             ${outletPhone}
             ${outletMaps}
         `;
@@ -928,12 +1062,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Saat tombol "Checkout" diklik
-    btnCheckout.addEventListener('click', () => {
+    btnCheckout?.addEventListener('click', () => {
         // Cek apakah user sudah login
         if (!currentUser) {
-            Swal.fire({icon: 'info', title: 'Ups!', text: 'Kamu harus login dulu buat lanjutin pesanan lezatmu!', confirmButtonColor: '#D20000', confirmButtonText: 'Oke, Login!'}).then(() => {
-                cartModal.classList.add('hidden');
-                loginModal.classList.remove('hidden');
+            promptLoginRequired({
+                title: 'Login Dulu untuk Checkout',
+                text: 'Masuk ke akunmu dulu ya supaya pesanan bisa diproses sampai selesai.',
+                confirmText: 'Login Sekarang'
             });
             return;
         }
@@ -967,14 +1102,14 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     });
 
-    // Tombol "Kembali" dari checkout → tampilkan cart lagi
-    btnBackToCart.addEventListener('click', () => {
+    // Tombol "Kembali" dari checkout â†’ tampilkan cart lagi
+    btnBackToCart?.addEventListener('click', () => {
         cartCheckoutSection.classList.add('hidden');      // Sembunyikan form checkout
         cartActionButtons.classList.remove('hidden');     // Tampilkan tombol cart
     });
 
     if (checkoutPaymentMethod && checkoutPaymentHint) {
-        checkoutPaymentMethod.addEventListener('change', () => {
+        checkoutPaymentMethod?.addEventListener('change', () => {
             checkoutPaymentHint.textContent = getCheckoutPaymentHint(checkoutPaymentMethod.value);
         });
     }
@@ -982,8 +1117,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // ====================================================================
     // TOGGLE FIELD ALAMAT BERDASARKAN JENIS BELANJA
     // ====================================================================
-    // Take Away → alamat tidak perlu diisi
-    // Delivery → alamat wajib diisi
+    // Take Away â†’ alamat tidak perlu diisi
+    // Delivery â†’ alamat wajib diisi
 
     const checkoutJenis = document.getElementById('checkout_jenis');
     const alamatWrapper = document.getElementById('checkout-alamat-wrapper');
@@ -1028,7 +1163,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (checkoutJenis) {
-        checkoutJenis.addEventListener('change', toggleAlamatField);
+        checkoutJenis?.addEventListener('change', toggleAlamatField);
     }
 
     if (useAddressCheckbox && alamatField) {
@@ -1044,14 +1179,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (checkoutOutletSearch) {
-        checkoutOutletSearch.addEventListener('input', () => {
+        checkoutOutletSearch?.addEventListener('input', () => {
             hasManualOutletSelection = false;
             renderOutletOptions(checkoutOutletSearch.value, true);
         });
     }
 
     if (checkoutOutletSelect) {
-        checkoutOutletSelect.addEventListener('change', () => {
+        checkoutOutletSelect?.addEventListener('change', () => {
             hasManualOutletSelection = !!checkoutOutletSelect.value;
             renderOutletPreview(getSelectedOutlet());
         });
@@ -1059,7 +1194,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const checkoutAlamatField = document.getElementById('checkout_alamat');
     if (checkoutAlamatField) {
-        checkoutAlamatField.addEventListener('input', () => {
+        checkoutAlamatField?.addEventListener('input', () => {
             tryRecommendOutlet(checkoutAlamatField.value);
         });
     }
@@ -1068,7 +1203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // KIRIM PESANAN (Submit Form Checkout)
     // ====================================================================
     // async karena menggunakan fetch API (AJAX request ke server)
-    checkoutForm.addEventListener('submit', async (e) => {
+    checkoutForm?.addEventListener('submit', async (e) => {
         e.preventDefault(); // Cegah form submit biasa (reload halaman)
 
         if (isCheckoutSubmitting) {
@@ -1124,15 +1259,20 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await apiRequest('/pesanan', 'POST', data);
             if (result.success) {
                 const waUrl   = result.whatsapp_url || '';
-                const orderCode = result.order_code || '';
 
                 // ---- Fungsi untuk membersihkan state cart setelah selesai ----
                 function resetAfterCheckout() {
                     clearCart();
-                    cartModal.classList.add('hidden');
+                    if (cartModal) {
+                        cartModal.classList.add('hidden');
+                    }
                     checkoutForm.reset();
-                    cartCheckoutSection.classList.add('hidden');
-                    cartActionButtons.classList.remove('hidden');
+                    if (cartCheckoutSection) {
+                        cartCheckoutSection.classList.add('hidden');
+                    }
+                    if (cartActionButtons) {
+                        cartActionButtons.classList.remove('hidden');
+                    }
                     hasManualOutletSelection = false;
                     activeCheckoutRequestId = null;
                     setCheckoutSubmittingState(false);
@@ -1141,165 +1281,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (checkoutPaymentHint) checkoutPaymentHint.textContent = getCheckoutPaymentHint('qris');
                 }
 
-                // ---- Fungsi untuk membuka dialog upload bukti ----
-                function openUploadProofDialog() {
-                    Swal.fire({
-                        title: '<span style="font-size:1rem;font-weight:800;color:#1e293b;">Upload Bukti Pembayaran</span>',
-                        html: `
-                            <div style="text-align:left;font-family:'Poppins',sans-serif;">
-                                <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Foto bukti transfer/QRIS kamu (JPG, PNG, WEBP · maks. 5MB)</p>
-                                <label for="proof-file-input"
-                                    style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-                                           border:2px dashed #cbd5e1;border-radius:16px;padding:28px 16px;cursor:pointer;
-                                           background:#f8fafc;transition:border-color 0.2s,background 0.2s;"
-                                    id="proof-drop-label"
-                                    onmouseover="this.style.borderColor='#94a3b8';this.style.background='#f1f5f9';"
-                                    onmouseout="this.style.borderColor='#cbd5e1';this.style.background='#f8fafc';">
-                                    <svg id="proof-upload-icon" xmlns="http://www.w3.org/2000/svg" width="38" height="38" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="1.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
-                                    </svg>
-                                    <span id="proof-label-text" style="font-size:13px;color:#64748b;font-weight:600;">Klik atau seret gambar ke sini</span>
-                                    <input type="file" id="proof-file-input" accept="image/*" style="display:none;">
-                                </label>
-                                <div id="proof-preview-wrap" style="display:none;margin-top:14px;text-align:center;">
-                                    <img id="proof-preview-img" src="" alt="Preview"
-                                        style="max-width:100%;max-height:220px;object-fit:contain;border-radius:14px;border:2px solid #e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,0.1);">
-                                    <p id="proof-file-name" style="margin-top:8px;font-size:12px;color:#64748b;"></p>
-                                </div>
-                                <div id="proof-error" style="display:none;margin-top:10px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:13px;color:#dc2626;font-weight:600;"></div>
-                                <div id="proof-progress-wrap" style="display:none;margin-top:14px;">
-                                    <div style="height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
-                                        <div id="proof-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#ef4444,#b91c1c);border-radius:99px;transition:width 0.3s ease;"></div>
-                                    </div>
-                                    <p style="text-align:center;font-size:12px;color:#64748b;margin-top:6px;">Mengupload bukti...</p>
-                                </div>
-                            </div>
-                        `,
-                        showConfirmButton: true,
-                        confirmButtonText: 'Upload Sekarang',
-                        confirmButtonColor: '#b91c1c',
-                        showCancelButton: true,
-                        cancelButtonText: 'Nanti Saja',
-                        cancelButtonColor: '#64748b',
-                        didOpen: () => {
-                            const fileInput = document.getElementById('proof-file-input');
-                            const previewWrap = document.getElementById('proof-preview-wrap');
-                            const previewImg  = document.getElementById('proof-preview-img');
-                            const fileName    = document.getElementById('proof-file-name');
-                            const uploadIcon  = document.getElementById('proof-upload-icon');
-                            const labelText   = document.getElementById('proof-label-text');
-                            const errorEl     = document.getElementById('proof-error');
-
-                            fileInput.addEventListener('change', () => {
-                                const file = fileInput.files[0];
-                                errorEl.style.display = 'none';
-                                if (!file) { previewWrap.style.display = 'none'; return; }
-
-                                // Validasi ukuran client-side
-                                if (file.size > 5 * 1024 * 1024) {
-                                    errorEl.textContent = 'Ukuran gambar terlalu besar. Maksimal 5MB.';
-                                    errorEl.style.display = 'block';
-                                    fileInput.value = '';
-                                    previewWrap.style.display = 'none';
-                                    return;
-                                }
-
-                                const reader = new FileReader();
-                                reader.onload = (e) => {
-                                    previewImg.src = e.target.result;
-                                    previewWrap.style.display = 'block';
-                                    uploadIcon.style.opacity = '0.4';
-                                    labelText.textContent = 'Ganti gambar';
-                                    fileName.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
-                                };
-                                reader.readAsDataURL(file);
-                            });
-                        },
-                        preConfirm: async () => {
-                            const fileInput = document.getElementById('proof-file-input');
-                            const errorEl   = document.getElementById('proof-error');
-                            const progressWrap = document.getElementById('proof-progress-wrap');
-                            const progressBar  = document.getElementById('proof-progress-bar');
-
-                            if (!fileInput.files[0]) {
-                                errorEl.textContent = 'Pilih file gambar terlebih dahulu.';
-                                errorEl.style.display = 'block';
-                                return false;
-                            }
-
-                            progressWrap.style.display = 'block';
-                            Swal.getConfirmButton().disabled = true;
-                            Swal.getCancelButton().disabled  = true;
-
-                            // Simulate progress
-                            let progress = 0;
-                            const progressInterval = setInterval(() => {
-                                progress = Math.min(progress + 15, 85);
-                                progressBar.style.width = progress + '%';
-                            }, 200);
-
-                            try {
-                                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                                const formData = new FormData();
-                                formData.append('payment_proof', fileInput.files[0]);
-
-                                const response = await fetch(resolveAppUrl(`/pesanan/${encodeURIComponent(orderCode)}/upload-proof`), {
-                                    method: 'POST',
-                                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                                    body: formData,
-                                    credentials: 'same-origin',
-                                });
-
-                                clearInterval(progressInterval);
-                                progressBar.style.width = '100%';
-
-                                const result = await response.json();
-                                if (!response.ok || !result.success) {
-                                    const validationMessage = result.errors && result.errors.payment_proof
-                                        ? result.errors.payment_proof[0]
-                                        : '';
-
-                                    errorEl.textContent = validationMessage || result.message || 'Upload gagal. Coba lagi.';
-                                    errorEl.style.display = 'block';
-                                    progressWrap.style.display = 'none';
-                                    Swal.getConfirmButton().disabled = false;
-                                    Swal.getCancelButton().disabled  = false;
-                                    return false;
-                                }
-                                return result;
-                            } catch (err) {
-                                clearInterval(progressInterval);
-                                errorEl.textContent = 'Terjadi kesalahan jaringan. Coba lagi.';
-                                errorEl.style.display = 'block';
-                                progressWrap.style.display = 'none';
-                                Swal.getConfirmButton().disabled = false;
-                                Swal.getCancelButton().disabled  = false;
-                                return false;
-                            }
-                        },
-                        allowOutsideClick: () => !Swal.isLoading(),
-                    }).then((uploadResult) => {
-                        if (uploadResult.isConfirmed && uploadResult.value) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Bukti Terkirim!',
-                                text: 'Bukti pembayaranmu berhasil diupload. Admin akan segera mengonfirmasi ya!',
-                                confirmButtonColor: '#16a34a',
-                                confirmButtonText: 'Tutup',
-                            }).then(resetAfterCheckout);
-                        } else {
-                            resetAfterCheckout();
-                        }
-                    });
-                }
-
                 // ---- Popup utama sukses checkout ----
                 Swal.fire({
                     icon: 'success',
                     title: 'Pesanan Tersimpan!',
                     html: buildPaymentDetailsHtml(result),
                     confirmButtonColor: '#D20000',
-                    confirmButtonText: 'Upload Bukti Bayar',
+                    confirmButtonText: 'Selesai',
                     showDenyButton:  !!waUrl,
                     denyButtonText:  'Hubungi Admin',
                     denyButtonColor: '#16a34a',
@@ -1307,14 +1295,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     cancelButtonText: 'Nanti Saja',
                     cancelButtonColor: '#64748b',
                 }).then((swalResult) => {
-                    if (swalResult.isConfirmed) {
-                        // Tombol "Upload Bukti Bayar"
-                        openUploadProofDialog();
-                    } else {
-                        resetAfterCheckout();
-                        if (swalResult.isDenied && waUrl) {
-                            window.open(waUrl, '_blank');
-                        }
+                    resetAfterCheckout();
+                    if (swalResult.isDenied && waUrl) {
+                        window.open(waUrl, '_blank');
                     }
                 });
             } else {
@@ -1342,8 +1325,8 @@ document.addEventListener("DOMContentLoaded", () => {
      * checkAuth() - Cek apakah user sudah login atau belum
      *
      * Mengirim request ke '/api/user' untuk cek session.
-     * Jika sudah login → simpan data user ke currentUser
-     * Jika belum → currentUser = null
+     * Jika sudah login â†’ simpan data user ke currentUser
+     * Jika belum â†’ currentUser = null
      * Lalu update tampilan UI sesuai status login
      */
     async function checkAuth() {
@@ -1434,8 +1417,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     const dot = document.createElement('button');
                     // Dot aktif: warna merah & lebih besar. Yang lain: abu-abu
                     dot.className = `w-3 h-3 rounded-full transition-all duration-300 ${i === carouselPage ? 'bg-primary-red scale-125 shadow-md' : 'bg-gray-300 hover:bg-gray-400'}`;
-                    // Klik dot → pindah ke halaman tersebut
-                    dot.addEventListener('click', () => {
+                    // Klik dot â†’ pindah ke halaman tersebut
+                    dot?.addEventListener('click', () => {
                         carouselPage = i;
                         renderProducts();
                     });
@@ -1458,7 +1441,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const categoryTabs = document.querySelectorAll('.category-tab');
     categoryTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab?.addEventListener('click', () => {
             currentCategory = tab.dataset.category; // Ambil kategori dari data-category
             carouselPage = 0;                        // Reset ke halaman pertama
 
@@ -1479,9 +1462,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // NAVIGASI CAROUSEL (Tombol Prev/Next)
     // ====================================================================
 
-    // Tombol "Sebelumnya" (←)
+    // Tombol "Sebelumnya" (â†)
     if (carouselPrev) {
-        carouselPrev.addEventListener('click', () => {
+        carouselPrev?.addEventListener('click', () => {
             const filtered = getFilteredProducts();
             if (carouselPage > 0) {
                 carouselPage--;      // Mundur 1 halaman
@@ -1489,9 +1472,9 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-    // Tombol "Berikutnya" (→)
+    // Tombol "Berikutnya" (â†’)
     if (carouselNext) {
-        carouselNext.addEventListener('click', () => {
+        carouselNext?.addEventListener('click', () => {
             const filtered = getFilteredProducts();
             const totalPages = getTotalPages(filtered);
             if (carouselPage < totalPages - 1) {
@@ -1519,6 +1502,8 @@ document.addEventListener("DOMContentLoaded", () => {
      * - Animasi card muncul bertahap (staggered animation)
      */
     function renderProducts() {
+        if (!menuGrid) return;
+
         menuGrid.innerHTML = '';   // Kosongkan grid terlebih dahulu
 
         // Cek apakah user adalah admin (untuk menampilkan tombol edit/hapus)
@@ -1603,7 +1588,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // ============================================================
             let adminControls = '';
             if (isAdmin) {
-                // Tombol muncul saat hover di card (opacity-0 → opacity-100)
+                // Tombol muncul saat hover di card (opacity-0 â†’ opacity-100)
                 adminControls = `
                     <div class="absolute top-2 right-2 flex gap-2 z-10 transition-opacity opacity-0 group-hover:opacity-100">
                         <button class="bg-white/80 text-gray-700 p-2 rounded-full hover:bg-white hover:text-yellow-600 transition shadow-sm border border-gray-200" onclick="editProduct(${product.id})" title="Edit"><i class="fas fa-pencil-alt text-xs"></i></button>
@@ -1701,7 +1686,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.style.opacity = "0";
             card.style.transform = "translateY(20px)";
 
-            // Setelah delay bertahap (80ms × index), card muncul
+            // Setelah delay bertahap (80ms Ã— index), card muncul
             // cubic-bezier(...) = kurva animasi yang memberi efek "bouncy"
             setTimeout(() => {
                 card.style.transition = "all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
@@ -1714,7 +1699,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Pasang event listener pada semua tombol "Tambah ke Keranjang"
         document.querySelectorAll('.btn-cart').forEach(btn => {
-            btn.addEventListener('click', handleCartClick);
+            btn?.addEventListener('click', handleCartClick);
         });
 
         // Sinkronkan radio button Layout Mode dengan setting yang tersimpan
@@ -1734,7 +1719,7 @@ document.addEventListener("DOMContentLoaded", () => {
      * updateLoginUI() - Update tampilan UI berdasarkan status login
      *
      * Jika sudah login:
-     * - Icon berubah dari fa-sign-in-alt → fa-user (icon orang)
+     * - Icon berubah dari fa-sign-in-alt â†’ fa-user (icon orang)
      * - Menu admin muncul jika role = admin
      * - FAB (tombol tambah menu) muncul jika admin
      *
@@ -1743,9 +1728,11 @@ document.addEventListener("DOMContentLoaded", () => {
      * - Menu admin dan FAB disembunyikan
      */
     function updateLoginUI() {
+        if (!btnLoginHeader || !btnCartHeader) return;
         const loginIcon = btnLoginHeader.querySelector('i');
         const fab = document.getElementById('btn-add-menu-fab');
         const cartIcon = btnCartHeader.querySelector('i');
+        const cartLabel = btnCartHeader.querySelector('[data-orders-label]');
         const cartBadgeEl = document.getElementById('cart-badge');
 
         // RESET: Hapus semua class icon terlebih dahulu
@@ -1763,9 +1750,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 // === ADMIN ===
                 navAdmin.classList.remove('hidden');
                 if (fab) fab.classList.remove('hidden');
-                // Icon → clipboard-check (pesanan)
+                // Icon â†’ clipboard-check (pesanan)
                 cartIcon.className = 'fas fa-clipboard-check';
                 btnCartHeader.title = 'Lihat Pesanan Masuk';
+                if (cartLabel) cartLabel.textContent = 'Pesanan';
                 
                 // Tampilkan tab switcher di settings
                 if(tabSlider) tabSlider.classList.remove('hidden');
@@ -1773,9 +1761,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 // === USER BIASA (PELANGGAN) ===
                 navAdmin.classList.add('hidden');
                 if (fab) fab.classList.add('hidden');
-                // Icon → shopping-cart (keranjang)
+                // Icon â†’ shopping-cart (keranjang)
                 cartIcon.className = 'fas fa-shopping-cart';
-                btnCartHeader.title = 'Keranjang Belanja';
+                btnCartHeader.title = 'Pesanan';
+                if (cartLabel) cartLabel.textContent = 'Pesanan';
                 if (document.getElementById('btn-show-user-orders')) document.getElementById('btn-show-user-orders').classList.remove('hidden');
                 if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.remove('hidden');
                 if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.add('flex');
@@ -1789,9 +1778,10 @@ document.addEventListener("DOMContentLoaded", () => {
             btnLoginHeader.title = "Login";
             navAdmin.classList.add('hidden');
             if (fab) fab.classList.add('hidden');
-            // Icon → shopping-cart (keranjang)
+            // Icon â†’ shopping-cart (keranjang)
             cartIcon.className = 'fas fa-shopping-cart';
-            btnCartHeader.title = 'Keranjang Belanja';
+            btnCartHeader.title = 'Pesanan';
+            if (cartLabel) cartLabel.textContent = 'Pesanan';
             if (document.getElementById('btn-show-user-orders')) document.getElementById('btn-show-user-orders').classList.add('hidden');
             if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.add('hidden');
             if (document.getElementById('btn-show-user-orders-nav')) document.getElementById('btn-show-user-orders-nav').classList.remove('flex');
@@ -1828,10 +1818,10 @@ document.addEventListener("DOMContentLoaded", () => {
      * Saat form login di-submit:
      * 1. Ambil username & password dari input
      * 2. Kirim ke server via AJAX POST ke '/login'
-     * 3. Jika berhasil → simpan user, update UI, tutup modal
-     * 4. Jika gagal → tampilkan alert error
+     * 3. Jika berhasil â†’ simpan user, update UI, tutup modal
+     * 4. Jika gagal â†’ tampilkan alert error
      */
-    loginForm.addEventListener('submit', async (e) => {
+    loginForm?.addEventListener('submit', async (e) => {
         e.preventDefault(); // Cegah halaman reload
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
@@ -1849,7 +1839,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 currentUser = result.user;        // Simpan data user
                 Swal.fire({icon: 'success', title: 'Yeay Berhasil!', text: result.message || 'Selamat datang di dunia penuh kelezatan, Chi-Pok!', confirmButtonColor: '#D20000'}).then(() => {
-                    // Jika admin → redirect ke halaman dashboard admin terpisah
+                    // Jika admin â†’ redirect ke halaman dashboard admin terpisah
                     const backofficePath = getBackofficeDashboardPath(currentUser);
                     if (backofficePath) {
                         window.location.href = resolveAppUrl(backofficePath);
@@ -1902,9 +1892,9 @@ document.addEventListener("DOMContentLoaded", () => {
      * Saat form signup di-submit:
      * 1. Ambil semua data dari input (email, username, no WA, password)
      * 2. Kirim ke server via AJAX POST ke '/register'
-     * 3. Jika berhasil → tutup modal signup, buka modal login
+     * 3. Jika berhasil â†’ tutup modal signup, buka modal login
      */
-    signupForm.addEventListener('submit', async (e) => {
+    signupForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('signup_email').value;
         const username = document.getElementById('signup_username').value;
@@ -1945,11 +1935,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /**
      * Saat tombol login/logout di header diklik:
-     * - Jika SUDAH login → tampilkan konfirmasi, lalu logout
-     * - Jika BELUM login → buka modal login
+     * - Jika SUDAH login â†’ tampilkan konfirmasi, lalu logout
+     * - Jika BELUM login â†’ buka modal login
      */
-    btnLoginHeader.addEventListener('click', async () => {
+    btnLoginHeader?.addEventListener('click', async (e) => {
         if (currentUser) {
+            e.preventDefault(); // Prevent navigation only if logged in (shows SweetAlert)
             Swal.fire({
                 title: 'Mau Pergi?',
                 text: "Yakin ingin keluar dari akun Chi-Pok kamu?",
@@ -1962,8 +1953,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     // PENTING: Hentikan polling DAN null-kan user SEBELUM kirim logout
-                    // Ini mencegah race condition: polling kirim request → server sudah
-                    // invalidasi session → polling dapat 419 → muncul pop-up error
+                    // Ini mencegah race condition: polling kirim request â†’ server sudah
+                    // invalidasi session â†’ polling dapat 419 â†’ muncul pop-up error
                     stopOrderPolling();
                     currentUser = null;
 
@@ -1984,9 +1975,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     updateLoginUI();
                 }
             });
-        } else {
-            // User belum login → buka modal login
-            loginModal.classList.remove('hidden');
         }
     });
 
@@ -1994,8 +1982,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // PANEL ADMIN - Kelola Pesanan
     // ====================================================================
 
-    // Saat tombol "ADMIN" di navbar diklik → buka panel admin
-    btnAdminPanel.addEventListener('click', (e) => {
+    // Saat tombol "ADMIN" di navbar diklik â†’ buka panel admin
+    btnAdminPanel?.addEventListener('click', (e) => {
         e.preventDefault();                          // Cegah navigasi default
         adminModal.classList.remove('hidden');        // Tampilkan modal admin
         renderOrdersTable();                          // Muat data pesanan
@@ -2039,7 +2027,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Fungsi submit banner
     const formAddBanner = document.getElementById('form-add-banner');
     if (formAddBanner) {
-        formAddBanner.addEventListener('submit', async (e) => {
+        formAddBanner?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(formAddBanner);
             
@@ -2156,7 +2144,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <p class="text-[10px] text-gray-400 font-medium mb-1"><i class="far fa-clock"></i> ${order.date}</p>
                                 <div class="flex flex-col items-end gap-1">
                                     <span class="px-2 py-1 inline-flex text-[10px] font-bold rounded-full ${order.payment_status === 'Lunas' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">
-                                        ${order.payment_method_label || formatPaymentMethodLabel(order.payment_method)} • ${order.payment_status || '-'}
+                                        ${order.payment_method_label || formatPaymentMethodLabel(order.payment_method)} â€¢ ${order.payment_status || '-'}
                                     </span>
                                     <span class="px-2 py-1 inline-flex text-[10px] sm:text-xs font-bold rounded-full bg-yellow-100 text-yellow-800">
                                         ${order.status}
@@ -2330,7 +2318,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Jika session expired/server restart, polling cukup diam saja
             const result = await apiRequest('/admin/api/pesanan', 'GET', null, { silent: true });
 
-            // CEK ULANG setelah await — user mungkin sudah logout saat request berlangsung
+            // CEK ULANG setelah await â€” user mungkin sudah logout saat request berlangsung
             if (!currentUser || currentUser.role !== 'admin') return;
 
             if (result.success) {
@@ -2359,12 +2347,12 @@ document.addEventListener("DOMContentLoaded", () => {
                         timer: 5000,
                         timerProgressBar: true,
                         icon: 'info',
-                        title: `🔔 ${newOrders} Pesanan Baru!`,
+                        title: `ðŸ”” ${newOrders} Pesanan Baru!`,
                         text: 'Klik icon pesanan untuk melihat detail.',
                         background: '#FEF3C7',
                         color: '#92400E',
                         didOpen: (toast) => {
-                            toast.addEventListener('click', () => {
+                            toast?.addEventListener('click', () => {
                                 adminModal.classList.remove('hidden');
                                 renderOrdersTable();
                                 Swal.close();
@@ -2416,23 +2404,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Event saat tombol "Pesanan Aktif" (dari dalam modal cart) diklik
     if (btnShowUserOrders) {
-        btnShowUserOrders.addEventListener('click', () => {
-            cartModal.classList.add('hidden'); // Sembunyikan cart
-            userOrdersModal.classList.remove('hidden'); // Tampilkan pesanan
-            renderUserOrdersTable(); // Load data pesanan
+        btnShowUserOrders?.addEventListener('click', (event) => {
+            event.preventDefault();
+            openUserOrdersPage();
         });
     }
 
     // Event saat tombol "Pesanan Saya" di Header Navbar diklik
     if (btnShowUserOrdersNav) {
-        btnShowUserOrdersNav.addEventListener('click', () => {
-            userOrdersModal.classList.remove('hidden'); // Tampilkan pesanan
-            renderUserOrdersTable(); // Load data pesanan
+        btnShowUserOrdersNav?.addEventListener('click', (event) => {
+            event.preventDefault();
+            openUserOrdersPage();
         });
     }
 
     if (closeUserOrdersModal) {
-        closeUserOrdersModal.addEventListener('click', () => {
+        closeUserOrdersModal?.addEventListener('click', () => {
             userOrdersModal.classList.add('hidden');
         });
     }
@@ -2550,10 +2537,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const completedOrders = orders.filter((order) => String(order.status || '').trim() === 'Selesai').length;
 
         summaryContainer.innerHTML = `
-            <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            <div class="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
                 <i class="fas fa-receipt text-[12px]"></i>
                 <span class="font-semibold">Total</span>
-                <span class="font-bold text-slate-900">${totalOrders}</span>
+                <span class="font-bold text-red-900">${totalOrders}</span>
             </div>
             <div class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
                 <i class="fas fa-hourglass-half text-[12px]"></i>
@@ -2630,52 +2617,85 @@ document.addEventListener("DOMContentLoaded", () => {
                     const outletLabel = escapeHtml(order.outlet_label || 'Outlet belum dipilih');
                     const totalBelanja = formatRupiah(order.total);
 
+                    let paymentActionHtml = '';
+                    if (String(order.payment_status || '').trim() !== 'Lunas') {
+                        if (order.payment_proof_url) {
+                            paymentActionHtml = `
+                                <div class="mt-4 p-3 bg-emerald-50/50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg overflow-hidden border border-emerald-200 shrink-0 bg-white">
+                                            <img src="${order.payment_proof_url}" class="w-full h-full object-cover" alt="Bukti">
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-bold text-emerald-900"><i class="fas fa-check-circle text-emerald-500 mr-1"></i> Bukti Terkirim</p>
+                                            <p class="text-[10px] font-medium text-emerald-700/80">Menunggu verifikasi dari admin toko</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            paymentActionHtml = `
+                                <div class="mt-4 p-4 bg-amber-50/80 border border-amber-200/60 border-dashed rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+                                    <div>
+                                        <p class="text-sm font-bold text-amber-900 mb-0.5"><i class="fas fa-clock mr-1 text-amber-500"></i> Upload Bukti Pembayaran</p>
+                                        <p class="text-[11px] text-amber-700/80">Fitur upload gambar sedang coming soon. Untuk sementara, konfirmasi pembayaran lewat admin dulu ya.</p>
+                                    </div>
+                                    <span class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-200 text-slate-600 text-xs font-bold shadow-sm">
+                                        <i class="fas fa-hourglass-half"></i> Coming Soon
+                                    </span>
+                                </div>
+                            `;
+                        }
+                    }
+
                     card.innerHTML = `
-                        <div class="flex flex-col gap-3">
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div class="min-w-0">
-                                    <p class="text-xs font-medium text-slate-500 flex items-center gap-2">
-                                        <i class="fas fa-calendar-alt text-[11px]"></i> ${orderDate}
+                        <div class="flex flex-col">
+                            <!-- Top row: Order info & Status -->
+                            <div class="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-slate-100 mb-4">
+                                <div>
+                                    <h4 class="text-base font-black text-slate-900 tracking-tight">${orderCode}</h4>
+                                    <p class="text-[11px] font-medium text-slate-400 flex items-center gap-1.5 mt-1">
+                                        <i class="far fa-clock"></i> ${orderDate}
                                     </p>
-                                    <h4 class="mt-1 text-lg font-bold text-slate-900">${orderCode}</h4>
                                 </div>
-                                <div class="flex flex-wrap gap-2 sm:justify-end">
-                                    <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold ${statusMeta.badgeClass}">
-                                        <i class="fas ${statusMeta.icon} text-[10px]"></i> ${statusMeta.label}
+                                <div class="flex flex-col sm:flex-row gap-2 items-end sm:items-center">
+                                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${typeMeta.badgeClass}">
+                                        ${escapeHtml(typeMeta.label)}
                                     </span>
-                                    <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold ${typeMeta.badgeClass}">
-                                        <i class="fas ${typeMeta.icon} text-[10px]"></i> ${escapeHtml(typeMeta.label)}
+                                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${statusMeta.badgeClass}">
+                                        ${statusMeta.label}
                                     </span>
                                 </div>
                             </div>
 
-                            <div>
-                                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400 mb-1">Menu Dipesan</p>
-                                <p class="text-[15px] sm:text-base font-semibold text-slate-800 leading-relaxed">${orderItems}</p>
+                            <!-- Middle row: Details -->
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-4">
+                                <div class="sm:col-span-8">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Menu Dipesan</p>
+                                    <p class="text-sm font-semibold text-slate-800 leading-relaxed">${orderItems}</p>
+                                </div>
+                                <div class="sm:col-span-4 sm:text-right">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total Belanja</p>
+                                    <p class="text-lg font-black text-emerald-600">${totalBelanja}</p>
+                                </div>
+                                <div class="col-span-full bg-slate-50 rounded-lg p-3 border border-slate-100">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Pengiriman</p>
+                                    <p class="text-[13px] text-slate-600 mb-1"><span class="font-bold text-slate-700">Outlet:</span> ${outletLabel}</p>
+                                    ${orderType === 'delivery' ? `<p class="text-[13px] text-slate-600"><span class="font-bold text-slate-700">Alamat:</span> ${orderAddress}</p>` : ''}
+                                </div>
                             </div>
 
-                            <p class="text-sm text-slate-500 leading-relaxed">
-                                <span class="font-medium text-slate-600">Outlet:</span> ${outletLabel}
-                            </p>
-
-                            ${orderType === 'delivery' ? `
-                                <p class="text-sm text-slate-500 leading-relaxed">
-                                    <span class="font-medium text-slate-600">Alamat:</span> ${orderAddress}
-                                </p>
-                            ` : ''}
-
-                            <div class="flex flex-wrap gap-2">
-                                <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700">
-                                    <i class="fas fa-credit-card text-[11px] text-slate-400"></i> ${paymentMethodLabel}
-                                </span>
-                                <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${paymentMeta.badgeClass}">
-                                    <i class="fas fa-circle text-[8px]"></i> ${escapeHtml(paymentMeta.label)}
-                                </span>
-                            </div>
-
-                            <div class="flex items-center justify-between border-t border-slate-100 pt-3">
-                                <span class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Total Belanja</span>
-                                <span class="text-lg sm:text-xl font-bold text-slate-900">${totalBelanja}</span>
+                            <!-- Bottom row: Payment Info & Upload -->
+                            <div class="pt-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                                        <i class="fas fa-wallet text-slate-400"></i> ${paymentMethodLabel}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${paymentMeta.badgeClass}">
+                                        ${escapeHtml(paymentMeta.label)}
+                                    </span>
+                                </div>
+                                ${paymentActionHtml}
                             </div>
                         </div>
                     `;
@@ -2683,7 +2703,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             } else {
                 renderUserOrdersSummary([]);
-                listContainer.innerHTML = '<div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500 flex flex-col items-center justify-center"><div class="w-14 h-14 rounded-2xl bg-white text-slate-400 flex items-center justify-center mb-4 border border-slate-200"><i class="fas fa-receipt text-xl"></i></div><p class="text-base font-semibold text-slate-700 mb-1">Belum ada pesanan aktif</p><p>Yuk pilih menu favoritmu, nanti riwayat pesanan akan muncul di sini.</p></div>';
+                listContainer.innerHTML = '<div class="rounded-2xl border border-dashed border-red-100 bg-red-50/40 p-8 text-center text-sm text-red-700 flex flex-col items-center justify-center"><div class="w-14 h-14 rounded-2xl bg-white text-red-400 flex items-center justify-center mb-4 border border-red-100"><i class="fas fa-receipt text-xl"></i></div><p class="text-base font-semibold text-red-900 mb-1">Belum ada pesanan aktif</p><p>Yuk pilih menu favoritmu, nanti riwayat pesanan akan muncul di sini.</p></div>';
             }
         } catch (err) {
             renderUserOrdersSummary([]);
@@ -2691,12 +2711,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    if (document.querySelector('[data-user-orders-page="true"]')) {
+        renderUserOrdersTable();
+    }
+
+    // ====================================================================
+    // UPLOAD BUKTI PEMBAYARAN (User)
+    // ====================================================================
+    // Fungsi ini dipanggil saat user memilih file gambar dari tombol
+    // "Upload Gambar" yang muncul di kartu pesanan dengan status belum lunas.
+    //
+    // Alur kerja:
+    //   1. Cek apakah file sudah dipilih dan ukurannya tidak melebihi 5MB
+    //   2. Tampilkan animasi loading di tombol agar user tahu sedang diproses
+    //   3. Kirim file ke server via POST (FormData multipart)
+    //   4. Jika berhasil â†’ tampilkan notifikasi sukses & refresh daftar pesanan
+    //   5. Jika gagal   â†’ kembalikan tombol ke kondisi semula & tampilkan error
+    //
+    // @param {string} orderCode    - Kode pesanan (misal: "ORD-000001")
+    // @param {HTMLElement} inputElement - Elemen <input type="file"> yang dipilih user
+    // ====================================================================
     // ====================================================================
     // PENGATURAN LAYOUT (Grid/List)
     // ====================================================================
-    // Saat radio button layout diubah → simpan ke localStorage & render ulang
+    // Saat radio button layout diubah â†’ simpan ke localStorage & render ulang
     document.querySelectorAll('input[name="layout_mode"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
+        radio?.addEventListener('change', (e) => {
             localStorage.setItem('menuLayout', e.target.value);
             renderProducts();
         });
@@ -2712,11 +2752,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Buka modal tambah menu saat FAB diklik
     if (fabAddMenu) {
-        fabAddMenu.addEventListener('click', () => addMenuModal.classList.remove('hidden'));
+        fabAddMenu?.addEventListener('click', () => addMenuModal.classList.remove('hidden'));
     }
     // Tutup modal tambah menu
     if (closeAddMenuBtn) {
-        closeAddMenuBtn.addEventListener('click', () => addMenuModal.classList.add('hidden'));
+        closeAddMenuBtn?.addEventListener('click', () => addMenuModal.classList.add('hidden'));
     }
 
     /**
@@ -2725,7 +2765,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const imgInput = document.getElementById('new_menu_img');
     const imgPreview = document.getElementById('new_menu_img_preview');
     if (imgInput && imgPreview) {
-        imgInput.addEventListener('change', (e) => {
+        imgInput?.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -2740,18 +2780,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * Auto-format harga saat mengetik (25000 → 25,000)
+     * Auto-format harga saat mengetik (25000 â†’ 25,000)
      * Hanya izinkan angka, otomatis tambahkan koma pemisah ribuan
      */
     const priceDisplay = document.getElementById('new_menu_price_display');
     const priceHidden = document.getElementById('new_menu_price');
     if (priceDisplay && priceHidden) {
-        priceDisplay.addEventListener('input', (e) => {
+        priceDisplay?.addEventListener('input', (e) => {
             // Hapus semua karakter selain angka
             let raw = e.target.value.replace(/[^0-9]/g, '');
             // Simpan nilai angka murni ke hidden input
             priceHidden.value = raw;
-            // Format dengan koma pemisah ribuan (25000 → 25,000)
+            // Format dengan koma pemisah ribuan (25000 â†’ 25,000)
             if (raw) {
                 e.target.value = parseInt(raw).toLocaleString('en-US');
             } else {
@@ -2763,9 +2803,9 @@ document.addEventListener("DOMContentLoaded", () => {
      * Submit form Tambah Menu (dengan upload file gambar):
      * 1. Buat FormData dari form (termasuk file gambar)
      * 2. Kirim ke server via POST '/products' (multipart/form-data)
-     * 3. Jika berhasil → tambahkan ke array products & render ulang
+     * 3. Jika berhasil â†’ tambahkan ke array products & render ulang
      */
-    addMenuForm.addEventListener('submit', async (e) => {
+    addMenuForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         // Buat FormData untuk upload file
@@ -2914,8 +2954,10 @@ document.addEventListener("DOMContentLoaded", () => {
     window.openReviewModal = (id) => {
         // Cek login dulu
         if (!currentUser) {
-            Swal.fire({icon: 'info', title: 'Stop!', text: 'Kamu harus login dulu buat ngintip komentar orang-orang atau ngasih rating!', confirmButtonColor: '#D20000', confirmButtonText: 'Oke, Login!'}).then(() => {
-                loginModal.classList.remove('hidden');
+            promptLoginRequired({
+                title: 'Login Dulu untuk Ulasan',
+                text: 'Masuk ke akunmu dulu ya supaya kamu bisa melihat dan mengirim ulasan menu.',
+                confirmText: 'Login Sekarang'
             });
             return;
         }
@@ -2923,12 +2965,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const product = products.find(p => p.id === id);
         if (!product) return;
 
+        const reviewProductIdField = document.getElementById('review_product_id');
+        const reviewProductName = document.getElementById('review-product-name');
+        const reviewsContainer = document.getElementById('existing-reviews');
+        if (!reviewModal || !reviewProductIdField || !reviewProductName || !reviewsContainer) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Ulasan Belum Tersedia',
+                text: 'Tampilan ulasan untuk halaman ini belum diaktifkan.',
+                confirmButtonColor: '#D20000'
+            });
+            return;
+        }
+
         // Set ID produk dan nama di modal
-        document.getElementById('review_product_id').value = id;
-        document.getElementById('review-product-name').innerText = product.name;
+        reviewProductIdField.value = id;
+        reviewProductName.innerText = product.name;
 
         // Render daftar ulasan yang sudah ada
-        const reviewsContainer = document.getElementById('existing-reviews');
         reviewsContainer.innerHTML = '';
 
         if (product.reviews && product.reviews.length > 0) {
@@ -2956,7 +3010,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Tutup modal ulasan
     if (closeReviewBtn) {
-        closeReviewBtn.addEventListener('click', () => reviewModal.classList.add('hidden'));
+        closeReviewBtn?.addEventListener('click', () => reviewModal.classList.add('hidden'));
     }
 
     // ====================================================================
@@ -2965,7 +3019,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const starInputs = document.querySelectorAll('#star-rating-input i');
     starInputs.forEach(star => {
-        star.addEventListener('click', () => {
+        star?.addEventListener('click', () => {
             starRatingValue = parseInt(star.dataset.value); // Simpan nilai rating
             document.getElementById('review_rating').value = starRatingValue;
             updateStarVisuals(starRatingValue);             // Update tampilan bintang
@@ -3000,9 +3054,9 @@ document.addEventListener("DOMContentLoaded", () => {
      * 1. Ambil product_id, rating, dan komentar
      * 2. Validasi rating (wajib pilih bintang)
      * 3. Kirim ke server via POST '/reviews'
-     * 4. Jika berhasil → tambahkan ulasan ke array lokal & render ulang
+     * 4. Jika berhasil â†’ tambahkan ulasan ke array lokal & render ulang
      */
-    reviewForm.addEventListener('submit', async (e) => {
+    reviewForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const product_id = parseInt(document.getElementById('review_product_id').value);
         const rating = parseInt(document.getElementById('review_rating').value);
@@ -3038,8 +3092,8 @@ document.addEventListener("DOMContentLoaded", () => {
      *
      * 1. Cari ID produk dari card parent-nya
      * 2. Cek apakah user sudah login
-     * 3. Jika ya → tambahkan ke cart
-     * 4. Jika tidak → minta login dulu
+     * 3. Jika ya â†’ tambahkan ke cart
+     * 4. Jika tidak â†’ minta login dulu
      */
     function handleCartClick(e) {
         e.preventDefault();
@@ -3048,8 +3102,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = parseInt(card.dataset.id);            // Ambil ID produk
 
         if (!currentUser) {
-            Swal.fire({icon: 'info', title: 'Lapar Ya?', text: 'Login dulu yuk sebelum masukin makanan enak ke keranjang!', confirmButtonColor: '#D20000', confirmButtonText: 'Meluncur!'}).then(() => {
-                loginModal.classList.remove('hidden');
+            promptLoginRequired({
+                title: 'Login Dulu untuk Memesan',
+                text: 'Masuk ke akunmu dulu ya sebelum menu favoritmu dimasukkan ke keranjang.',
+                confirmText: 'Login Sekarang'
             });
             return;
         }
@@ -3058,18 +3114,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ====================================================================
-    // TUTUP SEMUA MODAL (Tombol × / Close)
+    // TUTUP SEMUA MODAL (Tombol Ã— / Close)
     // ====================================================================
 
     // Tutup modal login/signup/admin saat tombol close diklik
-    document.getElementById('closeLoginModal').addEventListener('click', () => loginModal.classList.add('hidden'));
-    document.getElementById('closeSignupModal').addEventListener('click', () => signupModal.classList.add('hidden'));
-    document.getElementById('closeAdminModal').addEventListener('click', () => adminModal.classList.add('hidden'));
+    document.getElementById('closeLoginModal')?.addEventListener('click', () => loginModal.classList.add('hidden'));
+    document.getElementById('closeSignupModal')?.addEventListener('click', () => signupModal.classList.add('hidden'));
+    document.getElementById('closeAdminModal')?.addEventListener('click', () => adminModal.classList.add('hidden'));
 
-    // Link "Daftar disini" di modal login → buka modal signup
+    // Link "Daftar disini" di modal login â†’ buka modal signup
     const signUpLink = document.getElementById('link-signup');
     if (signUpLink) {
-        signUpLink.addEventListener('click', (e) => {
+        signUpLink?.addEventListener('click', (e) => {
             e.preventDefault();
             loginModal.classList.add('hidden');        // Tutup modal login
             signupModal.classList.remove('hidden');    // Buka modal signup
@@ -3086,8 +3142,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /**
      * openSettingsModal() - Buka modal settings dan isi data user
-     * Jika belum login → tampilkan pesan "silakan login"
-     * Jika sudah login → isi form dengan data user saat ini
+     * Jika belum login â†’ tampilkan pesan "silakan login"
+     * Jika sudah login â†’ isi form dengan data user saat ini
      */
     function openSettingsModal() {
         if (!settingsModal) return;
@@ -3111,17 +3167,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Tombol settings di header (desktop)
-    document.getElementById('btn-settings').addEventListener('click', () => openSettingsModal());
+    document.getElementById('btn-settings')?.addEventListener('click', () => openSettingsModal());
 
     // Tutup modal settings
-    document.getElementById('closeSettingsModal').addEventListener('click', () => {
+    document.getElementById('closeSettingsModal')?.addEventListener('click', () => {
         settingsModal.classList.add('hidden');
     });
 
     // Tombol "Login Sekarang" di settings modal (saat belum login)
     const settingsGoLogin = document.getElementById('settings-go-login');
     if (settingsGoLogin) {
-        settingsGoLogin.addEventListener('click', () => {
+        settingsGoLogin?.addEventListener('click', () => {
             settingsModal.classList.add('hidden');
             loginModal.classList.remove('hidden');
         });
@@ -3143,20 +3199,20 @@ document.addEventListener("DOMContentLoaded", () => {
             [containerProfile, containerBanner, containerOutlet].forEach(c => c.classList.add('hidden'));
         };
 
-        btnTabProfile.addEventListener('click', () => {
+        btnTabProfile?.addEventListener('click', () => {
             resetTabs();
             btnTabProfile.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all';
             containerProfile.classList.remove('hidden');
         });
 
-        btnTabBanner.addEventListener('click', () => {
+        btnTabBanner?.addEventListener('click', () => {
             resetTabs();
             btnTabBanner.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all';
             containerBanner.classList.remove('hidden');
             if (typeof renderAdminBanners === 'function') renderAdminBanners();
         });
 
-        btnTabOutlet.addEventListener('click', () => {
+        btnTabOutlet?.addEventListener('click', () => {
             resetTabs();
             btnTabOutlet.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all';
             containerOutlet.classList.remove('hidden');
@@ -3164,7 +3220,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Submit form settings (update profil)
-    settingsForm.addEventListener('submit', async (e) => {
+    settingsForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const data = {
@@ -3202,7 +3258,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const formEditOutlet = document.getElementById('form-edit-outlet');
     if (formEditOutlet) {
-        formEditOutlet.addEventListener('submit', async (e) => {
+        formEditOutlet?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const outlet_address = document.getElementById('input_outlet_address').value;
             const admin_whatsapp_number = document.getElementById('input_admin_whatsapp').value;
@@ -3248,10 +3304,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Drawer adalah panel geser dari kanan yang muncul di layar kecil (mobile)
     // Menggantikan navbar horizontal yang terlalu sempit di layar kecil
 
-    const hamburgerBtn = document.querySelector('.hamburger-btn');   // Tombol hamburger (☰)
+    const hamburgerBtn = document.querySelector('.hamburger-btn');   // Tombol hamburger (â˜°)
     const mobileDrawer = document.querySelector('.mobile-drawer');   // Panel drawer
     const drawerOverlay = document.querySelector('.drawer-overlay'); // Overlay gelap di belakang drawer
-    const drawerClose = document.querySelector('.drawer-close');     // Tombol × di drawer
+    const drawerClose = document.querySelector('.drawer-close');     // Tombol Ã— di drawer
 
     /**
      * openDrawer() - Buka drawer mobile
@@ -3261,7 +3317,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function openDrawer() {
         mobileDrawer.classList.add('open');        // Animasi geser masuk
         drawerOverlay.classList.add('open');       // Tampilkan overlay gelap
-        hamburgerBtn.classList.add('active');      // Animasi hamburger → X
+        hamburgerBtn.classList.add('active');      // Animasi hamburger â†’ X
         document.body.style.overflow = 'hidden';  // Kunci scroll halaman
     }
 
@@ -3271,18 +3327,18 @@ document.addEventListener("DOMContentLoaded", () => {
     function closeDrawer() {
         mobileDrawer.classList.remove('open');     // Animasi geser keluar
         drawerOverlay.classList.remove('open');    // Sembunyikan overlay
-        hamburgerBtn.classList.remove('active');   // Animasi X → hamburger
+        hamburgerBtn.classList.remove('active');   // Animasi X â†’ hamburger
         document.body.style.overflow = '';         // Buka kunci scroll
     }
 
     // Toggle drawer saat hamburger diklik (buka jika tutup, tutup jika buka)
-    if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => {
+    if (hamburgerBtn) hamburgerBtn?.addEventListener('click', () => {
         mobileDrawer.classList.contains('open') ? closeDrawer() : openDrawer();
     });
     // Tutup drawer saat overlay diklik
-    if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
-    // Tutup drawer saat tombol × diklik
-    if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+    if (drawerOverlay) drawerOverlay?.addEventListener('click', closeDrawer);
+    // Tutup drawer saat tombol Ã— diklik
+    if (drawerClose) drawerClose?.addEventListener('click', closeDrawer);
 
     // ====================================================================
     // TOMBOL-TOMBOL DI DRAWER MOBILE
@@ -3293,18 +3349,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSettingsMobile = document.getElementById('btn-settings-mobile');
     const btnAdminPanelMobile = document.getElementById('btn-admin-panel-mobile');
 
-    // Klik login di drawer → tutup drawer → klik tombol login asli
-    if (btnLoginMobile) btnLoginMobile.addEventListener('click', () => {
+    // Klik login di drawer â†’ tutup drawer â†’ klik tombol login asli
+    if (btnLoginMobile) btnLoginMobile?.addEventListener('click', () => {
         closeDrawer();
         btnLoginHeader.click();
     });
-    // Klik settings di drawer → tutup drawer → klik tombol settings asli
-    if (btnSettingsMobile) btnSettingsMobile.addEventListener('click', () => {
+    // Klik settings di drawer â†’ tutup drawer â†’ klik tombol settings asli
+    if (btnSettingsMobile) btnSettingsMobile?.addEventListener('click', () => {
         closeDrawer();
         document.getElementById('btn-settings').click();
     });
-    // Klik admin di drawer → tutup drawer → klik tombol admin asli
-    if (btnAdminPanelMobile) btnAdminPanelMobile.addEventListener('click', (e) => {
+    // Klik admin di drawer â†’ tutup drawer â†’ klik tombol admin asli
+    if (btnAdminPanelMobile) btnAdminPanelMobile?.addEventListener('click', (e) => {
         e.preventDefault();
         closeDrawer();
         btnAdminPanel.click();
@@ -3351,7 +3407,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // dengan animasi smooth (halus), bukan langsung loncat
 
     document.querySelectorAll('.nav-links-mobile a[href^="#"]').forEach(link => {
-        link.addEventListener('click', (e) => {
+        link?.addEventListener('click', (e) => {
             e.preventDefault();
             closeDrawer(); // Tutup drawer dulu
             const targetId = link.getAttribute('href');       // Ambil ID target (misal: #menu)
@@ -3370,7 +3426,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Sama seperti drawer, tapi untuk link di navbar desktop
 
     document.querySelectorAll('.nav-links a[href^="#"]').forEach(link => {
-        link.addEventListener('click', (e) => {
+        link?.addEventListener('click', (e) => {
             e.preventDefault();
             const targetId = link.getAttribute('href');
             const targetSection = document.querySelector(targetId);
@@ -3394,7 +3450,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Skip link yang sudah di-handle di atas atau link tanpa target
         if (link.closest('.nav-links') || link.getAttribute('href') === '#') return;
 
-        link.addEventListener('click', (e) => {
+        link?.addEventListener('click', (e) => {
             const targetId = link.getAttribute('href');
             const targetSection = document.querySelector(targetId);
 
@@ -3474,6 +3530,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 1. Render produk LANGSUNG (tanpa tunggu cek auth) agar menu cepat muncul
     // 2. Cek auth di BACKGROUND (akan re-render jika ternyata ada session login)
 
+    renderCartModal(); // Tampilkan isi keranjang saat halaman checkout dibuka
     renderProducts();  // Tampilkan menu langsung tanpa tunggu auth
     checkAuth();       // Cek login di background (akan re-render jika ada session)
 });

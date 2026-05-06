@@ -55,12 +55,23 @@ class ProductController extends Controller
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'minimum_portions' => 'nullable|integer|min:0|max:1000',
+            'category' => 'nullable|string|in:makanan,minuman',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         if ($request->has('price')) $product->price = $request->price;
         if ($request->has('name')) $product->name = $request->name;
         if ($request->has('description')) $product->description = $request->description;
         if ($request->has('minimum_portions')) $product->minimum_portions = $request->integer('minimum_portions');
+        if ($request->has('category')) $product->category = $request->category;
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+            $file->move(public_path('asset/menu'), $filename);
+            $product->image = 'asset/menu/' . $filename;
+        }
+
         $product->save();
 
         return response()->json([

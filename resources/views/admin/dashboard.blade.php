@@ -1,27 +1,56 @@
+{{--
+    ============================================================
+    HALAMAN DASHBOARD ADMIN
+    File: resources/views/admin/dashboard.blade.php
+    ============================================================
+    Halaman beranda untuk Admin. Menampilkan ikhtisar bisnis:
+    1. Tiga kartu statistik utama (Pendapatan, Transaksi, Produk Terlaris)
+    2. Tabel 10 transaksi terkini dari seluruh outlet
+
+    Data dari AdminDashboardController:
+    - $totalPendapatan   : Total pendapatan (Hari ini / Minggu ini / Bulan ini)
+    - $jumlahTransaksi   : Jumlah transaksi dalam periode yang sama
+    - $produkTerlaris    : Menu yang paling banyak dipesan
+    - $summaryBadge      : Label periode ("Hari Ini" / "Minggu Ini" / dll)
+    - $summaryDateLabel  : Deskripsi tanggal rentang periode
+    - $summaryDescription: Deskripsi konteks transaksi
+    - $transaksiTerkini  : 10 pesanan terakhir dari semua outlet
+    ============================================================
+--}}
 @extends('admin.layouts.app')
 @section('page_title', 'Dashboard')
 
 @section('content')
-<!-- RINGKASAN - Grid 3 Kolom -->
+
+{{-- ============================================================
+     KARTU STATISTIK RINGKASAN (3 Kolom)
+     ============================================================
+     Responsive: 1 kolom (HP) → 2 kolom (tablet) → 3 kolom (desktop)
+     ============================================================ --}}
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-7">
 
-    <!-- 1. Total Pendapatan -->
+    {{-- Kartu 1: Total Pendapatan dalam periode yang dipilih --}}
+    {{-- "before:..." = garis warna di atas kartu via CSS pseudo-element --}}
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-blue-600 before:to-blue-400">
         <div class="flex items-center justify-between mb-4">
+            {{-- Ikon dolar --}}
             <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
                     <line x1="12" y1="1" x2="12" y2="23"/>
                     <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
                 </svg>
             </div>
+            {{-- Badge label periode: "Hari Ini" / "Minggu Ini" / "Bulan Ini" --}}
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">{{ $summaryBadge }}</span>
         </div>
+        {{-- Angka pendapatan dalam format Rupiah --}}
         <div class="text-[28px] font-extrabold text-slate-900 tracking-tight mb-1">Rp {{ number_format($totalPendapatan ?? 0, 0, ',', '.') }}</div>
         <div class="text-[13px] font-medium text-slate-400">Total Pendapatan</div>
+        {{-- Keterangan tanggal periode --}}
         <div class="text-[11px] text-slate-400 mt-1">{{ $summaryDateLabel }}</div>
     </div>
 
-    <!-- 2. Jumlah Transaksi -->
+    {{-- Kartu 2: Jumlah Transaksi dalam periode yang sama --}}
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-green-600 before:to-green-400">
         <div class="flex items-center justify-between mb-4">
             <div class="w-11 h-11 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
@@ -37,7 +66,8 @@
         <div class="text-[11px] text-slate-400 mt-1">{{ $summaryDescription }}</div>
     </div>
 
-    <!-- 3. Produk Terlaris -->
+    {{-- Kartu 3: Produk/Menu Terlaris --}}
+    {{-- optional($produkTerlaris) = aman jika $produkTerlaris null, tidak error --}}
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-amber-500 before:to-yellow-400">
         <div class="flex items-center justify-between mb-4">
             <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -47,6 +77,7 @@
             </div>
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600">Top #1</span>
         </div>
+        {{-- optional() mencegah error jika $produkTerlaris null (belum ada transaksi) --}}
         <div class="text-xl font-extrabold text-slate-900 tracking-tight mb-1 truncate">{{ optional($produkTerlaris)->pesanan ?: '-' }}</div>
         <div class="text-[13px] font-medium text-slate-400">Produk Terlaris</div>
         <div class="text-[11px] text-slate-400 mt-1">
@@ -56,7 +87,13 @@
 
 </div>
 
-<!-- TABEL TRANSAKSI TERKINI -->
+{{-- ============================================================
+     TABEL TRANSAKSI TERKINI
+     ============================================================
+     Menampilkan 10 pesanan terbaru dari seluruh outlet.
+     Tabel ini bersifat read-only (hanya bisa dilihat, tidak bisa diubah).
+     Untuk pengelolaan, admin harus ke halaman Pesanan.
+     ============================================================ --}}
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 lg:px-6 border-b border-slate-200 gap-4">
         <div>

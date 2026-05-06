@@ -58,7 +58,7 @@
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 px-3 py-4 overflow-y-auto sidebar-scroll">
+        <nav class="flex-1 px-3 py-4 overflow-y-auto sidebar-scroll">   
             <div class="text-[13px] font-semibold text-white uppercase tracking-widest px-3 pt-4 pb-2">Menu Utama</div>
 
             @php
@@ -133,14 +133,14 @@
         </nav>
 
         <!-- Sidebar Footer -->
-        <div class="p-4 border-t border-slate-700">
+        <div class="p-4 border-t border-white-700">
             <div class="flex items-center gap-3 px-3 py-2 rounded-md">
                 <div class="w-9 h-9 bg-white rounded-full flex items-center justify-center font-bold text-sm">
                     <img src="{{ asset('asset/logo merah.png') }}" alt="Logo" class="w-10 h-13">
                 </div>
                 <div>
                     <h4 class="text-[13px] font-semibold">{{ Auth::user()->name ?? 'Admin' }}</h4>
-                    <span class="text-[11px] text-slate-400">{{ Auth::user()->role ?? 'Administrator' }}</span>
+                    <span class="text-[11px] text-white-400">{{ Auth::user()->role ?? 'Administrator' }}</span>
                 </div>
             </div>
         </div>

@@ -1,18 +1,42 @@
+{{--
+    ============================================================
+    HALAMAN MONITORING PESANAN (Admin)
+    File: resources/views/admin/pesanan.blade.php
+    ============================================================
+    Admin HANYA bisa memantau (monitor) pesanan dari semua outlet.
+    Admin TIDAK bisa mengubah status pesanan atau konfirmasi bayar.
+    Semua aksi tersebut hanya bisa dilakukan dari panel Kasir.
+
+    Data dari AdminPesananController:
+    - $orders              : Semua pesanan dari seluruh outlet (dikelompokkan)
+    - $pendingPaymentCount : Jumlah pesanan yang menunggu konfirmasi bayar
+    - $completedOrderCount : Jumlah pesanan yang sudah selesai
+    - $activeOrderCount    : Jumlah pesanan yang masih aktif
+    ============================================================
+--}}
 @extends('admin.layouts.app')
 @section('page_title', 'Monitoring Pesanan')
 
 @section('content')
+
+{{-- STATISTIK RINGKASAN: 3 kartu angka pesanan --}}
 <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+    {{-- Kartu 1: Total seluruh pesanan dari semua outlet --}}
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
         <div class="text-[12px] uppercase tracking-widest text-slate-400 font-semibold">Total Order</div>
+        {{-- $orders->count() = hitung jumlah item dalam koleksi pesanan --}}
         <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ $orders->count() }}</div>
         <div class="mt-1 text-sm text-slate-500">Semua pesanan dari seluruh outlet</div>
     </div>
+
+    {{-- Kartu 2: Pesanan belum lunas — perlu tindakan kasir (warna kuning) --}}
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-amber-200 bg-amber-50/60">
         <div class="text-[12px] uppercase tracking-widest text-amber-600 font-semibold">Menunggu Bayar</div>
         <div class="mt-2 text-3xl font-extrabold text-amber-700">{{ $pendingPaymentCount }}</div>
         <div class="mt-1 text-sm text-amber-700/80">Perlu dicek oleh kasir outlet terkait</div>
     </div>
+
+    {{-- Kartu 3: Pesanan sudah selesai (warna hijau = positif) --}}
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-emerald-200 bg-emerald-50/60">
         <div class="text-[12px] uppercase tracking-widest text-emerald-600 font-semibold">Selesai</div>
         <div class="mt-2 text-3xl font-extrabold text-emerald-700">{{ $completedOrderCount }}</div>
@@ -78,15 +102,17 @@
                             @endif
                         </div>
                     </td>
+                    {{-- Kolom Status Pesanan: Warna badge dinamis berdasarkan nilai $o->status --}}
                     <td class="py-3.5 px-6">
                         @php
+                            // match() = switch modern PHP 8+: cocokkan nilai $o->status ke class warna
                             $statusClasses = match ($o->status) {
-                                'Diproses' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                'Pesanan Siap' => 'bg-blue-50 text-blue-600 border-blue-200',
-                                'Sedang Diantar' => 'bg-sky-50 text-sky-600 border-sky-200',
-                                'Selesai' => 'bg-green-50 text-green-600 border-green-200',
-                                'Dibatalkan' => 'bg-red-50 text-red-600 border-red-200',
-                                default => 'bg-slate-100 text-slate-600 border-slate-200',
+                                'Diproses'      => 'bg-amber-50 text-amber-700 border-amber-200', // Kuning
+                                'Pesanan Siap'  => 'bg-blue-50 text-blue-600 border-blue-200',   // Biru
+                                'Sedang Diantar'=> 'bg-sky-50 text-sky-600 border-sky-200',      // Biru muda
+                                'Selesai'       => 'bg-green-50 text-green-600 border-green-200',// Hijau
+                                'Dibatalkan'    => 'bg-red-50 text-red-600 border-red-200',      // Merah
+                                default         => 'bg-slate-100 text-slate-600 border-slate-200',// Abu (fallback)
                             };
                         @endphp
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border {{ $statusClasses }}">

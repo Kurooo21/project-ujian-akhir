@@ -56,18 +56,20 @@
                     <td class="py-3.5 px-6 truncate max-w-[200px]" title="{{ $produk->description }}">{{ Str::limit($produk->description, 50) }}</td>
                     <td class="py-3.5 px-6 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <form action="{{ route('products.destroy', $produk->id) }}" method="POST" onsubmit="return confirm('Hapus produk ini?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="p-2 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white rounded-md transition-colors" title="Hapus">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                                        <line x1="10" y1="11" x2="10" y2="17"/>
-                                        <line x1="14" y1="11" x2="14" y2="17"/>
-                                    </svg>
-                                </button>
-                            </form>
+                            <button onclick="openEditMenuModal({{ $produk->id }}, '{{ addslashes($produk->name) }}', {{ $produk->price }}, '{{ addslashes($produk->description) }}', '{{ $produk->category }}')" class="p-2 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-md transition-colors" title="Edit">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button type="button" onclick="deleteMenu({{ $produk->id }})" class="p-2 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white rounded-md transition-colors" title="Hapus">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                    <line x1="10" y1="11" x2="10" y2="17"/>
+                                    <line x1="14" y1="11" x2="14" y2="17"/>
+                                </svg>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -123,6 +125,55 @@
                     <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" class="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50" onclick="closeAddMenuModal()">Batal</button>
                         <button type="submit" id="btnSubmitMenu" class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Simpan Menu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL EDIT MENU (Admin Panel)
+     ============================================================ -->
+<div id="editMenuModal" class="fixed inset-0 z-[2004] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeEditMenuModal()"></div>
+        
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+            <div class="bg-white px-6 pb-6 pt-6">
+                <h3 class="text-lg font-bold text-slate-900 mb-5">Edit Menu</h3>
+                <form id="editMenuForm" class="space-y-4">
+                    <input type="hidden" id="edit_menu_id">
+                    <div>
+                        <label class="block text-[13px] font-semibold text-slate-700 mb-1">Nama Menu</label>
+                        <input type="text" id="edit_menu_name" required class="block w-full rounded-md border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm border p-2.5">
+                    </div>
+                    <div>
+                        <label class="block text-[13px] font-semibold text-slate-700 mb-1">Harga</label>
+                        <div class="flex rounded-md shadow-sm border border-slate-200 overflow-hidden">
+                            <span class="inline-flex items-center px-3 bg-slate-50 text-slate-500 text-sm font-semibold border-r border-slate-200">Rp</span>
+                            <input type="number" id="edit_menu_price" required inputmode="numeric" class="block w-full border-0 focus:ring-blue-500 focus:border-blue-500 text-sm p-2.5">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[13px] font-semibold text-slate-700 mb-1">Deskripsi</label>
+                        <textarea id="edit_menu_desc" rows="3" required class="block w-full rounded-md border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm border p-2.5"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-[13px] font-semibold text-slate-700 mb-1">Gambar Menu (Opsional)</label>
+                        <input type="file" id="edit_menu_img" accept="image/*" class="block w-full text-sm text-slate-500 border border-slate-200 rounded-md p-1.5 file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer">
+                        <p class="mt-1 text-xs text-slate-400">Biarkan kosong jika tidak mengubah gambar</p>
+                    </div>
+                    <div>
+                        <label class="block text-[13px] font-semibold text-slate-700 mb-1">Kategori</label>
+                        <select id="edit_menu_category" class="block w-full rounded-md border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm border p-2.5 bg-white">
+                            <option value="makanan">Makanan</option>
+                            <option value="minuman">Minuman</option>
+                        </select>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" class="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50" onclick="closeEditMenuModal()">Batal</button>
+                        <button type="submit" id="btnSubmitEditMenu" class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
@@ -188,5 +239,96 @@
             btnSubmit.innerHTML = 'Simpan Menu';
         }
     });
+
+    const editModal = document.getElementById('editMenuModal');
+    
+    function openEditMenuModal(id, name, price, description, category) {
+        document.getElementById('edit_menu_id').value = id;
+        document.getElementById('edit_menu_name').value = name;
+        document.getElementById('edit_menu_price').value = price;
+        document.getElementById('edit_menu_desc').value = description;
+        document.getElementById('edit_menu_category').value = category;
+        editModal.classList.remove('hidden');
+    }
+
+    function closeEditMenuModal() {
+        editModal.classList.add('hidden');
+        document.getElementById('editMenuForm').reset();
+    }
+
+    document.getElementById('editMenuForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const btnSubmit = document.getElementById('btnSubmitEditMenu');
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = 'Menyimpan...';
+
+        const id = document.getElementById('edit_menu_id').value;
+        const formData = new FormData();
+        formData.append('_method', 'PUT'); // Fake PUT for file upload support in Laravel
+        formData.append('name', document.getElementById('edit_menu_name').value);
+        formData.append('price', document.getElementById('edit_menu_price').value);
+        formData.append('description', document.getElementById('edit_menu_desc').value);
+        formData.append('category', document.getElementById('edit_menu_category').value);
+        
+        const imageFile = document.getElementById('edit_menu_img').files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const response = await fetch(`/products/${id}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+            
+            if(result.success) {
+                alert('Menu berhasil diubah!');
+                window.location.reload();
+            } else {
+                alert('Gagal mengubah menu: ' + (result.message || 'Error Server'));
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = 'Simpan Perubahan';
+            }
+        } catch(err) {
+            console.error(err);
+            alert('Terjadi kesalahan jaringan.');
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = 'Simpan Perubahan';
+        }
+    });
+
+    async function deleteMenu(id) {
+        if (!confirm('Hapus produk ini?')) return;
+        
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const response = await fetch(`/products/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Menu berhasil dihapus!');
+                window.location.reload();
+            } else {
+                alert('Gagal menghapus menu: ' + (result.message || 'Error Server'));
+            }
+        } catch(err) {
+            console.error(err);
+            alert('Terjadi kesalahan jaringan.');
+        }
+    }
 </script>
 @endsection

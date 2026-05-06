@@ -3,46 +3,55 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithGroupedOrders;
-use App\Models\Ingredient;
 use App\Models\Pesanan;
-use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class KasirPesananController extends Controller
 {
+    // Menggunakan trait untuk mempermudah pengelompokan pesanan yang punya kode/grup sama
     use InteractsWithGroupedOrders;
 
+    /**
+     * Menampilkan daftar pesanan untuk kasir
+     */
     public function index()
     {
+        // 1. Ambil data kasir yang login dan outlet tempat dia bekerja
         $kasir = Auth::user()->loadMissing('outlet');
         $assignedOutlet = $kasir->outlet;
 
+        // 2. Ambil pesanan khusus untuk outlet kasir tersebut dan kelompokkan berdasarkan order_code
         $orders = $assignedOutlet
             ? $this->summarizeGroupedOrders(
-                Pesanan::with('user')
+                Pesanan::with('user') // Ambil juga data user pemesannya
                     ->where('outlet_id', $assignedOutlet->id)
-                    ->orderBy('created_at', 'desc')
+                    ->orderBy('created_at', 'desc') // Urutkan dari pesanan terbaru
                     ->get()
                     ->groupBy(fn ($item) => $this->buildGroupId($item))
             )
             : collect();
 
+        // 3. Tampilkan halaman daftar pesanan (kasir/pesanan.blade.php)
         return view('kasir.pesanan', compact('orders', 'assignedOutlet'));
     }
 
+    /**
+     * Mengubah status pesanan (misal: dari "Diproses" ke "Pesanan Siap")
+     */
     public function updateStatus(Request $request): RedirectResponse
     {
+        // 1. Cek apakah kasir punya outlet
         if (! Auth::user()->outlet_id) {
             return redirect()
                 ->route('kasir.pesanan')
                 ->with('error', 'Akun kasir ini belum ditautkan ke outlet. Hubungi admin untuk mengatur outlet kerja.');
         }
 
+        // 2. Validasi input dari form
         $request->validate([
             'group_id' => 'required|string',
             'status' => [
@@ -52,11 +61,13 @@ class KasirPesananController extends Controller
             ],
         ]);
 
+        // 3. Cari pesanan berdasarkan ID Grup (order_code) dan outlet
         $ordersQuery = $this->queryByGroupId($request->group_id)
             ->where('outlet_id', Auth::user()->outlet_id);
 
         $orders = $ordersQuery->get();
 
+        // 4. Jika pesanan tidak ditemukan
         if ($orders->isEmpty()) {
             return redirect()
                 ->route('kasir.pesanan')
@@ -65,12 +76,14 @@ class KasirPesananController extends Controller
 
         $firstOrder = $orders->first();
 
+        // 5. Pastikan pesanan sudah lunas sebelum statusnya bisa diubah (selain dibatalkan)
         if (($firstOrder->payment_status ?? 'Lunas') !== 'Lunas') {
             return redirect()
                 ->route('kasir.pesanan')
                 ->with('error', 'Pembayaran belum dikonfirmasi. Konfirmasi pembayaran dulu sebelum mengubah status pesanan.');
         }
 
+        // 6. Update status pesanan di database
         $ordersQuery->update(['status' => $request->status]);
 
         return redirect()
@@ -78,59 +91,61 @@ class KasirPesananController extends Controller
             ->with('success', 'Status pesanan berhasil diperbarui.');
     }
 
+    /**
+     * Mengkonfirmasi pembayaran dari pelanggan (misal transfer bank/cash)
+     */
     public function confirmPayment(Request $request): RedirectResponse
     {
+        // 1. Cek apakah kasir punya outlet
         if (! Auth::user()->outlet_id) {
             return redirect()
                 ->route('kasir.pesanan')
                 ->with('error', 'Akun kasir ini belum ditautkan ke outlet. Hubungi admin untuk mengatur outlet kerja.');
         }
 
+        // 2. Validasi input
         $request->validate([
             'group_id' => 'required|string',
         ]);
 
+        // 3. Gunakan DB transaction agar jika ada error di tengah jalan, perubahan dibatalkan semua
         $result = DB::transaction(function () use ($request) {
+            // Ambil pesanan dan kunci baris di database (lockForUpdate) agar tidak diubah proses lain
+            /** @var \Illuminate\Database\Eloquent\Collection $orders */
             $orders = $this->queryByGroupId($request->group_id)
                 ->where('outlet_id', Auth::user()->outlet_id)
                 ->lockForUpdate()
                 ->get();
 
             if ($orders->isEmpty()) {
-                return [
-                    'status' => 'not_found',
-                ];
+                return ['status' => 'not_found'];
             }
 
             $firstOrder = $orders->first();
 
+            // Cegah double konfirmasi jika sudah lunas
             if (($firstOrder->payment_status ?? 'Lunas') === 'Lunas') {
-                return [
-                    'status' => 'already_paid',
-                ];
+                return ['status' => 'already_paid'];
             }
 
-            $inventoryError = $this->deductIngredientsForOrders($orders);
-
-            if ($inventoryError !== null) {
-                return [
-                    'status' => 'inventory_error',
-                    'message' => $inventoryError,
-                ];
+            // Kumpulkan ID pesanan secara manual agar tidak ada warning di VS Code
+            $orderIds = [];
+            foreach ($orders as $order) {
+                $orderIds[] = $order->id;
             }
 
-            Pesanan::whereIn('id', $orders->pluck('id'))
+            // Update status pesanan menjadi Lunas dan lanjut ke tahap 'Diproses'
+            Pesanan::whereIn('id', $orderIds)
                 ->update([
                     'payment_status' => 'Lunas',
-                    'paid_at' => now(),
-                    'status' => 'Diproses',
+                    'paid_at' => now(), // Catat waktu pembayaran
+                    'status' => 'Diproses', // Otomatis masuk dapur
                 ]);
 
-            return [
-                'status' => 'success',
-            ];
+            return ['status' => 'success'];
         });
 
+        // 4. Tangani hasil dari transaksi database
         if ($result['status'] === 'not_found') {
             return redirect()
                 ->route('kasir.pesanan')
@@ -143,104 +158,14 @@ class KasirPesananController extends Controller
                 ->with('success', 'Pembayaran pesanan ini sudah pernah dikonfirmasi sebelumnya.');
         }
 
-        if ($result['status'] === 'inventory_error') {
-            return redirect()
-                ->route('kasir.pesanan')
-                ->with('error', $result['message']);
-        }
-
         return redirect()
             ->route('kasir.pesanan')
             ->with('success', 'Pembayaran berhasil dikonfirmasi dan pesanan masuk ke proses dapur.');
     }
 
-    private function deductIngredientsForOrders(Collection $orders): ?string
-    {
-        $ingredientDeductions = $this->buildIngredientDeductions($orders);
-
-        if ($ingredientDeductions->isEmpty()) {
-            return null;
-        }
-
-        $ingredients = Ingredient::query()
-            ->whereIn('id', $ingredientDeductions->keys())
-            ->lockForUpdate()
-            ->get()
-            ->keyBy('id');
-
-        foreach ($ingredientDeductions as $ingredientId => $requiredQuantity) {
-            /** @var Ingredient|null $ingredient */
-            $ingredient = $ingredients->get($ingredientId);
-
-            if (! $ingredient) {
-                return 'Ada bahan resep yang tidak ditemukan. Cek ulang data resep produk sebelum konfirmasi pembayaran.';
-            }
-
-            if ((float) $ingredient->stock_quantity < $requiredQuantity) {
-                return sprintf(
-                    'Stok bahan %s tidak cukup. Dibutuhkan %s %s, sisa stok %s %s.',
-                    $ingredient->name,
-                    $this->formatIngredientQuantity($requiredQuantity),
-                    $ingredient->unit,
-                    $this->formatIngredientQuantity((float) $ingredient->stock_quantity),
-                    $ingredient->unit
-                );
-            }
-        }
-
-        foreach ($ingredientDeductions as $ingredientId => $requiredQuantity) {
-            /** @var Ingredient $ingredient */
-            $ingredient = $ingredients->get($ingredientId);
-
-            $ingredient->stock_quantity = max(
-                (float) $ingredient->stock_quantity - $requiredQuantity,
-                0
-            );
-            $ingredient->save();
-        }
-
-        return null;
-    }
-
-    private function buildIngredientDeductions(Collection $orders): Collection
-    {
-        $productsByName = Product::with('recipeItems.ingredient')
-            ->get()
-            ->keyBy(fn (Product $product) => $this->normalizeProductName($product->name));
-
-        return $orders->reduce(function (Collection $carry, Pesanan $order) use ($productsByName) {
-            /** @var Product|null $product */
-            $product = $productsByName->get($this->normalizeProductName((string) $order->pesanan));
-
-            if (! $product) {
-                return $carry;
-            }
-
-            $orderQuantity = max((float) $order->jumlah, 0);
-
-            foreach ($product->recipeItems as $recipeItem) {
-                if (! $recipeItem->ingredient || $recipeItem->quantity_required <= 0) {
-                    continue;
-                }
-
-                $ingredientId = (int) $recipeItem->ingredient_id;
-                $carry->put(
-                    $ingredientId,
-                    (float) $carry->get($ingredientId, 0) + ($orderQuantity * (float) $recipeItem->quantity_required)
-                );
-            }
-
-            return $carry;
-        }, collect())->filter(fn ($quantity) => $quantity > 0);
-    }
-
+    // Fungsi normalisasi nama produk untuk keperluan pencarian atau logika internal
     private function normalizeProductName(string $productName): string
     {
         return strtolower(trim(preg_replace('/\s+/', ' ', $productName)));
-    }
-
-    private function formatIngredientQuantity(float $quantity): string
-    {
-        return rtrim(rtrim(number_format($quantity, 2, '.', ''), '0'), '.');
     }
 }

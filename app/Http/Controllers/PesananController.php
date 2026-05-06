@@ -193,57 +193,6 @@ class PesananController extends Controller
         }
     }
 
-    // UPLOAD BUKTI PEMBAYARAN
-    public function uploadProof(Request $request, string $orderCode)
-    {
-        $request->validate([
-            'payment_proof' => 'required|file|image|mimes:jpeg,jpg,png,webp|max:5120', // max 5MB
-        ], [
-            'payment_proof.required' => 'Pilih file gambar bukti pembayaran terlebih dahulu.',
-            'payment_proof.image'    => 'File harus berupa gambar.',
-            'payment_proof.mimes'    => 'Format gambar harus JPG, PNG, atau WEBP.',
-            'payment_proof.max'      => 'Ukuran gambar maksimal 5MB.',
-        ]);
-
-        // Cari pesanan berdasarkan order_code milik user yang login
-        $orders = Pesanan::where('order_code', $orderCode)
-            ->where('user_id', Auth::id())
-            ->get();
-
-        if ($orders->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Pesanan tidak ditemukan.',
-            ], 404);
-        }
-
-        $firstOrder = $orders->first();
-
-        // Hapus file lama jika ada
-        if ($firstOrder->payment_proof) {
-            Storage::disk('public')->delete($firstOrder->payment_proof);
-        }
-
-        // Simpan file baru
-        $path = $request->file('payment_proof')->store('payment_proofs', 'public');
-        $uploadedAt = now();
-
-        // Update semua baris dengan order_code yang sama
-        Pesanan::where('order_code', $orderCode)
-            ->where('user_id', Auth::id())
-            ->update([
-                'payment_proof' => $path,
-                'payment_proof_uploaded_at' => $uploadedAt,
-            ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Bukti pembayaran berhasil diupload. Tunggu konfirmasi dari admin ya!',
-            'proof_url' => Storage::disk('public')->url($path),
-            'uploaded_at' => $uploadedAt->format('d/m/Y H:i'),
-        ]);
-    }
-
     public function index()
     {
         $pesanan = Pesanan::with('user')->orderBy('created_at', 'desc')->get();
@@ -326,46 +275,85 @@ class PesananController extends Controller
         ]);
     }
 
+    // ============================================================
     // GET PESANAN SAYA (User)
+    // ============================================================
+    // Fungsi ini dipanggil saat user membuka modal "Pesanan Saya"
+    // di navbar. Menampilkan riwayat semua pesanan user yang sedang login.
+    //
+    // Cara kerjanya:
+    //   1. Ambil semua pesanan milik user (berdasarkan user_id)
+    //   2. Kelompokkan baris-baris pesanan berdasarkan "group_id"
+    //      (satu transaksi bisa punya banyak baris item)
+    //   3. Gabungkan semua item dalam satu transaksi menjadi satu baris ringkasan
+    //   4. Sertakan info bukti pembayaran (payment_proof_url) agar
+    //      frontend bisa menampilkan status bukti / info coming soon
+    //
+    // Data yang dikembalikan digunakan oleh renderUserOrdersTable() di app.js
+    // ============================================================
     public function userOrders()
     {
+        // Ambil semua pesanan milik user yang sedang login,
+        // diurutkan dari yang terbaru (created_at descending)
         $pesanan = Pesanan::where('user_id', Auth::id())
                           ->orderBy('created_at', 'desc')
                           ->get();
 
+        // Kelompokkan baris pesanan berdasarkan group_id
+        // Satu transaksi (misal pesan 3 menu) akan menghasilkan 3 baris di DB,
+        // tapi group_id mereka sama → dikelompokkan jadi 1 kartu pesanan di UI
         $grouped = $pesanan->groupBy(fn ($item) => $this->buildGroupId($item));
 
+        // Transformasi setiap kelompok menjadi satu objek ringkasan pesanan
         $orders = $grouped->map(function ($items) {
-            $first = $items->first();
+            $first      = $items->first(); // Baris pertama sebagai representasi grup
+            $totalHarga = $items->sum('total_harga'); // Total harga semua item
+
+            // Gabungkan nama item menjadi satu string, contoh:
+            // "Ayam Goreng (2x), Es Teh (1x)"
             $itemsList = $items->map(function ($item) {
                 return $item->pesanan . ' (' . $item->jumlah . 'x)';
             })->implode(', ');
-            $totalHarga = $items->sum('total_harga');
 
             return [
-                'id' => $first->id,
-                'group_id' => $this->buildGroupId($first),
-                'order_code' => $first->order_code,
-                'date' => $first->created_at->format('d/m/Y H:i'),
-                'items' => $itemsList,
-                'total' => $totalHarga,
-                'jenis' => $first->jenis_belanja,
-                'alamat' => $first->alamat,
-                'outlet_name' => $first->outlet_name,
-                'outlet_city' => $first->outlet_city,
-                'outlet_district' => $first->outlet_district,
-                'outlet_address' => $first->outlet_address_snapshot,
-                'outlet_label' => $this->buildOutletLabel($first->outlet_name, $first->outlet_district, $first->outlet_city),
-                'payment_method' => $first->payment_method ?? 'manual',
-                'payment_method_label' => $this->paymentMethodLabel($first->payment_method),
-                'payment_status' => $first->payment_status ?? 'Lunas',
-                'status' => $first->status,
-            ];
-        })->values();
+                'id'          => $first->id,
+                'group_id'    => $this->buildGroupId($first),  // ID unik per transaksi
+                'order_code'  => $first->order_code,           // Kode pesanan (ORD-000001)
+                'date'        => $first->created_at->format('d/m/Y H:i'), // Tanggal pesan
+                'items'       => $itemsList,                   // Daftar item yang dipesan
+                'total'       => $totalHarga,                  // Total harga transaksi
+                'jenis'       => $first->jenis_belanja,        // "Take Away" / "Delivery"
+                'alamat'      => $first->alamat,               // Alamat pengiriman (jika delivery)
 
+                // Info outlet
+                'outlet_name'     => $first->outlet_name,
+                'outlet_city'     => $first->outlet_city,
+                'outlet_district' => $first->outlet_district,
+                'outlet_address'  => $first->outlet_address_snapshot,
+                'outlet_label'    => $this->buildOutletLabel($first->outlet_name, $first->outlet_district, $first->outlet_city),
+
+                // Info pembayaran
+                'payment_method'       => $first->payment_method ?? 'manual',
+                'payment_method_label' => $this->paymentMethodLabel($first->payment_method),
+                'payment_status'       => $first->payment_status ?? 'Lunas',
+
+                // Info bukti pembayaran
+                // Digunakan frontend untuk menampilkan status bukti yang sudah ada
+                // atau pesan bahwa fitur upload sedang coming soon
+                'payment_proof'             => $first->payment_proof,
+                'payment_proof_url'         => $first->payment_proof
+                    ? Storage::disk('public')->url($first->payment_proof) // URL publik gambar
+                    : null,
+                'payment_proof_uploaded_at' => $first->payment_proof_uploaded_at?->format('d/m/Y H:i'),
+
+                'status' => $first->status, // Status pesanan (Menunggu/Diproses/Selesai)
+            ];
+        })->values(); // ->values() untuk mereset key array menjadi 0,1,2,...
+
+        // Kembalikan data sebagai JSON ke frontend (app.js)
         return response()->json([
             'success' => true,
-            'data' => $orders
+            'data'    => $orders
         ]);
     }
 

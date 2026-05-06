@@ -1,7 +1,31 @@
+{{--
+    ============================================================
+    HALAMAN MANAJEMEN KASIR
+    File: resources/views/admin/kasir.blade.php
+    ============================================================
+    Halaman ini digunakan Admin untuk mengelola akun kasir:
+    - Melihat daftar semua kasir beserta outlet yang ditugaskan
+    - Menambah akun kasir baru
+    - Mengedit data kasir (nama, username, outlet, password, dll)
+    - Menghapus akun kasir
+
+    Aturan bisnis penting:
+    - Satu outlet hanya boleh dipegang satu kasir
+    - Kasir yang belum ditautkan ke outlet tidak bisa melihat pesanan
+
+    Data dari AdminKasirController:
+    - $kasirs  : Koleksi semua akun dengan role 'kasir'
+    - $outlets : Semua outlet aktif (untuk pilihan dropdown di form)
+    ============================================================
+--}}
 @extends('admin.layouts.app')
 @section('page_title', 'Manajemen Kasir')
 
 @section('content')
+
+{{-- Hitung statistik kasir di sisi server (PHP) --}}
+{{-- $totalKasir         = jumlah semua akun kasir --}}
+{{-- $kasirDenganOutlet  = kasir yang sudah ditautkan ke outlet --}}
 @php
     $totalKasir = $kasirs->count();
     $kasirDenganOutlet = $kasirs->whereNotNull('outlet_id')->count();
@@ -97,30 +121,37 @@
         </div>
     </div>
 
-    <div class="space-y-5">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <h3 class="text-sm font-bold text-slate-900 mb-4">Ringkasan Kasir</h3>
-            <div class="space-y-3">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Total Kasir</div>
-                    <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ $totalKasir }}</div>
-                </div>
-                <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                    <div class="text-[11px] uppercase tracking-widest text-blue-500 font-semibold">Kasir Tertaut Outlet</div>
-                    <div class="mt-2 text-3xl font-extrabold text-blue-700">{{ $kasirDenganOutlet }}</div>
-                </div>
+{{-- ============================================================
+     PANEL RINGKASAN & CATATAN (Kolom Kanan)
+     ============================================================ --}}
+<div class="space-y-5">
+    {{-- Widget: Statistik angka kasir --}}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="text-sm font-bold text-slate-900 mb-4">Ringkasan Kasir</h3>
+        <div class="space-y-3">
+            {{-- Total seluruh akun kasir --}}
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Total Kasir</div>
+                <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ $totalKasir }}</div>
+            </div>
+            {{-- Kasir yang sudah punya outlet (bisa mulai bekerja) --}}
+            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                <div class="text-[11px] uppercase tracking-widest text-blue-500 font-semibold">Kasir Tertaut Outlet</div>
+                <div class="mt-2 text-3xl font-extrabold text-blue-700">{{ $kasirDenganOutlet }}</div>
             </div>
         </div>
-
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <h3 class="text-sm font-bold text-slate-900 mb-4">Catatan</h3>
-            <ul class="space-y-3 text-sm text-slate-600 leading-relaxed">
-                <li>Satu outlet hanya boleh dipegang satu akun kasir agar alur operasional tidak bentrok.</li>
-                <li>Username dipakai saat login. Password minimal 4 karakter untuk kebutuhan demo.</li>
-                <li>Kalau outlet diganti, kasir otomatis akan melihat pesanan outlet barunya.</li>
-            </ul>
-        </div>
     </div>
+
+    {{-- Widget: Catatan aturan bisnis untuk admin --}}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="text-sm font-bold text-slate-900 mb-4">Catatan</h3>
+        <ul class="space-y-3 text-sm text-slate-600 leading-relaxed">
+            <li>Satu outlet hanya boleh dipegang satu akun kasir agar alur operasional tidak bentrok.</li>
+            <li>Username dipakai saat login. Password minimal 4 karakter untuk kebutuhan demo.</li>
+            <li>Kalau outlet diganti, kasir otomatis akan melihat pesanan outlet barunya.</li>
+        </ul>
+    </div>
+</div>
 </div>
 
 <div id="kasirModal" class="fixed inset-0 z-[2004] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -204,6 +235,10 @@
     const kasirStoreAction = kasirForm.dataset.storeAction;
     const kasirUpdateActionTemplate = kasirForm.dataset.updateActionTemplate;
 
+    /**
+     * resetKasirFormFields() — Kosongkan semua field di form kasir
+     * Dipanggil sebelum modal dibuka dalam mode "Tambah" agar form bersih
+     */
     function resetKasirFormFields() {
         document.getElementById('kasir_name').value = '';
         document.getElementById('kasir_username').value = '';
@@ -214,52 +249,87 @@
         document.getElementById('kasir_alamat').value = '';
     }
 
+    /**
+     * setKasirFormMode(mode, kasir) — Atur form modal ke mode Tambah atau Edit
+     *
+     * @param {string} mode  - 'create' untuk tambah baru, 'edit' untuk update
+     * @param {object} kasir - Data kasir (hanya diisi jika mode = 'edit')
+     *
+     * Cara kerjanya:
+     * - Ubah judul modal, teks tombol, dan hint password sesuai mode
+     * - Ubah action form dan method (POST untuk create, PUT untuk update)
+     * - Jika edit: isi field form dengan data kasir yang ada
+     * - Jika create: kosongkan semua field
+     */
     function setKasirFormMode(mode, kasir = null) {
         const isEditMode = mode === 'edit' && kasir;
 
+        // Atur teks tampilan sesuai mode
         kasirModalTitle.textContent = isEditMode ? 'Edit Kasir' : 'Tambah Kasir';
         kasirSubmitButton.textContent = isEditMode ? 'Perbarui Kasir' : 'Simpan Kasir';
         kasirPasswordHint.textContent = isEditMode
             ? 'Kosongkan password kalau tidak ingin mengubahnya.'
             : 'Minimal 4 karakter.';
+
+        // Atur action & method form
+        // Untuk update: ganti __KASIR__ di template URL dengan ID kasir yang diedit
         kasirForm.action = isEditMode
             ? kasirUpdateActionTemplate.replace('__KASIR__', kasir.id)
             : kasirStoreAction;
         kasirMethodInput.value = isEditMode ? 'PUT' : 'POST';
 
+        // Jika mode create: kosongkan form dan selesai
         if (!isEditMode) {
             resetKasirFormFields();
             return;
         }
 
+        // Jika mode edit: isi field form dengan data kasir yang ada
         document.getElementById('kasir_name').value = kasir.name || '';
         document.getElementById('kasir_username').value = kasir.username || '';
         document.getElementById('kasir_email').value = kasir.email || '';
         document.getElementById('kasir_outlet_id').value = kasir.outlet_id || '';
         document.getElementById('kasir_no_hp').value = kasir.no_hp || '';
-        document.getElementById('kasir_password').value = '';
+        document.getElementById('kasir_password').value = ''; // Password selalu dikosongkan saat edit
         document.getElementById('kasir_alamat').value = kasir.alamat || '';
     }
 
+    /** openKasirModal() — Buka modal dalam mode Tambah Kasir Baru */
     function openKasirModal() {
-        setKasirFormMode('create');
-        kasirModal.classList.remove('hidden');
+        setKasirFormMode('create'); // Set form ke mode tambah
+        kasirModal.classList.remove('hidden'); // Tampilkan modal
     }
 
+    /** closeKasirModal() — Tutup modal dan reset form ke mode tambah */
     function closeKasirModal() {
-        kasirModal.classList.add('hidden');
-        setKasirFormMode('create');
+        kasirModal.classList.add('hidden'); // Sembunyikan modal
+        setKasirFormMode('create');          // Reset form agar bersih
     }
 
+    /**
+     * openEditKasirModal(kasirPayload) — Buka modal dalam mode Edit Kasir
+     *
+     * @param {string|object} kasirPayload - Data kasir sebagai string JSON atau objek JS
+     *
+     * Kenapa bisa string atau objek?
+     * → Saat dipanggil dari atribut HTML (onclick), data dikirim sebagai
+     *   string JSON via data-kasir attribute. Fungsi ini memastikan
+     *   data selalu dikonversi ke objek JS sebelum digunakan.
+     */
     function openEditKasirModal(kasirPayload) {
+        // Jika payload masih berupa string JSON, parse dulu ke objek
         const kasir = typeof kasirPayload === 'string'
             ? JSON.parse(kasirPayload)
             : kasirPayload;
 
-        setKasirFormMode('edit', kasir);
-        kasirModal.classList.remove('hidden');
+        setKasirFormMode('edit', kasir); // Set form ke mode edit dengan data kasir
+        kasirModal.classList.remove('hidden'); // Tampilkan modal
     }
 
+    /**
+     * Tutup modal saat user menekan tombol Escape di keyboard
+     * Ini standar UX agar modal tidak "menjebak" user
+     */
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !kasirModal.classList.contains('hidden')) {
             closeKasirModal();

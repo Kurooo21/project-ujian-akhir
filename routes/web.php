@@ -16,13 +16,25 @@ use App\Http\Controllers\KasirPesananController;
 // ========================================================================
 // HALAMAN UTAMA
 // ========================================================================
+// Halaman utama - bisa diakses semua orang
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Halaman Menu - bisa diakses semua orang (tanpa login)
+// Ini agar tombol "Lihat Semua Menu" bisa dipakai siapa saja
 Route::get('/menu', [HomeController::class, 'menu'])->name('menu');
+
+// Halaman Checkout - wajib login terlebih dahulu
+// Jika belum login, Laravel otomatis redirect ke halaman /login
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [HomeController::class, 'checkout'])->name('checkout');
+});
 
 // ========================================================================
 // AUTHENTICATION (Login, Register, Logout)
 // ========================================================================
-Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::get('/login', [HomeController::class, 'login'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/register', [HomeController::class, 'register'])->name('register.form');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/api/user', [AuthController::class, 'user'])->name('api.user');
@@ -33,9 +45,10 @@ Route::put('/api/user/update', [AuthController::class, 'updateProfile'])->middle
 // ========================================================================
 Route::middleware('auth')->group(function () {
     Route::post('/pesanan', [PesananController::class, 'store'])->name('pesanan.store');
-    Route::post('/pesanan/{orderCode}/upload-proof', [PesananController::class, 'uploadProof'])->name('pesanan.upload-proof');
     Route::get('/pesanan/user', [PesananController::class, 'userOrders'])->name('pesanan.user');
+    Route::get('/pesanan/saya', [HomeController::class, 'userOrdersPage'])->name('user.orders.page');
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::get('/settings', [HomeController::class, 'settings'])->name('user.settings');
 });
 
 // ========================================================================
@@ -66,9 +79,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
-    Route::get('/admin/banners', [\App\Http\Controllers\BannerController::class, 'index']);
-    Route::post('/admin/banners', [\App\Http\Controllers\BannerController::class, 'store']);
-    Route::delete('/admin/banners/{id}', [\App\Http\Controllers\BannerController::class, 'destroy']);
+
     Route::get('/admin/settings', [SettingController::class, 'getSettings']);
     Route::post('/admin/settings', [SettingController::class, 'update']);
 });

@@ -185,27 +185,27 @@
 
             <!-- Tombol-Tombol Aksi (Kanan) -->
             <div class="flex items-center gap-2 sm:gap-3 md:gap-4">
-                <!-- Tombol Pesanan Saya (User Biasa) -->
-                <button id="btn-show-user-orders-nav" class="hidden items-center gap-1 sm:gap-2 text-sm sm:text-base font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors px-2 sm:px-3 py-1.5 rounded-full shadow-sm" title="Pesanan Saya">
-                    <i class="fas fa-receipt text-lg"></i> <span class="hidden sm:inline">Pesanan Saya</span>
-                </button>
-                
-                <!-- Tombol Keranjang Belanja -->
-                <button id="btn-cart-header" class="relative text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1" title="Keranjang Belanja">
-                    <i class="fas fa-shopping-cart"></i>
-                    <!-- Badge angka (hidden saat kosong, muncul saat ada item di cart) -->
-                    <span id="cart-badge" class="hidden absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-600 text-white text-[8px] sm:text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center leading-none p-0 m-0 pb-[1px] animate-bounce">0</span>
+                <!-- Tombol Pesanan Terpadu -->
+                <button type="button" id="btn-cart-header"
+                    class="relative inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 sm:px-4 py-2 text-sm font-bold text-red-600 shadow-sm transition-colors hover:bg-red-100"
+                    title="Pesanan">
+                    <i class="fas fa-shopping-cart text-base sm:text-lg"></i>
+                    <span data-orders-label class="hidden sm:inline">Pesanan</span>
+                    <span id="cart-badge"
+                        class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-[8px] sm:text-[10px] font-bold min-w-[1rem] h-4 sm:h-5 px-1.5 rounded-full flex items-center justify-center leading-none animate-bounce">0</span>
                 </button>
                 <!-- Tombol Pengaturan (hidden di mobile) -->
-                <button id="btn-settings" class="hidden sm:block text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
+                @auth
+                <a href="{{ route('user.settings') }}" id="btn-settings" class="hidden sm:block text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
                     title="Pengaturan">
                     <i class="fas fa-cog"></i>
-                </button>
+                </a>
+                @endauth
                 <!-- Tombol Login/Logout (icon berubah via JavaScript) -->
-                <button id="btn-login" class="text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
+                <a href="{{ route('login') }}" id="btn-login" class="text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
                     title="Login / Logout">
                     <i class="fas fa-sign-in-alt"></i>
-                </button>
+                </a>
 
                 <!-- Tombol Hamburger (☰) - Hanya muncul di mobile (md:hidden) -->
                 <!-- Terdiri dari 3 garis yang beranimasi menjadi X -->
@@ -250,12 +250,14 @@
         <!-- Footer Drawer: Tombol Settings & Login -->
         <div class="p-5 border-t border-gray-100">
             <div class="flex items-center justify-center gap-4">
-                <button id="btn-settings-mobile" class="w-10 h-10 rounded-full bg-gray-100 text-primary-red flex items-center justify-center hover:bg-red-50 transition-colors" title="Pengaturan">
+                @auth
+                <a href="{{ route('user.settings') }}" id="btn-settings-mobile" class="w-10 h-10 rounded-full bg-gray-100 text-primary-red flex items-center justify-center hover:bg-red-50 transition-colors" title="Pengaturan">
                     <i class="fas fa-cog"></i>
-                </button>
-                <button id="btn-login-mobile" class="flex-1 py-2.5 bg-gradient-to-r from-primary-red to-accent-red text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:shadow-lg transition-all">
+                </a>
+                @endauth
+                <a href="{{ route('login') }}" id="btn-login-mobile" class="flex-1 py-2.5 bg-gradient-to-r from-primary-red to-accent-red text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:shadow-lg transition-all">
                     <i class="fas fa-sign-in-alt"></i> <span>Login</span>
-                </button>
+                </a>
             </div>
         </div>
     </nav>
@@ -288,14 +290,7 @@
                         class="w-full h-full object-cover block">
                 </div>
 
-                <!-- Slide Tambahan dari Database -->
-                @if(isset($banners) && count($banners) > 0)
-                    @foreach($banners as $index => $banner)
-                        <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out bg-[#A80D11] flex items-center justify-center" style="opacity:0;">
-                            <img src="{{ asset($banner->image_path) }}" alt="{{ $banner->description ?? 'Banner Chi-Pok' }}" class="w-full h-full object-contain block text-transparent drop-shadow-xl">
-                        </div>
-                    @endforeach
-                @endif
+
             </div>
 
             <!-- Tombol Navigasi Slider: Panah Kiri (Previous) -->
@@ -375,7 +370,7 @@
                 <!-- Dots persegi untuk navigasi halaman carousel -->
                 <div id="carousel-dots" class="hidden flex justify-center gap-2 mt-6"></div>
 
-                <!-- Tombol "Lihat Semua Menu" - mengarah ke halaman /menu -->
+                <!-- Tombol "Lihat Semua Menu" - mengarah ke halaman semua menu -->
                 <div class="text-center mt-10">
                     <a href="{{ route('menu') }}"
                         class="inline-flex items-center gap-2 px-8 py-3 rounded-full font-bold text-primary-red border-2 border-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm uppercase tracking-wide group">
@@ -383,6 +378,7 @@
                         <i class="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
                     </a>
                 </div>
+
             </div>
         </section>
 
@@ -570,383 +566,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- ============================================================
-         MODAL KERANJANG & CHECKOUT
-         ============================================================
-         Pop-up yang muncul saat tombol keranjang diklik.
-         Berisi daftar item di keranjang, total belanja,
-         dan form checkout (jenis belanja, nama, HP, alamat).
-         z-[2000] = z-index tinggi agar di atas semua elemen
-         ============================================================ -->
-    <div id="cartModal" class="fixed inset-0 z-[2000] hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
-        <!-- Overlay gelap di belakang modal -->
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-            <div
-                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="w-full">
-                        <!-- Header -->
-                        <div class="flex items-center justify-between mb-5 pb-3 border-b">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-shopping-cart text-red-600"></i>
-                                </div>
-                                <h3 class="text-xl font-bold text-gray-900">Keranjang Belanja</h3>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <button type="button" id="btn-show-user-orders" class="hidden text-sm font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-full transition-colors flex items-center gap-2">
-                                    <i class="fas fa-receipt"></i> Pesanan Aktif
-                                </button>
-                                <button type="button" id="closeCartModal" class="text-gray-400 hover:text-gray-600 transition w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Cart Items List -->
-                        <div id="cart-items-container" class="max-h-[250px] overflow-y-auto space-y-3 mb-5">
-                            <p class="text-gray-400 text-center py-8"><i class="fas fa-shopping-basket text-3xl mb-2 block"></i>Keranjang kosong</p>
-                        </div>
-
-                        <!-- Cart Total -->
-                        <div class="bg-gray-50 rounded-xl p-4 mb-5">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-gray-700">Total Belanja</span>
-                                <span id="cart-total-display" class="text-xl font-extrabold text-red-600">Rp 0</span>
-                            </div>
-                        </div>
-
-                        <!-- Checkout Form -->
-                        <div id="cart-checkout-section" class="hidden">
-                            <div class="border-t pt-4">
-                                <h4 class="font-bold text-sm text-gray-900 mb-3 flex items-center gap-2">
-                                    <i class="fas fa-truck text-red-500"></i> Detail Pesanan
-                                </h4>
-                                <form id="checkoutForm" class="space-y-3">
-                                    <div>
-                                        <label for="checkout_jenis" class="block text-sm font-medium text-gray-700">Jenis Belanja</label>
-                                        <select id="checkout_jenis" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                            <option value="Take Away">Take Away</option>
-                                            <option value="Delivery">Delivery</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="checkout_nama" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-                                        <input type="text" id="checkout_nama" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                    </div>
-                                    <div>
-                                        <label for="checkout_no_hp" class="block text-sm font-medium text-gray-700">No. HP / WhatsApp</label>
-                                        <input type="tel" id="checkout_no_hp" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                    </div>
-                                    <div>
-                                        <label for="checkout_outlet_search" class="block text-sm font-medium text-gray-700">Cari Area Outlet</label>
-                                        <input type="text" id="checkout_outlet_search"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"
-                                            placeholder="Contoh: Jakarta Barat, Kebon Jeruk, Bandung">
-                                        <p id="checkout-outlet-search-hint" class="mt-2 text-xs text-gray-500">Ketik kota, kecamatan, atau nama outlet agar pilihan outlet lebih mudah dicari.</p>
-                                    </div>
-                                    <div>
-                                        <label for="checkout_outlet_id" class="block text-sm font-medium text-gray-700">Pilih Outlet</label>
-                                        <select id="checkout_outlet_id" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                            <option value="">Pilih outlet terdekat</option>
-                                        </select>
-                                        <p id="checkout-outlet-helper" class="mt-2 text-xs text-gray-500 leading-relaxed bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-                                            Pilih outlet yang paling dekat dengan area kamu.
-                                        </p>
-                                    </div>
-                                    <div id="checkout-outlet-preview" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600"></div>
-                                    <div>
-                                        <label for="checkout_payment_method" class="block text-sm font-medium text-gray-700">Metode Pembayaran</label>
-                                        <select id="checkout_payment_method" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                            <option value="qris">QRIS</option>
-                                            <option value="bank_transfer">Transfer Bank</option>
-                                        </select>
-                                        <p id="checkout-payment-hint" class="mt-2 text-xs text-gray-500 leading-relaxed bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-                                            Ini mode demo. Pilih QRIS atau transfer bank untuk mensimulasikan alur pembayaran tanpa transaksi sungguhan.
-                                        </p>
-                                    </div>
-                                    <div id="checkout-alamat-wrapper">
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
-                                        <div id="address-options" class="hidden mb-2">
-                                            <label class="flex items-center gap-2 cursor-pointer bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm hover:bg-red-100 transition">
-                                                <input type="checkbox" id="use_saved_address" class="accent-red-600">
-                                                <i class="fas fa-map-marker-alt text-red-500"></i>
-                                                <span>Gunakan alamat tersimpan: <strong id="saved-address-preview" class="text-gray-800"></strong></span>
-                                            </label>
-                                        </div>
-                                        <textarea id="checkout_alamat" rows="2" required
-                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"
-                                            placeholder="Masukkan alamat pengiriman"></textarea>
-                                    </div>
-                                    <div class="pt-2 flex gap-3">
-                                        <button type="submit"
-                                            class="flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 transition flex items-center gap-2 disabled:cursor-not-allowed disabled:bg-red-400 disabled:opacity-70">
-                                            <i class="fas fa-receipt"></i> Buat Pesanan
-                                        </button>
-                                        <button type="button" id="btn-back-to-cart"
-                                            class="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
-                                            Kembali
-                                        </button>
-                                    </div>
-                                    <p class="text-xs text-gray-500 leading-relaxed bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                                        Pesanan akan disimpan dulu. Setelah itu detail pembayaran demo sesuai metode yang dipilih akan langsung ditampilkan di website ini.
-                                    </p>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Cart Action Buttons -->
-                        <div id="cart-action-buttons" class="flex gap-3">
-                            <button id="btn-checkout"
-                                class="flex-1 justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled>
-                                <i class="fas fa-credit-card"></i> Checkout
-                            </button>
-                            <button id="btn-clear-cart"
-                                class="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50 transition">
-                                <i class="fas fa-trash"></i> Kosongkan
-                            </button>
-                        </div>
-                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-         MODAL LOGIN - Form masuk akun user
-         ============================================================
-         Layout split: panel kiri (branding) + panel kanan (form)
-         Di mobile: hanya tampil form (panel kiri tersembunyi)
-         ============================================================ -->
-    <div id="loginModal" class="fixed inset-0 z-[2001] hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
-
-        <div class="flex min-h-screen items-center justify-center p-4">
-            <!-- Card -->
-            <div class="relative w-full max-w-[900px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row transform transition-all duration-500 animate-[modalIn_0.4s_ease-out]">
-
-                <!-- Left — Branding Panel -->
-                <div class="hidden md:flex md:w-[45%] bg-gradient-to-br from-[#D20000] via-[#B30000] to-[#8B0000] flex-col items-center justify-center p-10 relative overflow-hidden">
-                    <!-- Decorative circles -->
-                    <div class="absolute -top-20 -left-20 w-56 h-56 bg-white/10 rounded-full"></div>
-                    <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-white/5 rounded-full"></div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-white/5 rounded-full"></div>
-
-                    <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok Logo" class="h-28 brightness-0 invert mb-6 drop-shadow-2xl relative z-10">
-                    <h2 class="font-heading text-3xl text-white text-center tracking-widest relative z-10 mb-3">SELAMAT DATANG</h2>
-                    <p class="text-white/70 text-sm text-center max-w-[220px] relative z-10 leading-relaxed">Masuk ke akunmu dan nikmati ledakan kelezatan di setiap gigitan!</p>
-                    <div class="mt-8 flex gap-3 relative z-10">
-                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
-                        <span class="w-6 h-2 rounded-full bg-white"></span>
-                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
-                    </div>
-                </div>
-
-                <!-- Right — Form Panel -->
-                <div class="flex-1 p-8 md:p-12 flex flex-col justify-center">
-                    <!-- Close button -->
-                    <button type="button" id="closeLoginModal"
-                        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-all duration-300 hover:rotate-90 z-20">
-                        <i class="fas fa-times text-sm"></i>
-                    </button>
-
-                    <!-- Mobile logo -->
-                    <div class="flex md:hidden justify-center mb-6">
-                        <div class="w-16 h-16 bg-gradient-to-br from-[#D20000] to-[#8B0000] rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
-                            <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok" class="h-10 brightness-0 invert">
-                        </div>
-                    </div>
-
-                    <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">MASUK</h3>
-                    <p class="text-gray-400 text-sm mb-8">Login ke akun Chi-Pok kamu</p>
-
-                    <form id="loginForm" class="space-y-5">
-                        <!-- Username -->
-                        <div>
-                            <label for="username" class="block text-sm font-semibold text-gray-600 mb-1.5">Username</label>
-                            <div class="relative group">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                    <i class="fas fa-user text-sm"></i>
-                                </span>
-                                <input type="text" id="username" name="username" required placeholder="Masukkan username"
-                                    class="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                            </div>
-                        </div>
-
-                        <!-- Password -->
-                        <div>
-                            <label for="password" class="block text-sm font-semibold text-gray-600 mb-1.5">Password</label>
-                            <div class="relative group">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                    <i class="fas fa-lock text-sm"></i>
-                                </span>
-                                <input type="password" id="password" name="password" required placeholder="Masukkan password"
-                                    class="w-full pl-11 pr-12 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                <button type="button" onclick="togglePassword('password', this)"
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Login Button -->
-                        <button type="submit"
-                            class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide">
-                            <i class="fas fa-sign-in-alt"></i> MASUK
-                        </button>
-                    </form>
-
-                    <!-- Divider -->
-                    <div class="flex items-center gap-4 my-6">
-                        <div class="flex-1 h-px bg-gray-200"></div>
-                        <span class="text-xs text-gray-400 font-medium">ATAU</span>
-                        <div class="flex-1 h-px bg-gray-200"></div>
-                    </div>
-
-                    <p class="text-center text-sm text-gray-500">
-                        Belum punya akun?
-                        <a href="#" id="link-signup" class="text-red-600 font-bold hover:text-red-700 hover:underline transition-colors">Daftar disini</a>
-                    </p>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================ -->
-    <!-- SIGNUP MODAL — Premium Split Layout                              -->
-    <!-- ================================================================ -->
-    <div id="signupModal" class="fixed inset-0 z-[2002] hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
-
-        <div class="flex min-h-screen items-center justify-center p-4">
-            <!-- Card -->
-            <div class="relative w-full max-w-[900px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row transform transition-all duration-500 animate-[modalIn_0.4s_ease-out]">
-
-                <!-- Left — Branding Panel -->
-                <div class="hidden md:flex md:w-[45%] bg-gradient-to-br from-[#D20000] via-[#B30000] to-[#8B0000] flex-col items-center justify-center p-10 relative overflow-hidden">
-                    <!-- Decorative circles -->
-                    <div class="absolute -top-20 -left-20 w-56 h-56 bg-white/10 rounded-full"></div>
-                    <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-white/5 rounded-full"></div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-white/5 rounded-full"></div>
-
-                    <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok Logo" class="h-28 brightness-0 invert mb-6 drop-shadow-2xl relative z-10">
-                    <h2 class="font-heading text-3xl text-white text-center tracking-widest relative z-10 mb-3">BERGABUNGLAH</h2>
-                    <p class="text-white/70 text-sm text-center max-w-[220px] relative z-10 leading-relaxed">Buat akunmu sekarang dan jadi bagian dari keluarga Chi-Pok!</p>
-                    <div class="mt-8 flex gap-3 relative z-10">
-                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
-                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
-                        <span class="w-6 h-2 rounded-full bg-white"></span>
-                    </div>
-                </div>
-
-                <!-- Right — Form Panel -->
-                <div class="flex-1 p-8 md:p-10 flex flex-col justify-center">
-                    <!-- Close button -->
-                    <button type="button" id="closeSignupModal"
-                        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-all duration-300 hover:rotate-90 z-20">
-                        <i class="fas fa-times text-sm"></i>
-                    </button>
-
-                    <!-- Mobile logo -->
-                    <div class="flex md:hidden justify-center mb-5">
-                        <div class="w-14 h-14 bg-gradient-to-br from-[#D20000] to-[#8B0000] rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
-                            <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok" class="h-9 brightness-0 invert">
-                        </div>
-                    </div>
-
-                    <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">DAFTAR</h3>
-                    <p class="text-gray-400 text-sm mb-6">Buat akun baru di Chi-Pok</p>
-
-                    <form id="signupForm" class="space-y-4">
-                        <!-- Email -->
-                        <div>
-                            <label for="signup_email" class="block text-sm font-semibold text-gray-600 mb-1">Email</label>
-                            <div class="relative group">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                    <i class="fas fa-envelope text-sm"></i>
-                                </span>
-                                <input type="email" id="signup_email" name="signup_email" required placeholder="nama@email.com"
-                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                            </div>
-                        </div>
-
-                        <!-- Username -->
-                        <div>
-                            <label for="signup_username" class="block text-sm font-semibold text-gray-600 mb-1">Username</label>
-                            <div class="relative group">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                    <i class="fas fa-user text-sm"></i>
-                                </span>
-                                <input type="text" id="signup_username" name="signup_username" required placeholder="Pilih username"
-                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                            </div>
-                        </div>
-
-                        <!-- No. WhatsApp Aktif -->
-                        <div>
-                            <label for="signup_no_hp" class="block text-sm font-semibold text-gray-600 mb-1">No. WhatsApp Aktif</label>
-                            <div class="relative group">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                    <i class="fab fa-whatsapp text-sm"></i>
-                                </span>
-                                <input type="tel" id="signup_no_hp" name="signup_no_hp" required placeholder="08xxxxxxxxxx"
-                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                            </div>
-                        </div>
-
-                        <!-- Password -->
-                        <div>
-                            <label for="signup_password" class="block text-sm font-semibold text-gray-600 mb-1">Password</label>
-                            <div class="relative group">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                    <i class="fas fa-lock text-sm"></i>
-                                </span>
-                                <input type="password" id="signup_password" name="signup_password" required placeholder="Buat password"
-                                    class="w-full pl-11 pr-12 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                <button type="button" onclick="togglePassword('signup_password', this)"
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Register Button -->
-                        <button type="submit"
-                            class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide mt-2">
-                            <i class="fas fa-user-plus"></i> DAFTAR SEKARANG
-                        </button>
-                    </form>
-
-                    <!-- Divider -->
-                    <div class="flex items-center gap-4 my-5">
-                        <div class="flex-1 h-px bg-gray-200"></div>
-                        <span class="text-xs text-gray-400 font-medium">ATAU</span>
-                        <div class="flex-1 h-px bg-gray-200"></div>
-                    </div>
-
-                    <p class="text-center text-sm text-gray-500">
-                        Sudah punya akun?
-                        <a href="#" id="link-login-from-signup" class="text-red-600 font-bold hover:text-red-700 hover:underline transition-colors">Masuk disini</a>
-                    </p>
-                </div>
-
             </div>
         </div>
     </div>
@@ -1210,288 +830,20 @@
     </div>
 
     <!-- ============================================================
-         MODAL USER SETTINGS - Pengaturan Profil User
-         ============================================================
-         Modal ini muncul saat tombol settings (gear icon) diklik.
-         Menampilkan data profil user yang sedang login.
-         User bisa mengedit: Nama, Username, No HP, Alamat.
-         Layout split: panel kiri (branding) + panel kanan (form)
-         ============================================================ -->
-    <div id="settingsModal" class="fixed inset-0 z-[2006] hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
-
-        <div class="flex min-h-screen items-center justify-center p-4">
-            <!-- Card -->
-            <div class="relative w-full max-w-[900px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row transform transition-all duration-500 animate-[modalIn_0.4s_ease-out]">
-
-                <!-- Left — Branding Panel -->
-                <div class="hidden md:flex md:w-[45%] bg-gradient-to-br from-[#D20000] via-[#B30000] to-[#8B0000] flex-col items-center justify-center p-10 relative overflow-hidden">
-                    <!-- Decorative circles -->
-                    <div class="absolute -top-20 -left-20 w-56 h-56 bg-white/10 rounded-full"></div>
-                    <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-white/5 rounded-full"></div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-white/5 rounded-full"></div>
-
-                    <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-6 relative z-10">
-                        <i class="fas fa-user-cog text-5xl text-white"></i>
-                    </div>
-                    <h2 class="font-heading text-3xl text-white text-center tracking-widest relative z-10 mb-3">PENGATURAN</h2>
-                    <p class="text-white/70 text-sm text-center max-w-[220px] relative z-10 leading-relaxed">Kelola profil dan informasi akun Chi-Pok kamu di sini.</p>
-                    <div class="mt-8 flex gap-3 relative z-10">
-                        <span class="w-6 h-2 rounded-full bg-white"></span>
-                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
-                        <span class="w-2 h-2 rounded-full bg-white/40"></span>
-                    </div>
-                </div>
-
-                <!-- Right — Settings Form Panel -->
-                <div class="flex-1 p-8 md:p-10 flex flex-col justify-center">
-                    <!-- Close button -->
-                    <button type="button" id="closeSettingsModal"
-                        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center transition-all duration-300 hover:rotate-90 z-20">
-                        <i class="fas fa-times text-sm"></i>
-                    </button>
-
-                    <!-- Mobile icon -->
-                    <div class="flex md:hidden justify-center mb-5">
-                        <div class="w-14 h-14 bg-gradient-to-br from-[#D20000] to-[#8B0000] rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
-                            <i class="fas fa-user-cog text-2xl text-white"></i>
-                        </div>
-                    </div>
-
-                    <!-- Tab Switcher untuk Admin -->
-                    <div id="settings-tab-slider" class="flex p-1 bg-gray-100 rounded-xl mb-6 hidden border border-gray-200">
-                        <button id="btn-tab-profile" type="button" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-red-600 transition-all">Profil Saya</button>
-                        <button id="btn-tab-banner" type="button" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Edit Banner</button>
-                        <button id="btn-tab-outlet" type="button" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Outlet & Demo Payment</button>
-                    </div>
-
-                    <!-- Container Profil -->
-                    <div id="container-profile">
-                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">PROFIL SAYA</h3>
-                        <p class="text-gray-400 text-sm mb-6">Kelola informasi akun kamu</p>
-
-                    <!-- Pesan saat belum login -->
-                    <div id="settings-not-logged-in" class="hidden text-center py-8">
-                        <i class="fas fa-lock text-4xl text-gray-300 mb-3 block"></i>
-                        <p class="text-gray-400 text-sm">Silakan login terlebih dahulu untuk mengakses pengaturan.</p>
-                        <button type="button" id="settings-go-login"
-                            class="mt-4 px-6 py-2.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl text-sm hover:shadow-lg transition-all">
-                            <i class="fas fa-sign-in-alt mr-1"></i> Login Sekarang
-                        </button>
-                    </div>
-
-                    <!-- Form Settings (muncul saat sudah login) -->
-                    <form id="settingsForm" class="space-y-4 hidden">
-                        <!-- Nama Lengkap -->
-                        <div>
-                            <label for="settings_name" class="block text-sm font-semibold text-gray-600 mb-1">Nama Lengkap</label>
-                            <div class="relative group">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                    <i class="fas fa-id-card text-sm"></i>
-                                </span>
-                                <input type="text" id="settings_name" name="settings_name" placeholder="Nama lengkapmu"
-                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                            </div>
-                        </div>
-
-                        <!-- Username (readonly) -->
-                        <div>
-                            <label for="settings_username" class="block text-sm font-semibold text-gray-600 mb-1">Username</label>
-                            <div class="relative group">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                                    <i class="fas fa-user text-sm"></i>
-                                </span>
-                                <input type="text" id="settings_username" name="settings_username"
-                                    class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                            </div>
-                        </div>
-
-                        <!-- Two columns: No HP + Alamat -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="settings_no_hp" class="block text-sm font-semibold text-gray-600 mb-1">No. HP</label>
-                                <div class="relative group">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                        <i class="fas fa-phone text-sm"></i>
-                                    </span>
-                                    <input type="tel" id="settings_no_hp" name="settings_no_hp" placeholder="08xxxxxxxxxx"
-                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                </div>
-                            </div>
-                            <div>
-                                <label for="settings_alamat" class="block text-sm font-semibold text-gray-600 mb-1">Alamat</label>
-                                <div class="relative group">
-                                    <span class="absolute left-4 top-3 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                        <i class="fas fa-map-marker-alt text-sm"></i>
-                                    </span>
-                                    <textarea id="settings_alamat" name="settings_alamat" rows="1" placeholder="Alamat lengkap"
-                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Password Baru (opsional) -->
-                        <div>
-                            <label for="settings_password" class="block text-sm font-semibold text-gray-600 mb-1">Password Baru <span class="text-gray-400 font-normal">(opsional)</span></label>
-                            <div class="relative group">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                    <i class="fas fa-lock text-sm"></i>
-                                </span>
-                                <input type="password" id="settings_password" name="settings_password" placeholder="Kosongkan jika tidak ingin ubah"
-                                    class="w-full pl-11 pr-12 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                <button type="button" onclick="togglePassword('settings_password', this)"
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Tombol Simpan -->
-                        <button type="submit"
-                            class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide mt-2">
-                            <i class="fas fa-save"></i> SIMPAN PERUBAHAN
-                        </button>
-                    </form>
-                    </div>
-
-                    <!-- Container Banner -->
-                    <div id="container-banner" class="hidden">
-                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">EDIT BANNER</h3>
-                        <p class="text-gray-400 text-sm mb-6">Kelola gambar promosi halaman utama</p>
-                        
-                        <div class="max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
-                            <!-- Form Tambah Banner -->
-                            <form id="form-add-banner" class="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                <div class="mb-4">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Pilih Gambar Banner</label>
-                                    <input type="file" id="banner-image" name="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer transition" required>
-                                    <p class="text-[11px] text-gray-500 mt-2 p-2 bg-gray-50 rounded-lg border border-gray-100 leading-tight">
-                                        💡 <strong>Rekomendasi Responsif:</strong><br/>
-                                        Rasio <strong>2:1</strong> / <strong>16:9</strong> (Contoh: 1920x1080px). Pusatkan desain inti (Center-safe).
-                                    </p>
-                                </div>
-                                <div class="mb-5">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Deskripsi Singkat <span class="text-gray-400 font-normal">(opsional)</span></label>
-                                    <input type="text" id="banner-desc" name="description" placeholder="Contoh: Promo Lebaran" class="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500 outline-none transition text-sm">
-                                </div>
-                                <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white font-bold rounded-lg shadow hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm flex items-center justify-center gap-2">
-                                    <i class="fas fa-upload"></i> Unggah Banner
-                                </button>
-                            </form>
-
-                            <!-- List Banner Saat Ini -->
-                            <div>
-                                <h5 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-widest border-b pb-2">Daftar Banner Aktif</h5>
-                                <div id="banner-list-container" class="grid grid-cols-1 gap-3">
-                                    <div class="col-span-full text-center text-sm text-gray-500 py-4">Memuat banner...</div>
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-
-                    <!-- Container Outlet -->
-                    <div id="container-outlet" class="hidden">
-                        <h3 class="font-heading text-3xl text-gray-900 tracking-wide mb-1">PENGATURAN OUTLET & DEMO PAYMENT</h3>
-                        <p class="text-gray-400 text-sm mb-6">Kelola alamat outlet, WhatsApp admin, QRIS demo, dan rekening demo untuk checkout pelanggan</p>
-
-                        <form id="form-edit-outlet" class="space-y-4">
-                            <div>
-                                <label for="input_outlet_address" class="block text-sm font-semibold text-gray-600 mb-1">Alamat Outlet</label>
-                                <div class="relative group">
-                                    <span class="absolute left-4 top-3 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                        <i class="fas fa-map-marker-alt text-sm"></i>
-                                    </span>
-                                    <textarea id="input_outlet_address" name="outlet_address" rows="3" placeholder="Masukkan alamat outlet..."
-                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none">{{ $settings['outlet_address'] ?? '' }}</textarea>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label for="input_admin_whatsapp" class="block text-sm font-semibold text-gray-600 mb-1">Nomor WhatsApp Admin</label>
-                                <div class="relative group">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors">
-                                        <i class="fab fa-whatsapp text-sm"></i>
-                                    </span>
-                                    <input type="tel" id="input_admin_whatsapp" name="admin_whatsapp_number" placeholder="628xxxxxxxxxx"
-                                        value="{{ $settings['admin_whatsapp_number'] ?? '' }}"
-                                        class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                </div>
-                                <p class="text-xs text-gray-400 mt-2">Gunakan format angka aktif WhatsApp, misalnya 6281336441994.</p>
-                            </div>
-
-                            <div class="pt-2 border-t border-gray-200">
-                                <h4 class="font-semibold text-gray-800 mb-3">Pengaturan Demo QRIS</h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label for="input_payment_qris_label" class="block text-sm font-semibold text-gray-600 mb-1">Label QRIS Demo</label>
-                                        <input type="text" id="input_payment_qris_label" name="payment_qris_label" placeholder="Contoh: Demo QRIS Chi-Pok"
-                                            value="{{ $settings['payment_qris_label'] ?? '' }}"
-                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                    </div>
-                                    <div>
-                                        <label for="input_payment_qris_image_url" class="block text-sm font-semibold text-gray-600 mb-1">Link / Path Gambar QRIS Demo</label>
-                                        <input type="text" id="input_payment_qris_image_url" name="payment_qris_image_url" placeholder="/asset/qris-chipok.png atau https://..."
-                                            value="{{ $settings['payment_qris_image_url'] ?? '' }}"
-                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                        <p class="text-xs text-gray-400 mt-2">Bisa isi path lokal seperti <span class="font-semibold">/asset/qris-chipok.png</span> atau URL gambar penuh.</p>
-                                    </div>
-                                    <div>
-                                        <label for="input_payment_qris_note" class="block text-sm font-semibold text-gray-600 mb-1">Catatan QRIS Demo</label>
-                                        <textarea id="input_payment_qris_note" name="payment_qris_note" rows="2" placeholder="Contoh: Ini hanya QRIS demo untuk presentasi."
-                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none">{{ $settings['payment_qris_note'] ?? '' }}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="pt-2 border-t border-gray-200">
-                                <h4 class="font-semibold text-gray-800 mb-3">Pengaturan Demo Transfer Bank</h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label for="input_payment_bank_name" class="block text-sm font-semibold text-gray-600 mb-1">Nama Bank Demo</label>
-                                        <input type="text" id="input_payment_bank_name" name="payment_bank_name" placeholder="Contoh: BCA Demo"
-                                            value="{{ $settings['payment_bank_name'] ?? '' }}"
-                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                    </div>
-                                    <div>
-                                        <label for="input_payment_bank_account_number" class="block text-sm font-semibold text-gray-600 mb-1">Nomor Rekening</label>
-                                        <input type="text" id="input_payment_bank_account_number" name="payment_bank_account_number" placeholder="Contoh: 1234567890"
-                                            value="{{ $settings['payment_bank_account_number'] ?? '' }}"
-                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                    </div>
-                                    <div>
-                                        <label for="input_payment_bank_account_name" class="block text-sm font-semibold text-gray-600 mb-1">Nama Pemilik Rekening</label>
-                                        <input type="text" id="input_payment_bank_account_name" name="payment_bank_account_name" placeholder="Contoh: Chi Pok Indonesia"
-                                            value="{{ $settings['payment_bank_account_name'] ?? '' }}"
-                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300">
-                                    </div>
-                                    <div>
-                                        <label for="input_payment_bank_note" class="block text-sm font-semibold text-gray-600 mb-1">Catatan Transfer Bank Demo</label>
-                                        <textarea id="input_payment_bank_note" name="payment_bank_note" rows="2" placeholder="Contoh: Ini hanya rekening demo untuk simulasi."
-                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-sm focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/10 outline-none transition-all duration-300 resize-none">{{ $settings['payment_bank_note'] ?? '' }}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tombol Simpan -->
-                            <button type="submit"
-                                class="w-full py-3.5 bg-gradient-to-r from-[#D20000] to-[#FF2E00] text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide mt-4">
-                                <i class="fas fa-save"></i> SIMPAN PENGATURAN
-                            </button>
-                        </form>
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
          SCRIPT SECTION - Data & JavaScript Files
          ============================================================ -->
+
+    @php
+        $homeCurrentUserData = Auth::check()
+            ? [
+                'id' => Auth::id(),
+                'name' => Auth::user()->name,
+                'no_hp' => Auth::user()->no_hp,
+                'alamat' => Auth::user()->alamat,
+                'role' => Auth::user()->role,
+            ]
+            : null;
+    @endphp
 
     {{-- Meneruskan data produk dari Laravel (PHP) ke JavaScript --}}
     {{-- @json() = helper Blade yang mengkonversi array PHP menjadi JSON --}}
@@ -1500,6 +852,9 @@
         const PRODUCTS_DATA = @json($productsData);                 // Data produk dari database
         const OUTLETS_DATA = @json($outletsData ?? []);            // Data outlet aktif untuk checkout
         const APP_BASE_URL = @json(rtrim(url('/'), '/'));           // Base URL aplikasi (support subfolder)
+        const CHECKOUT_URL = @json(route('checkout'));              // Halaman checkout / keranjang
+        const USER_ORDERS_PAGE_URL = @json(route('user.orders.page')); // Halaman riwayat pesanan user
+        const CURRENT_USER_DATA = @json($homeCurrentUserData);      // Data user login untuk UI awal
         let CSRF_TOKEN = @json(csrf_token());                       // Token CSRF untuk keamanan (mutable)
     </script>
 
