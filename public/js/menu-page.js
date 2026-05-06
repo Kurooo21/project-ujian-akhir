@@ -61,6 +61,12 @@ function updateCartCount() {
     const cartCount = document.getElementById('menu-cart-count');
     if (!cartCount) return;
 
+    if (!currentUserData) {
+        cartCount.textContent = '0';
+        cartCount.classList.add('hidden');
+        return;
+    }
+
     const totalItems = getCartCount();
     if (totalItems > 0) {
         cartCount.textContent = totalItems;

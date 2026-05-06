@@ -14,9 +14,9 @@
 
     .menu-shell {
         background:
-            radial-gradient(circle at top left, rgba(210, 0, 0, 0.12), transparent 34%),
-            radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.14), transparent 30%),
-            linear-gradient(180deg, #fffaf7 0%, #ffffff 48%, #fff5ef 100%);
+            
+
+        
     }
 
     .menu-shell::before {
