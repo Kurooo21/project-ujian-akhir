@@ -20,6 +20,7 @@
 <!-- ================================================================
      BAGIAN HEAD - Metadata & Resource Eksternal
      ================================================================ -->
+
 <head>
     <!-- Encoding karakter UTF-8 (mendukung semua bahasa termasuk Indonesia) -->
     <meta charset="UTF-8">
@@ -48,18 +49,18 @@
                 extend: {
                     colors: {
                         // Warna-warna kustom Chi-Pok
-                        'primary-red': '#D20000',      // Merah utama (logo, tombol)
-                        'accent-red': '#FF2E00',       // Merah aksen (hover effects)
-                        'primary-white': '#FFFFFF',    // Putih
-                        'text-dark': '#333333',        // Warna teks gelap
-                        'text-grey': '#666666',        // Warna teks abu-abu
-                        'bg-light': '#F9F9F9',         // Background terang
-                        'mustard': '#FFC107',          // Kuning mustard (bintang rating)
+                        'primary-red': '#D20000', // Merah utama (logo, tombol)
+                        'accent-red': '#FF2E00', // Merah aksen (hover effects)
+                        'primary-white': '#FFFFFF', // Putih
+                        'text-dark': '#333333', // Warna teks gelap
+                        'text-grey': '#666666', // Warna teks abu-abu
+                        'bg-light': '#F9F9F9', // Background terang
+                        'mustard': '#FFC107', // Kuning mustard (bintang rating)
                     },
                     fontFamily: {
                         // Font kustom
-                        heading: ['Anton', 'sans-serif'],     // Font untuk judul (tebal, bold)
-                        body: ['Poppins', 'sans-serif'],      // Font untuk body text (mudah dibaca)
+                        heading: ['Anton', 'sans-serif'], // Font untuk judul (tebal, bold)
+                        body: ['Poppins', 'sans-serif'], // Font untuk body text (mudah dibaca)
                     },
                     backgroundImage: {
                         // Gambar background kustom untuk section menu
@@ -88,22 +89,33 @@
     <style>
         /* Animasi modal: masuk dari transparan + kecil ke terlihat + ukuran normal */
         @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.9) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         /* Animasi tombol Hamburger (☰) berubah menjadi X saat drawer terbuka */
         .hamburger-line {
-            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+            transition: all 0.3s cubic-bezier(.4, 0, .2, 1);
         }
+
         /* Garis pertama: geser ke bawah 8px + rotasi 45° (membentuk \) */
         .hamburger-btn.active .hamburger-line:nth-child(1) {
             transform: translateY(8px) rotate(45deg);
         }
+
         /* Garis tengah: menghilang (opacity 0) */
         .hamburger-btn.active .hamburger-line:nth-child(2) {
-            opacity: 0; transform: scaleX(0);
+            opacity: 0;
+            transform: scaleX(0);
         }
+
         /* Garis ketiga: geser ke atas 8px + rotasi -45° (membentuk /) */
         .hamburger-btn.active .hamburger-line:nth-child(3) {
             transform: translateY(-8px) rotate(-45deg);
@@ -111,20 +123,28 @@
 
         /* Mobile Drawer: panel navigasi geser dari kanan */
         .mobile-drawer {
-            transform: translateX(100%);  /* Awalnya tersembunyi di luar layar kanan */
-            transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+            transform: translateX(100%);
+            /* Awalnya tersembunyi di luar layar kanan */
+            transition: transform 0.35s cubic-bezier(.4, 0, .2, 1);
         }
+
         .mobile-drawer.open {
-            transform: translateX(0);  /* Saat terbuka: geser ke posisi normal */
+            transform: translateX(0);
+            /* Saat terbuka: geser ke posisi normal */
         }
 
         /* Overlay gelap di belakang drawer (saat drawer terbuka) */
         .drawer-overlay {
-            opacity: 0; pointer-events: none;  /* Awalnya transparan & tidak bisa diklik */
+            opacity: 0;
+            pointer-events: none;
+            /* Awalnya transparan & tidak bisa diklik */
             transition: opacity 0.3s ease;
         }
+
         .drawer-overlay.open {
-            opacity: 1; pointer-events: auto;  /* Saat terbuka: terlihat & bisa diklik */
+            opacity: 1;
+            pointer-events: auto;
+            /* Saat terbuka: terlihat & bisa diklik */
         }
 
         /* SweetAlert2: Pastikan popup selalu di atas semua modal */
@@ -141,6 +161,7 @@
      bg-bg-light = Background abu-abu terang
      overflow-x-hidden = Sembunyikan scroll horizontal
      ================================================================ -->
+
 <body class="font-body bg-bg-light text-text-dark leading-relaxed overflow-x-hidden">
 
     <!-- ============================================================
@@ -151,8 +172,10 @@
          z-50 = di atas semua elemen lain (z-index tinggi)
          backdrop-blur-sm = efek blur transparan di belakang header
          ============================================================ -->
-    <header id="main-header" class="fixed top-0 left-0 w-full z-50 overflow-visible bg-white/95 backdrop-blur-sm shadow-md transition-all duration-300">
-        <div class="container mx-auto px-3 sm:px-4 lg:px-6 py-2 md:py-3 flex justify-between items-center overflow-visible">
+    <header id="main-header"
+        class="fixed top-0 left-0 w-full z-50 overflow-visible bg-white/95 backdrop-blur-sm shadow-md transition-all duration-300">
+        <div
+            class="container mx-auto px-3 sm:px-4 lg:px-6 py-2 md:py-3 flex justify-between items-center overflow-visible">
 
             <!-- Logo: slot tinggi navbar tetap (h-12…h-16), gambar lebih besar di dalam → bar tidak memanjang -->
             <a href="#home"
@@ -196,20 +219,24 @@
                 </button>
                 <!-- Tombol Pengaturan (hidden di mobile) -->
                 @auth
-                <a href="{{ route('user.settings') }}" id="btn-settings" class="hidden sm:block text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
-                    title="Pengaturan">
-                    <i class="fas fa-cog"></i>
-                </a>
+                    <a href="{{ route('user.settings') }}" id="btn-settings"
+                        class="hidden sm:block text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
+                        title="Pengaturan">
+                        <i class="fas fa-cog"></i>
+                    </a>
                 @endauth
                 <!-- Tombol Login/Logout (icon berubah via JavaScript) -->
-                <a href="{{ route('login') }}" id="btn-login" class="text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
+                <a href="{{ route('login') }}" id="btn-login"
+                    class="text-lg sm:text-xl md:text-2xl text-primary-red hover:text-accent-red transition-colors p-1"
                     title="Login / Logout">
                     <i class="fas fa-sign-in-alt"></i>
                 </a>
 
                 <!-- Tombol Hamburger (☰) - Hanya muncul di mobile (md:hidden) -->
                 <!-- Terdiri dari 3 garis yang beranimasi menjadi X -->
-                <button class="hamburger-btn md:hidden flex flex-col justify-center items-center w-8 h-8 gap-[6px] ml-1 relative z-[60]" aria-label="Menu">
+                <button
+                    class="hamburger-btn md:hidden flex flex-col justify-center items-center w-8 h-8 gap-[6px] ml-1 relative z-[60]"
+                    aria-label="Menu">
                     <span class="hamburger-line block w-6 h-[2px] bg-text-dark rounded-full origin-center"></span>
                     <span class="hamburger-line block w-6 h-[2px] bg-text-dark rounded-full origin-center"></span>
                     <span class="hamburger-line block w-6 h-[2px] bg-text-dark rounded-full origin-center"></span>
@@ -228,34 +255,43 @@
          Muncul saat tombol hamburger diklik. Berisi link navigasi,
          tombol login, dan tombol settings.
          ============================================================ -->
-    <nav class="mobile-drawer fixed top-0 right-0 h-full w-[75%] max-w-[320px] bg-white z-[56] md:hidden shadow-2xl flex flex-col">
+    <nav
+        class="mobile-drawer fixed top-0 right-0 h-full w-[75%] max-w-[320px] bg-white z-[56] md:hidden shadow-2xl flex flex-col">
         <!-- Header Drawer: Logo + Tombol Tutup -->
         <div class="flex items-center justify-between p-5 border-b border-gray-100">
             <img src="{{ asset('asset/logo merah.png') }}" alt="Chi-Pok" class="h-10 object-contain">
-            <button class="drawer-close w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500">
+            <button
+                class="drawer-close w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500">
                 <i class="fas fa-times text-lg"></i>
             </button>
         </div>
         <!-- Link Navigasi di Drawer -->
         <ul class="nav-links-mobile flex flex-col py-4 flex-grow">
-            <li><a href="#home" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
-                <i class="fas fa-home text-base w-6 text-center text-gray-400"></i> HOME</a></li>
-            <li><a href="#menu" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
-                <i class="fas fa-utensils text-base w-6 text-center text-gray-400"></i> MENU</a></li>
-            <li><a href="#contact" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
-                <i class="fas fa-envelope text-base w-6 text-center text-gray-400"></i> CONTACT</a></li>
-            <li id="nav-admin-mobile" class="hidden"><a href="#" id="btn-admin-panel-mobile" class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
-                <i class="fas fa-clipboard-check text-base w-6 text-center text-gray-400"></i> PESANAN</a></li>
+            <li><a href="#home"
+                    class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
+                    <i class="fas fa-home text-base w-6 text-center text-gray-400"></i> HOME</a></li>
+            <li><a href="#menu"
+                    class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
+                    <i class="fas fa-utensils text-base w-6 text-center text-gray-400"></i> MENU</a></li>
+            <li><a href="#contact"
+                    class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
+                    <i class="fas fa-envelope text-base w-6 text-center text-gray-400"></i> CONTACT</a></li>
+            <li id="nav-admin-mobile" class="hidden"><a href="#" id="btn-admin-panel-mobile"
+                    class="flex items-center gap-3 px-6 py-4 font-heading text-xl text-text-dark hover:bg-red-50 hover:text-primary-red transition-all duration-200 uppercase tracking-wide">
+                    <i class="fas fa-clipboard-check text-base w-6 text-center text-gray-400"></i> PESANAN</a></li>
         </ul>
         <!-- Footer Drawer: Tombol Settings & Login -->
         <div class="p-5 border-t border-gray-100">
             <div class="flex items-center justify-center gap-4">
                 @auth
-                <a href="{{ route('user.settings') }}" id="btn-settings-mobile" class="w-10 h-10 rounded-full bg-gray-100 text-primary-red flex items-center justify-center hover:bg-red-50 transition-colors" title="Pengaturan">
-                    <i class="fas fa-cog"></i>
-                </a>
+                    <a href="{{ route('user.settings') }}" id="btn-settings-mobile"
+                        class="w-10 h-10 rounded-full bg-gray-100 text-primary-red flex items-center justify-center hover:bg-red-50 transition-colors"
+                        title="Pengaturan">
+                        <i class="fas fa-cog"></i>
+                    </a>
                 @endauth
-                <a href="{{ route('login') }}" id="btn-login-mobile" class="flex-1 py-2.5 bg-gradient-to-r from-primary-red to-accent-red text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:shadow-lg transition-all">
+                <a href="{{ route('login') }}" id="btn-login-mobile"
+                    class="flex-1 py-2.5 bg-gradient-to-r from-primary-red to-accent-red text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:shadow-lg transition-all">
                     <i class="fas fa-sign-in-alt"></i> <span>Login</span>
                 </a>
             </div>
@@ -273,19 +309,22 @@
              prev/next dan dots. Dikelola oleh hero-slider.js.
              mt-[64px] dst = margin top sebesar tinggi header
              ======================================================== -->
-        <section id="home" class="hero relative w-full overflow-hidden mt-[64px] sm:mt-[72px] md:mt-[80px] lg:mt-[88px]">
+        <section id="home"
+            class="hero relative w-full overflow-hidden mt-[64px] sm:mt-[72px] md:mt-[80px] lg:mt-[88px]">
 
             <!-- Container Slider -->
             <div id="hero-slider" class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[700px]">
-                
+
                 <!-- Slide Default 1: Gambar promosi utama -->
-                <div class="hero-slide absolute inset-0 w-full h-100 transition-opacity duration-700 ease-in-out" style="opacity:1;">
+                <div class="hero-slide absolute inset-0 w-full h-100 transition-opacity duration-700 ease-in-out"
+                    style="opacity:1;">
                     <img src="{{ asset('asset/ledakan kelezatan.png') }}" alt="Ledakan Kelezatan"
                         class="w-full h-full object-cover block">
                 </div>
 
                 <!-- Slide Default 2: Gambar vocer promo -->
-                <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out" style="opacity:0;">
+                <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out"
+                    style="opacity:0;">
                     <img src="{{ asset('asset/vocer.jpg') }}" alt="Vocer Promo"
                         class="w-full h-full object-cover block">
                 </div>
@@ -305,7 +344,8 @@
             </button>
 
             <!-- Dots Navigasi Slider (dibuat oleh JavaScript) -->
-            <div id="hero-dots" class="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 flex gap-2 sm:gap-3 hidden">
+            <div id="hero-dots"
+                class="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 flex gap-2 sm:gap-3 hidden">
             </div>
 
         </section>
@@ -388,18 +428,25 @@
              Berisi link media sosial, alamat outlet, jam buka,
              dan peta Google Maps embed
              ======================================================== -->
-        <section id="contact" class="contact bg-[#B30000] py-20 text-white relative">
+        <section id="contact" class="contact bg-[#B30000] py-20 text-white relative ">
             @php
                 $contactOutlets = collect($outletsData ?? [])->values();
                 $primaryOutlet = $contactOutlets->first();
-                $primaryOutletQuery = trim(collect([
-                    data_get($primaryOutlet, 'address'),
-                    data_get($primaryOutlet, 'district'),
-                    data_get($primaryOutlet, 'city'),
-                    data_get($primaryOutlet, 'province'),
-                ])->filter()->implode(', '));
-                $primaryMapsLink = data_get($primaryOutlet, 'maps_url')
-                    ?: ($primaryOutletQuery ? 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($primaryOutletQuery) : 'https://maps.google.com');
+                $primaryOutletQuery = trim(
+                    collect([
+                        data_get($primaryOutlet, 'address'),
+                        data_get($primaryOutlet, 'district'),
+                        data_get($primaryOutlet, 'city'),
+                        data_get($primaryOutlet, 'province'),
+                    ])
+                        ->filter()
+                        ->implode(', '),
+                );
+                $primaryMapsLink =
+                    data_get($primaryOutlet, 'maps_url') ?:
+                    ($primaryOutletQuery
+                        ? 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($primaryOutletQuery)
+                        : 'https://maps.google.com');
                 $primaryMapEmbedUrl = $primaryOutletQuery
                     ? 'https://www.google.com/maps?q=' . rawurlencode($primaryOutletQuery) . '&output=embed'
                     : 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126932.6288647893!2d106.75628659550778!3d-6.186933566160163!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e945e34b9d%3A0x5371bf0fdad786a2!2sJakarta%2C%20Special%20Capital%20Region%20of%20Jakarta%2C%20Indonesia!5e0!3m2!1sen!2sus!4v1707505296053!5m2!1sen!2sus';
@@ -409,7 +456,7 @@
                     class="contact-header absolute top-0 right-0 hidden lg:block opacity-20 hover:opacity-100 transition-opacity duration-300">
                     <div class="footer-logo">
                         <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok Logo White"
-                            class="h-[200px] brightness-0 invert mt-[-90px]">
+                            class="h-[200px] brightness-0 invert mt-[-50px]">
                     </div>
                 </div>
 
@@ -423,7 +470,7 @@
                                 class="w-12 h-12 border-2 border-white rounded-full flex items-center justify-center text-xl transition-all duration-300 hover:bg-white hover:text-[#B30000] transform hover:scale-110"><i
                                     class="fab fa-instagram"></i></a>
                             <a href="{{ $contactWaNumber ? 'https://wa.me/' . $contactWaNumber : '#' }}"
-                                @if($contactWaNumber) target="_blank" rel="noopener" @endif
+                                @if ($contactWaNumber) target="_blank" rel="noopener" @endif
                                 class="w-12 h-12 border-2 border-white rounded-full flex items-center justify-center text-xl transition-all duration-300 hover:bg-white hover:text-[#B30000] transform hover:scale-110"><i
                                     class="fab fa-whatsapp"></i></a>
                             <a href="#"
@@ -437,53 +484,64 @@
                                 <div class="mt-4 space-y-2.5">
                                     @forelse($contactOutlets as $outlet)
                                         @php
-                                            $outletQuery = trim(collect([
-                                                $outlet['address'] ?? null,
-                                                $outlet['district'] ?? null,
-                                                $outlet['city'] ?? null,
-                                                $outlet['province'] ?? null,
-                                            ])->filter()->implode(', '));
-                                            $outletMapsLink = $outlet['maps_url'] ?? ($outletQuery ? 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($outletQuery) : 'https://maps.google.com');
+                                            $outletQuery = trim(
+                                                collect([
+                                                    $outlet['address'] ?? null,
+                                                    $outlet['district'] ?? null,
+                                                    $outlet['city'] ?? null,
+                                                    $outlet['province'] ?? null,
+                                                ])
+                                                    ->filter()
+                                                    ->implode(', '),
+                                            );
+                                            $outletMapsLink =
+                                                $outlet['maps_url'] ??
+                                                ($outletQuery
+                                                    ? 'https://www.google.com/maps/search/?api=1&query=' .
+                                                        rawurlencode($outletQuery)
+                                                    : 'https://maps.google.com');
                                             $outletEmbedUrl = $outletQuery
-                                                ? 'https://www.google.com/maps?q=' . rawurlencode($outletQuery) . '&output=embed'
+                                                ? 'https://www.google.com/maps?q=' .
+                                                    rawurlencode($outletQuery) .
+                                                    '&output=embed'
                                                 : $primaryMapEmbedUrl;
                                         @endphp
-                                        <div
-                                            class="contact-outlet-card rounded-2xl border px-4 py-3 cursor-pointer transition-all duration-300 hover:bg-white/15 {{ $loop->first ? 'border-white/35 bg-white/18 shadow-lg shadow-black/10' : 'border-white/15 bg-white/10' }}"
+                                        <div class="contact-outlet-card rounded-2xl border px-4 py-3 cursor-pointer transition-all duration-300 hover:bg-white/15 {{ $loop->first ? 'border-white/35 bg-white/18 shadow-lg shadow-black/10' : 'border-white/15 bg-white/10' }}"
                                             data-contact-outlet-card
                                             data-outlet-name="{{ $outlet['name'] ?? 'Outlet' }}"
                                             data-outlet-address="{{ $outlet['address'] ?? '-' }}"
                                             data-outlet-embed-url="{{ $outletEmbedUrl }}"
                                             data-outlet-maps-url="{{ $outletMapsLink }}"
-                                            aria-pressed="{{ $loop->first ? 'true' : 'false' }}"
-                                            tabindex="0"
-                                            role="button"
-                                        >
-                                            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                            aria-pressed="{{ $loop->first ? 'true' : 'false' }}" tabindex="0"
+                                            role="button">
+                                            <div
+                                                class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                                 <div>
-                                                    <p class="text-sm font-bold text-white">{{ $outlet['name'] ?? 'Outlet' }}</p>
+                                                    <p class="text-sm font-bold text-white">
+                                                        {{ $outlet['name'] ?? 'Outlet' }}</p>
                                                     <p class="mt-1 text-sm leading-relaxed text-white/85">
-                                                        <i class="fas fa-map-marker-alt mr-2 text-white/60"></i>{{ $outlet['address'] ?? '-' }}
+                                                        <i
+                                                            class="fas fa-map-marker-alt mr-2 text-white/60"></i>{{ $outlet['address'] ?? '-' }}
                                                     </p>
-                                                    @if(!empty($outlet['district']) || !empty($outlet['city']))
-                                                        <p class="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/60">
+                                                    @if (!empty($outlet['district']) || !empty($outlet['city']))
+                                                        <p
+                                                            class="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/60">
                                                             {{ collect([$outlet['district'] ?? null, $outlet['city'] ?? null])->filter()->implode(' • ') }}
                                                         </p>
                                                     @endif
                                                 </div>
-                                                @if(!empty($outletMapsLink))
-                                                    <button
-                                                        type="button"
+                                                @if (!empty($outletMapsLink))
+                                                    <button type="button"
                                                         class="inline-flex w-fit items-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#B30000] transition hover:bg-gray-100"
-                                                        data-contact-outlet-trigger
-                                                    >
+                                                        data-contact-outlet-trigger>
                                                         <i class="fas fa-location-arrow mr-2 text-[10px]"></i>Maps
                                                     </button>
                                                 @endif
                                             </div>
                                         </div>
                                     @empty
-                                        <p class="rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-3 text-sm text-white/75">
+                                        <p
+                                            class="rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-3 text-sm text-white/75">
                                             Outlet aktif belum tersedia.
                                         </p>
                                     @endforelse
@@ -496,31 +554,33 @@
                             </div>
                         </div>
 
-                        <p class="copyright mt-12 text-sm opacity-80">© 2026 Chi Pok Indonesia. All Rights Reserved!</p>
+                        <p class="copyright mt-12 text-sm opacity-80">© 2026 Chi Pok Indonesia. All Rights Reserved!
+                        </p>
                     </div>
 
                     <div class="contact-right flex-1 min-w-[300px] space-y-6">
-                        <h2 class="section-title text-white font-heading text-4xl mb-6 uppercase">CONTACT</h2>
+                        <h2 class="section-title  text-white font-heading text-4xl mb-6 uppercase"style='margin-top:30px;'>CONTACT</h2>
                         <div
-                            class="map-container rounded-[20px] overflow-hidden h-[300px] bg-gray-200 shadow-lg relative group">
-                            <iframe
-                                id="contact-map-frame"
-                                src="{{ $primaryMapEmbedUrl }}"
-                                width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
+                            class="map-container  rounded-[20px] overflow-visible h-[300px] bg-gray-200 shadow-lg relative group "style="margin-top: 60px;">
+                            <iframe id="contact-map-frame" src="{{ $primaryMapEmbedUrl }}" width="100%"
+                                height="100%" style="border:0;" allowfullscreen="" loading="lazy"
                                 referrerpolicy="no-referrer-when-downgrade"
                                 class="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500"></iframe>
                             <a id="contact-map-link" href="{{ $primaryMapsLink }}" target="_blank" rel="noopener"
-                                class="btn btn-white absolute bottom-4 right-4 bg-white text-[#B30000] px-6 py-2 rounded-full font-bold shadow-md hover:bg-gray-100 transition-colors z-10 text-sm">BUKA
+                                class="btn btn-white absolute bottom-4 right-2 bg-white text-[#B30000] px-6 py-2 rounded-full font-bold shadow-md hover:bg-gray-100 transition-colors z-10 text-sm">BUKA
                                 DI MAPS</a>
                         </div>
 
                         <div class="hidden rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                                 <div>
-                                    <h3 class="font-heading text-2xl text-white uppercase tracking-wide">Outlet Tersedia</h3>
-                                    <p class="text-sm text-white/70">Pilih outlet yang paling dekat dengan area kamu.</p>
+                                    <h3 class="font-heading text-2xl text-white uppercase tracking-wide">Outlet
+                                        Tersedia</h3>
+                                    <p class="text-sm text-white/70">Pilih outlet yang paling dekat dengan area kamu.
+                                    </p>
                                 </div>
-                                <span class="inline-flex w-fit items-center rounded-full border border-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
+                                <span
+                                    class="inline-flex w-fit items-center rounded-full border border-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
                                     {{ $contactOutlets->count() }} Outlet
                                 </span>
                             </div>
@@ -530,26 +590,31 @@
                                     <div class="rounded-2xl border border-white/10 bg-black/10 p-4 text-white">
                                         <div class="flex items-start justify-between gap-3">
                                             <div>
-                                                <h4 class="text-base font-bold leading-tight">{{ $outlet['name'] ?? 'Outlet' }}</h4>
+                                                <h4 class="text-base font-bold leading-tight">
+                                                    {{ $outlet['name'] ?? 'Outlet' }}</h4>
                                                 <p class="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/60">
-                                                    {{ collect([$outlet['district'] ?? null, $outlet['city'] ?? null])->filter()->implode(' • ') ?: 'Area outlet' }}
+                                                    {{ collect([$outlet['district'] ?? null, $outlet['city'] ?? null])->filter()->implode(' • ') ?:'Area outlet' }}
                                                 </p>
                                             </div>
-                                            <span class="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-300"></span>
+                                            <span
+                                                class="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-300"></span>
                                         </div>
 
                                         <p class="mt-3 text-sm leading-relaxed text-white/85">
-                                            <i class="fas fa-map-marker-alt mr-2 text-white/60"></i>{{ $outlet['address'] ?? '-' }}
+                                            <i
+                                                class="fas fa-map-marker-alt mr-2 text-white/60"></i>{{ $outlet['address'] ?? '-' }}
                                         </p>
 
                                         <div class="mt-4 flex flex-wrap items-center gap-2">
-                                            @if(!empty($outlet['phone']))
-                                                <span class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/85">
-                                                    <i class="fas fa-phone-alt mr-2 text-[10px] text-white/60"></i>{{ $outlet['phone'] }}
+                                            @if (!empty($outlet['phone']))
+                                                <span
+                                                    class="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/85">
+                                                    <i
+                                                        class="fas fa-phone-alt mr-2 text-[10px] text-white/60"></i>{{ $outlet['phone'] }}
                                                 </span>
                                             @endif
 
-                                            @if(!empty($outlet['maps_url']))
+                                            @if (!empty($outlet['maps_url']))
                                                 <a href="{{ $outlet['maps_url'] }}" target="_blank" rel="noopener"
                                                     class="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#B30000] transition hover:bg-gray-100">
                                                     <i class="fas fa-location-arrow mr-2 text-[10px]"></i>Lihat Maps
@@ -558,340 +623,357 @@
                                         </div>
                                     </div>
                                 @empty
-                                    <div class="xl:col-span-2 rounded-2xl border border-dashed border-white/20 bg-black/10 px-4 py-5 text-sm text-white/75">
-                                        Outlet aktif belum tersedia. Admin bisa menambahkannya dari menu manajemen outlet.
+                                    <div
+                                        class="xl:col-span-2 rounded-2xl border border-dashed border-white/20 bg-black/10 px-4 py-5 text-sm text-white/75">
+                                        Outlet aktif belum tersedia. Admin bisa menambahkannya dari menu manajemen
+                                        outlet.
                                     </div>
                                 @endforelse
                             </div>
                         </div>
                     </div>
                 </div>
-                </div>
             </div>
-        </div>
-    </div>
+            </div>
+            </div>
+            </div>
 
-    <!-- Admin Panel Modal -->
-    <div id="adminModal" class="fixed inset-0 z-[2003] hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-            <div
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start flex-col w-full">
-                        <div class="flex justify-between items-center w-full mb-6 border-b pb-4">
-                            <h3 class="text-3xl font-heading text-red-600" id="modal-title">PANEL ADMIN</h3>
-                            <button type="button" id="closeAdminModal"
-                                class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                                <span class="sr-only">Close</span>
-                                <i class="fas fa-times text-2xl"></i>
-                            </button>
-                        </div>
-
-                        <!-- Tabs -->
-                        <div class="w-full mb-4">
-                            <div class="border-b border-gray-200">
-                                <nav class="-mb-px flex" aria-label="Tabs">
-                                    <button id="tab-orders"
-                                        class="border-red-500 text-red-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm w-full text-center hover:bg-red-50 transition-colors">
-                                        Data Pesanan
+            <!-- Admin Panel Modal -->
+            <div id="adminModal" class="fixed inset-0 z-[2003] hidden overflow-y-auto" aria-labelledby="modal-title"
+                role="dialog" aria-modal="true">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+                    <div
+                        class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start flex-col w-full">
+                                <div class="flex justify-between items-center w-full mb-6 border-b pb-4">
+                                    <h3 class="text-3xl font-heading text-red-600" id="modal-title">PANEL ADMIN</h3>
+                                    <button type="button" id="closeAdminModal"
+                                        class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                        <span class="sr-only">Close</span>
+                                        <i class="fas fa-times text-2xl"></i>
                                     </button>
-                                </nav>
-                            </div>
-                        </div>
-
-                        <!-- Orders Content -->
-                        <div id="content-orders" class="w-full">
-                            <!-- Container untuk List Pesanan (Minimalist Grid/Card Style) -->
-                            <div id="orders-table-body" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto p-2 custom-scrollbar">
-                                <div class="col-span-full p-6 text-center text-sm text-gray-500">Belum ada pesanan masuk.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================ -->
-    <!-- USER ORDERS MODAL — User Modal to Track Orders                   -->
-    <!-- ================================================================ -->
-    <div id="userOrdersModal" class="fixed inset-0 z-[2003] hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
-        <div class="flex min-h-screen items-center justify-center p-4">
-            <div class="relative w-full max-w-4xl overflow-hidden rounded-[28px] bg-white text-left shadow-2xl ring-1 ring-slate-200 animate-[modalIn_0.3s_ease-out]">
-                <div class="relative px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
-                    <div class="flex items-start justify-between gap-4 mb-5">
-                        <div class="flex items-start gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
-                                <i class="fas fa-receipt text-base"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">Pesanan Saya</h3>
-                                <p class="text-sm text-slate-500 mt-1">Lihat status pembayaran dan progres pesananmu dengan tampilan yang lebih sederhana.</p>
-                            </div>
-                        </div>
-                        <button type="button" id="closeUserOrdersModal"
-                            class="text-slate-400 hover:text-red-500 transition-colors w-10 h-10 rounded-full hover:bg-slate-50 flex items-center justify-center border border-slate-200 bg-white">
-                            <i class="fas fa-times text-base"></i>
-                        </button>
-                    </div>
-
-                    <div id="user-orders-summary" class="flex flex-wrap gap-2 mb-4">
-                        <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-                            <span class="font-semibold">Total</span>
-                            <span class="font-bold text-slate-900">0</span>
-                        </div>
-                    </div>
-
-                    <div class="w-full">
-                        <!-- Container untuk List Pesanan (Card Style) -->
-                        <div id="user-orders-list" class="space-y-3 max-h-[62vh] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
-                            <div class="p-6 text-center text-gray-500">Belum ada riwayat pesanan.</div>
-                        </div>
-                    </div>
-
-                        <!-- Settings Content (Layout Mode) -->
-                        <div id="content-settings" class="w-full hidden">
-                            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
-                                <h4 class="text-xl font-bold text-gray-900 mb-6">Pilih Mode Tampilan Menu</h4>
-                                <div class="flex justify-center gap-8">
-                                    <label class="cursor-pointer group">
-                                        <input type="radio" name="layout_mode" value="grid" class="hidden peer">
-                                        <div
-                                            class="w-40 h-32 border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 peer-checked:border-red-600 peer-checked:bg-red-50 hover:bg-gray-100 transition-all">
-                                            <i class="fas fa-th-large text-3xl text-gray-400"></i>
-                                            <span class="font-bold text-gray-500">Grid/Kotak</span>
-                                        </div>
-                                    </label>
-                                    <label class="cursor-pointer group">
-                                        <input type="radio" name="layout_mode" value="list" class="hidden peer">
-                                        <div
-                                            class="w-40 h-32 border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 peer-checked:border-red-600 peer-checked:bg-red-50 hover:bg-gray-100 transition-all">
-                                            <i class="fas fa-list text-3xl text-gray-400"></i>
-                                            <span class="font-bold text-gray-500">List/Daftar</span>
-                                        </div>
-                                    </label>
                                 </div>
-                                <p class="mt-6 text-sm text-gray-500">
-                                    * Pengaturan ini akan mengubah tampilan menu untuk <b>Semua Pengunjung</b>.
-                                </p>
+
+                                <!-- Tabs -->
+                                <div class="w-full mb-4">
+                                    <div class="border-b border-gray-200">
+                                        <nav class="-mb-px flex" aria-label="Tabs">
+                                            <button id="tab-orders"
+                                                class="border-red-500 text-red-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm w-full text-center hover:bg-red-50 transition-colors">
+                                                Data Pesanan
+                                            </button>
+                                        </nav>
+                                    </div>
+                                </div>
+
+                                <!-- Orders Content -->
+                                <div id="content-orders" class="w-full">
+                                    <!-- Container untuk List Pesanan (Minimalist Grid/Card Style) -->
+                                    <div id="orders-table-body"
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto p-2 custom-scrollbar">
+                                        <div class="col-span-full p-6 text-center text-sm text-gray-500">Belum ada
+                                            pesanan masuk.</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Admin Floating Action Button (FAB) -->
-    <button id="btn-add-menu-fab"
-        class="fixed bottom-8 right-8 bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-transform hover:scale-110 z-[1999] hidden flex items-center gap-2 group">
-        <i class="fas fa-plus text-xl"></i>
-        <span
-            class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-out whitespace-nowrap">Tambah
-            Menu</span>
-    </button>
-
-    <!-- Review Modal -->
-    <div id="reviewModal" class="fixed inset-0 z-[2005] hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-            <div
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div
-                            class="hidden sm:block mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <i class="fas fa-star text-yellow-500 mt-3 ml-3"></i>
-                        </div>
-                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                            <h3 class="text-xl font-bold leading-6 text-gray-900" id="modal-title">Ulasan Produk</h3>
-                            <p class="text-sm text-gray-500 mb-4">Untuk <span id="review-product-name"
-                                    class="font-bold text-gray-800"></span></p>
-
-                            <!-- Existing Reviews List -->
-                            <div id="existing-reviews" class="mb-6 max-h-60 overflow-y-auto space-y-3 text-left">
+            <!-- ================================================================ -->
+            <!-- USER ORDERS MODAL — User Modal to Track Orders                   -->
+            <!-- ================================================================ -->
+            <div id="userOrdersModal" class="fixed inset-0 z-[2003] hidden overflow-y-auto"
+                aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+                <div class="flex min-h-screen items-center justify-center p-4">
+                    <div
+                        class="relative w-full max-w-4xl overflow-hidden rounded-[28px] bg-white text-left shadow-2xl ring-1 ring-slate-200 animate-[modalIn_0.3s_ease-out]">
+                        <div class="relative px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
+                            <div class="flex items-start justify-between gap-4 mb-5">
+                                <div class="flex items-start gap-3">
+                                    <div
+                                        class="w-11 h-11 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+                                        <i class="fas fa-receipt text-base"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">Pesanan
+                                            Saya</h3>
+                                        <p class="text-sm text-slate-500 mt-1">Lihat status pembayaran dan progres
+                                            pesananmu dengan tampilan yang lebih sederhana.</p>
+                                    </div>
+                                </div>
+                                <button type="button" id="closeUserOrdersModal"
+                                    class="text-slate-400 hover:text-red-500 transition-colors w-10 h-10 rounded-full hover:bg-slate-50 flex items-center justify-center border border-slate-200 bg-white">
+                                    <i class="fas fa-times text-base"></i>
+                                </button>
                             </div>
 
-                            <div class="border-t pt-4">
-                                <h4 class="font-bold text-sm text-gray-900 mb-2">Tulis Ulasan Baru</h4>
-                                <form id="reviewForm" class="space-y-4">
-                                    <input type="hidden" id="review_product_id">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Rating</label>
-                                        <div class="flex gap-2 mt-1 justify-center sm:justify-start"
-                                            id="star-rating-input">
-                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
-                                                data-value="1"></i>
-                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
-                                                data-value="2"></i>
-                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
-                                                data-value="3"></i>
-                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
-                                                data-value="4"></i>
-                                            <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
-                                                data-value="5"></i>
-                                        </div>
-                                        <input type="hidden" id="review_rating" required>
+                            <div id="user-orders-summary" class="flex flex-wrap gap-2 mb-4">
+                                <div
+                                    class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                                    <span class="font-semibold">Total</span>
+                                    <span class="font-bold text-slate-900">0</span>
+                                </div>
+                            </div>
+
+                            <div class="w-full">
+                                <!-- Container untuk List Pesanan (Card Style) -->
+                                <div id="user-orders-list"
+                                    class="space-y-3 max-h-[62vh] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
+                                    <div class="p-6 text-center text-gray-500">Belum ada riwayat pesanan.</div>
+                                </div>
+                            </div>
+
+                            <!-- Settings Content (Layout Mode) -->
+                            <div id="content-settings" class="w-full hidden">
+                                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
+                                    <h4 class="text-xl font-bold text-gray-900 mb-6">Pilih Mode Tampilan Menu</h4>
+                                    <div class="flex justify-center gap-8">
+                                        <label class="cursor-pointer group">
+                                            <input type="radio" name="layout_mode" value="grid"
+                                                class="hidden peer">
+                                            <div
+                                                class="w-40 h-32 border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 peer-checked:border-red-600 peer-checked:bg-red-50 hover:bg-gray-100 transition-all">
+                                                <i class="fas fa-th-large text-3xl text-gray-400"></i>
+                                                <span class="font-bold text-gray-500">Grid/Kotak</span>
+                                            </div>
+                                        </label>
+                                        <label class="cursor-pointer group">
+                                            <input type="radio" name="layout_mode" value="list"
+                                                class="hidden peer">
+                                            <div
+                                                class="w-40 h-32 border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 peer-checked:border-red-600 peer-checked:bg-red-50 hover:bg-gray-100 transition-all">
+                                                <i class="fas fa-list text-3xl text-gray-400"></i>
+                                                <span class="font-bold text-gray-500">List/Daftar</span>
+                                            </div>
+                                        </label>
                                     </div>
-                                    <div>
-                                        <label for="review_comment"
-                                            class="block text-sm font-medium text-gray-700">Komentar</label>
-                                        <textarea id="review_comment" rows="3"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"
-                                            placeholder="Ceritakan pengalamanmu..."></textarea>
-                                    </div>
-                                    <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                                        <button type="submit"
-                                            class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Kirim
-                                            Ulasan</button>
-                                        <button type="button" id="closeReviewModal"
-                                            class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Tutup</button>
-                                    </div>
-                                </form>
+                                    <p class="mt-6 text-sm text-gray-500">
+                                        * Pengaturan ini akan mengubah tampilan menu untuk <b>Semua Pengunjung</b>.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+            </div>
 
-    <!-- ============================================================
+            <!-- Admin Floating Action Button (FAB) -->
+            <button id="btn-add-menu-fab"
+                class="fixed bottom-8 right-8 bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-transform hover:scale-110 z-[1999] hidden flex items-center gap-2 group">
+                <i class="fas fa-plus text-xl"></i>
+                <span
+                    class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-out whitespace-nowrap">Tambah
+                    Menu</span>
+            </button>
+
+            <!-- Review Modal -->
+            <div id="reviewModal" class="fixed inset-0 z-[2005] hidden overflow-y-auto" aria-labelledby="modal-title"
+                role="dialog" aria-modal="true">
+                <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                    <div
+                        class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div
+                                    class="hidden sm:block mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <i class="fas fa-star text-yellow-500 mt-3 ml-3"></i>
+                                </div>
+                                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                    <h3 class="text-xl font-bold leading-6 text-gray-900" id="modal-title">Ulasan
+                                        Produk</h3>
+                                    <p class="text-sm text-gray-500 mb-4">Untuk <span id="review-product-name"
+                                            class="font-bold text-gray-800"></span></p>
+
+                                    <!-- Existing Reviews List -->
+                                    <div id="existing-reviews"
+                                        class="mb-6 max-h-60 overflow-y-auto space-y-3 text-left">
+                                    </div>
+
+                                    <div class="border-t pt-4">
+                                        <h4 class="font-bold text-sm text-gray-900 mb-2">Tulis Ulasan Baru</h4>
+                                        <form id="reviewForm" class="space-y-4">
+                                            <input type="hidden" id="review_product_id">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Rating</label>
+                                                <div class="flex gap-2 mt-1 justify-center sm:justify-start"
+                                                    id="star-rating-input">
+                                                    <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                        data-value="1"></i>
+                                                    <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                        data-value="2"></i>
+                                                    <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                        data-value="3"></i>
+                                                    <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                        data-value="4"></i>
+                                                    <i class="far fa-star text-2xl text-yellow-400 cursor-pointer hover:scale-110 transition"
+                                                        data-value="5"></i>
+                                                </div>
+                                                <input type="hidden" id="review_rating" required>
+                                            </div>
+                                            <div>
+                                                <label for="review_comment"
+                                                    class="block text-sm font-medium text-gray-700">Komentar</label>
+                                                <textarea id="review_comment" rows="3"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"
+                                                    placeholder="Ceritakan pengalamanmu..."></textarea>
+                                            </div>
+                                            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                                <button type="submit"
+                                                    class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Kirim
+                                                    Ulasan</button>
+                                                <button type="button" id="closeReviewModal"
+                                                    class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Tutup</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================
          MODAL TAMBAH MENU (Admin Only)
          ============================================================
          Form untuk menambah produk baru ke database.
          Berisi input: nama, harga, deskripsi, URL gambar, kategori
          ============================================================ -->
-    <div id="addMenuModal" class="fixed inset-0 z-[2004] hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-            <!-- Overlay gelap -->
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-            <div
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                    <h3 class="text-xl font-bold mb-4">Tambah Menu Baru</h3>
-                    <form id="addMenuForm" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Nama Menu</label>
-                            <input type="text" id="new_menu_name" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Harga</label>
-                            <div class="mt-1 flex rounded-md shadow-sm border">
-                                <span class="inline-flex items-center px-3 rounded-l-md bg-gray-50 text-gray-500 text-sm font-medium border-r">Rp</span>
-                                <input type="text" id="new_menu_price_display" required placeholder="25,000" inputmode="numeric"
-                                    class="block w-full rounded-r-md border-0 focus:ring-red-500 focus:border-red-500 sm:text-sm p-2">
-                            </div>
-                            <input type="hidden" id="new_menu_price" value="">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
-                            <textarea id="new_menu_desc" rows="3" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Gambar Menu</label>
-                            <div class="mt-1 flex items-center gap-4">
-                                <div id="new_menu_img_preview" class="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
-                                    <i class="fas fa-image text-2xl text-gray-300"></i>
+            <div id="addMenuModal" class="fixed inset-0 z-[2004] hidden overflow-y-auto"
+                aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                    <!-- Overlay gelap -->
+                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                    <div
+                        class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <h3 class="text-xl font-bold mb-4">Tambah Menu Baru</h3>
+                            <form id="addMenuForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Nama Menu</label>
+                                    <input type="text" id="new_menu_name" required
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
                                 </div>
-                                <div class="flex-1">
-                                    <input type="file" id="new_menu_img" accept="image/*"
-                                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-600 hover:file:bg-red-100 cursor-pointer">
-                                    <p class="mt-1 text-xs text-gray-400">PNG, JPG, JPEG (maks. 2MB)</p>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Harga</label>
+                                    <div class="mt-1 flex rounded-md shadow-sm border">
+                                        <span
+                                            class="inline-flex items-center px-3 rounded-l-md bg-gray-50 text-gray-500 text-sm font-medium border-r">Rp</span>
+                                        <input type="text" id="new_menu_price_display" required
+                                            placeholder="25,000" inputmode="numeric"
+                                            class="block w-full rounded-r-md border-0 focus:ring-red-500 focus:border-red-500 sm:text-sm p-2">
+                                    </div>
+                                    <input type="hidden" id="new_menu_price" value="">
                                 </div>
-                            </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                                    <textarea id="new_menu_desc" rows="3" required
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Gambar Menu</label>
+                                    <div class="mt-1 flex items-center gap-4">
+                                        <div id="new_menu_img_preview"
+                                            class="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+                                            <i class="fas fa-image text-2xl text-gray-300"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <input type="file" id="new_menu_img" accept="image/*"
+                                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-600 hover:file:bg-red-100 cursor-pointer">
+                                            <p class="mt-1 text-xs text-gray-400">PNG, JPG, JPEG (maks. 2MB)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Kategori</label>
+                                    <select id="new_menu_category"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
+                                        <option value="makanan">🍗 Makanan</option>
+                                        <option value="minuman">🥤 Minuman</option>
+                                    </select>
+                                </div>
+                                <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                                    <button type="submit"
+                                        class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:col-start-2">Tambah</button>
+                                    <button type="button" id="closeAddMenuModal"
+                                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0">Batal</button>
+                                </div>
+                            </form>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Kategori</label>
-                            <select id="new_menu_category"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm border p-2">
-                                <option value="makanan">🍗 Makanan</option>
-                                <option value="minuman">🥤 Minuman</option>
-                            </select>
-                        </div>
-                        <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                            <button type="submit"
-                                class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:col-start-2">Tambah</button>
-                            <button type="button" id="closeAddMenuModal"
-                                class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0">Batal</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- ============================================================
+            <!-- ============================================================
          SCRIPT SECTION - Data & JavaScript Files
          ============================================================ -->
 
-    @php
-        $homeCurrentUserData = Auth::check()
-            ? [
-                'id' => Auth::id(),
-                'name' => Auth::user()->name,
-                'no_hp' => Auth::user()->no_hp,
-                'alamat' => Auth::user()->alamat,
-                'role' => Auth::user()->role,
-            ]
-            : null;
-    @endphp
+            @php
+                $homeCurrentUserData = Auth::check()
+                    ? [
+                        'id' => Auth::id(),
+                        'name' => Auth::user()->name,
+                        'no_hp' => Auth::user()->no_hp,
+                        'alamat' => Auth::user()->alamat,
+                        'role' => Auth::user()->role,
+                    ]
+                    : null;
+            @endphp
 
-    {{-- Meneruskan data produk dari Laravel (PHP) ke JavaScript --}}
-    {{-- @json() = helper Blade yang mengkonversi array PHP menjadi JSON --}}
-    {{-- Sehingga variabel PRODUCTS_DATA bisa diakses di app.js --}}
-    <script>
-        const PRODUCTS_DATA = @json($productsData);                 // Data produk dari database
-        const OUTLETS_DATA = @json($outletsData ?? []);            // Data outlet aktif untuk checkout
-        const APP_BASE_URL = @json(rtrim(url('/'), '/'));           // Base URL aplikasi (support subfolder)
-        const CHECKOUT_URL = @json(route('checkout'));              // Halaman checkout / keranjang
-        const USER_ORDERS_PAGE_URL = @json(route('user.orders.page')); // Halaman riwayat pesanan user
-        const CURRENT_USER_DATA = @json($homeCurrentUserData);      // Data user login untuk UI awal
-        let CSRF_TOKEN = @json(csrf_token());                       // Token CSRF untuk keamanan (mutable)
-    </script>
+            {{-- Meneruskan data produk dari Laravel (PHP) ke JavaScript --}}
+            {{-- @json() = helper Blade yang mengkonversi array PHP menjadi JSON --}}
+            {{-- Sehingga variabel PRODUCTS_DATA bisa diakses di app.js --}}
+            <script>
+                const PRODUCTS_DATA = @json($productsData); // Data produk dari database
+                const OUTLETS_DATA = @json($outletsData ?? []); // Data outlet aktif untuk checkout
+                const APP_BASE_URL = @json(rtrim(url('/'), '/')); // Base URL aplikasi (support subfolder)
+                const CHECKOUT_URL = @json(route('checkout')); // Halaman checkout / keranjang
+                const USER_ORDERS_PAGE_URL = @json(route('user.orders.page')); // Halaman riwayat pesanan user
+                const CURRENT_USER_DATA = @json($homeCurrentUserData); // Data user login untuk UI awal
+                let CSRF_TOKEN = @json(csrf_token()); // Token CSRF untuk keamanan (mutable)
+            </script>
 
-    <!-- JavaScript Files -->
-    <!-- ?v={{ time() }} = cache buster, mencegah browser menyimpan versi lama -->
-    <script src="{{ asset('js/hero-slider.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/app.js') }}?v={{ time() }}"></script>
+            <!-- JavaScript Files -->
+            <!-- ?v={{ time() }} = cache buster, mencegah browser menyimpan versi lama -->
+            <script src="{{ asset('js/hero-slider.js') }}?v={{ time() }}"></script>
+            <script src="{{ asset('js/app.js') }}?v={{ time() }}"></script>
 
-    <script>
-        /**
-         * togglePassword() - Toggle tampilkan/sembunyikan password
-         * Saat tombol mata (eye icon) diklik, input password berubah:
-         * type="password" → type="text" (terlihat)
-         * type="text" → type="password" (tersembunyi)
-         */
-        function togglePassword(inputId, btn) {
-            const input = document.getElementById(inputId);
-            const icon = btn.querySelector('i');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye-slash');  // Tampilkan password
-                icon.classList.add('fa-eye'); 
-                 // Ubah icon jadi mata coret
-            } else {
-                input.type = 'password';           // Sembunyikan password
-                 icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');      // Ubah icon jadi mata terbuka
-            }
-        }
+            <script>
+                /**
+                 * togglePassword() - Toggle tampilkan/sembunyikan password
+                 * Saat tombol mata (eye icon) diklik, input password berubah:
+                 * type="password" → type="text" (terlihat)
+                 * type="text" → type="password" (tersembunyi)
+                 */
+                function togglePassword(inputId, btn) {
+                    const input = document.getElementById(inputId);
+                    const icon = btn.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye-slash'); // Tampilkan password
+                        icon.classList.add('fa-eye');
+                        // Ubah icon jadi mata coret
+                    } else {
+                        input.type = 'password'; // Sembunyikan password
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash'); // Ubah icon jadi mata terbuka
+                    }
+                }
 
-        // Link "Masuk disini" di modal signup → pindah ke modal login
-        document.getElementById('link-login-from-signup')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('signupModal').classList.add('hidden');    // Tutup signup
-            document.getElementById('loginModal').classList.remove('hidden'); // Buka login
-        });
-    </script>
+                // Link "Masuk disini" di modal signup → pindah ke modal login
+                document.getElementById('link-login-from-signup')?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('signupModal').classList.add('hidden'); // Tutup signup
+                    document.getElementById('loginModal').classList.remove('hidden'); // Buka login
+                });
+            </script>
 </body>
 
 </html>

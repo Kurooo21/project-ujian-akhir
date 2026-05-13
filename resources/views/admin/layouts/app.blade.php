@@ -121,15 +121,7 @@
                 Kasir
             </a>
 
-            <a href="{{ route('admin.pelanggan') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-1 {{ $currentRoute == 'admin.pelanggan' ? 'bg-white text-black shadow-[0_2px_8px_rgba(37,99,235,0.35)]' : 'text-slate-300 hover:bg-white hover:text-black' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 flex-shrink-0">
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 010 7.75"/>
-                </svg>
-                Pelanggan
-            </a>
+
         </nav>
 
         <!-- Sidebar Footer -->

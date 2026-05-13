@@ -82,12 +82,12 @@
                         Semua
                     </button>
                     <button type="button" data-category="makanan"
-                        class="menu-category-tab inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold uppercase tracking-wide text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-600">
+                        class="menu-category-tab inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold uppercase tracking-wide text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-white-600">
                         <i class="fas fa-drumstick-bite text-xs"></i>
                         Makanan
                     </button>
                     <button type="button" data-category="minuman"
-                        class="menu-category-tab inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold uppercase tracking-wide text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-600">
+                        class="menu-category-tab inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold uppercase tracking-wide text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-white-600">
                         <i class="fas fa-glass-water text-xs"></i>
                         Minuman
                     </button>

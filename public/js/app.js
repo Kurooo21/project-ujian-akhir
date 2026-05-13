@@ -2560,12 +2560,14 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
+    const isStandaloneUserOrdersPage = Boolean(document.querySelector('[data-user-orders-page="true"]'));
+
     async function renderUserOrdersTable() {
         const listContainer = document.getElementById('user-orders-list');
         if (!listContainer) return;
         renderUserOrdersSummary([]);
         listContainer.innerHTML = `
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse">
+            <div class="user-order-state rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse">
                 <div class="h-4 w-28 rounded-full bg-slate-200 mb-3"></div>
                 <div class="h-5 w-40 rounded-full bg-slate-200 mb-4"></div>
                 <div class="h-4 w-full rounded-full bg-slate-100 mb-2"></div>
@@ -2580,7 +2582,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="h-5 w-24 rounded-full bg-slate-200"></div>
                 </div>
             </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse">
+            <div class="user-order-state rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse">
                 <div class="h-4 w-28 rounded-full bg-slate-200 mb-3"></div>
                 <div class="h-5 w-40 rounded-full bg-slate-200 mb-4"></div>
                 <div class="h-4 w-full rounded-full bg-slate-100 mb-2"></div>
@@ -2604,7 +2606,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 listContainer.innerHTML = '';
                 result.data.forEach(order => {
                     const card = document.createElement('div');
-                    card.className = 'rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm transition hover:shadow-md';
+                    card.className = `user-order-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md sm:p-5 ${isStandaloneUserOrdersPage ? 'h-full' : ''}`.trim();
                     const orderType = normalizeOrderType(order.jenis);
                     const statusMeta = getUserOrderStatusMeta(order.status);
                     const paymentMeta = getUserPaymentMeta(order.payment_status);
@@ -2703,11 +2705,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             } else {
                 renderUserOrdersSummary([]);
-                listContainer.innerHTML = '<div class="rounded-2xl border border-dashed border-red-100 bg-red-50/40 p-8 text-center text-sm text-red-700 flex flex-col items-center justify-center"><div class="w-14 h-14 rounded-2xl bg-white text-red-400 flex items-center justify-center mb-4 border border-red-100"><i class="fas fa-receipt text-xl"></i></div><p class="text-base font-semibold text-red-900 mb-1">Belum ada pesanan aktif</p><p>Yuk pilih menu favoritmu, nanti riwayat pesanan akan muncul di sini.</p></div>';
+                listContainer.innerHTML = '<div class="user-order-state rounded-2xl border border-dashed border-red-100 bg-red-50/40 p-8 text-center text-sm text-red-700 flex flex-col items-center justify-center"><div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-red-100 bg-white text-red-400"><i class="fas fa-receipt text-xl"></i></div><p class="mb-1 text-base font-semibold text-red-900">Belum ada pesanan aktif</p><p>Yuk pilih menu favoritmu, nanti riwayat pesanan akan muncul di sini.</p></div>';
             }
         } catch (err) {
             renderUserOrdersSummary([]);
-            listContainer.innerHTML = '<div class="rounded-2xl border border-red-100 bg-red-50 p-8 text-center text-sm text-red-600">Gagal memuat pesanan. Coba tutup lalu buka lagi jendela ini.</div>';
+            listContainer.innerHTML = '<div class="user-order-state rounded-2xl border border-red-100 bg-red-50 p-8 text-center text-sm text-red-600">Gagal memuat pesanan. Coba tutup lalu buka lagi jendela ini.</div>';
         }
     }
 

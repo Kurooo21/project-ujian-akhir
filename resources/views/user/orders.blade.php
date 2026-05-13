@@ -18,6 +18,46 @@
             radial-gradient(circle at bottom right, rgba(226, 232, 240, 0.7), transparent 26%),
             linear-gradient(180deg, #f8fafc 0%, #ffffff 48%, #f8fafc 100%);
     }
+
+    .orders-shell__frame {
+        width: min(100%, 1380px);
+    }
+
+    .orders-shell__panel {
+        min-height: min(860px, calc(100vh - 6.5rem));
+    }
+
+    .orders-shell__list {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+        align-content: start;
+        max-height: calc(100vh - 15.5rem);
+    }
+
+    .orders-shell__list > .user-order-state {
+        width: 100%;
+    }
+
+    @media (min-width: 1280px) {
+        .orders-shell__list {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .orders-shell__list > .user-order-state {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 1023px) {
+        .orders-shell__panel {
+            min-height: auto;
+        }
+
+        .orders-shell__list {
+            max-height: none;
+        }
+    }
 </style>
 @endpush
 
@@ -37,8 +77,8 @@
 @endphp
 
 @section('content')
-<section class="orders-shell min-h-screen px-4 py-5 sm:px-6 lg:px-8" data-user-orders-page="true">
-    <div class="mx-auto flex max-w-4xl items-center gap-3">
+<section class="orders-shell min-h-screen px-3 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6 xl:px-8" data-user-orders-page="true">
+    <div class="orders-shell__frame mx-auto flex items-center gap-3">
         <a href="{{ $backUrl }}"
             class="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-4 py-2.5 text-sm font-medium text-red-700 shadow-sm transition hover:border-red-300 hover:bg-red-50 hover:text-red-900">
             <i class="fas fa-arrow-left text-xs"></i>
@@ -46,9 +86,9 @@
         </a>
     </div>
 
-    <div class="mx-auto max-w-4xl pb-16 pt-6">
-        <div class="relative overflow-hidden rounded-[28px] bg-white text-left shadow-2xl ring-1 ring-slate-200">
-            <div class="relative px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
+    <div class="orders-shell__frame mx-auto pb-8 pt-4 lg:pb-10 lg:pt-5">
+        <div class="orders-shell__panel relative overflow-hidden rounded-[28px] bg-white/95 text-left shadow-2xl ring-1 ring-slate-200">
+            <div class="relative flex h-full flex-col px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-8 xl:px-10">
                 <div class="mb-5 flex items-start justify-between gap-4">
                     <div class="flex items-start gap-3">
                         <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-red-600">
@@ -73,8 +113,8 @@
                 </div>
 
                 <div class="w-full">
-                    <div id="user-orders-list" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1 sm:pr-2">
-                        <div class="rounded-2xl border border-dashed border-red-100 bg-red-50/40 p-8 text-center text-sm text-red-700">
+                    <div id="user-orders-list" class="orders-shell__list w-full overflow-y-auto pr-1 sm:pr-2 lg:pr-3">
+                        <div class="user-order-state rounded-2xl border border-dashed border-red-100 bg-red-50/40 p-8 text-center text-sm text-red-700">
                             Riwayat pesanan akan muncul di sini.
                         </div>
                     </div>
