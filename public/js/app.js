@@ -3297,8 +3297,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Offset header untuk smooth scroll (tinggi header fixed dalam px)
-    const HEADER_OFFSET = 100;
+    // Offset header untuk smooth scroll mengikuti tinggi navbar fixed aktual.
+    function getHeaderOffset() {
+        return Math.ceil(document.getElementById('main-header')?.getBoundingClientRect().height || 0);
+    }
 
     // ====================================================================
     // MOBILE DRAWER (Menu Navigasi untuk Handphone)
@@ -3416,7 +3418,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const targetSection = document.querySelector(targetId); // Cari section tujuan
             if (targetSection) {
                 // Hitung posisi scroll (dikurangi tinggi header agar tidak tertutup)
-                const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - HEADER_OFFSET;
+                const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - getHeaderOffset();
                 window.scrollTo({ top: targetPosition, behavior: 'smooth' });
             }
         });
@@ -3434,7 +3436,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const targetSection = document.querySelector(targetId);
 
             if (targetSection) {
-                const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - HEADER_OFFSET;
+                const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - getHeaderOffset();
                 window.scrollTo({
                     top: targetPosition,
                     behavior: 'smooth'   // Animasi scroll halus
@@ -3458,7 +3460,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (targetSection) {
                 e.preventDefault();
-                const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - HEADER_OFFSET;
+                const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - getHeaderOffset();
                 window.scrollTo({
                     top: targetPosition,
                     behavior: 'smooth'
@@ -3481,7 +3483,7 @@ document.addEventListener("DOMContentLoaded", () => {
      * dan highlight link navbar yang sesuai
      */
     function updateActiveNavLink() {
-        const scrollPos = window.scrollY + HEADER_OFFSET + 50; // Posisi scroll + offset
+        const scrollPos = window.scrollY + getHeaderOffset() + 50; // Posisi scroll + offset
 
         sections.forEach(section => {
             const sectionTop = section.offsetTop;          // Posisi atas section

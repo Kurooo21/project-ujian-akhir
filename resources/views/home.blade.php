@@ -181,7 +181,7 @@
             <a href="#home"
                 class="logo-slot flex-shrink-0 flex items-center justify-center overflow-visible h-12 sm:h-14 md:h-14 lg:h-16 pr-1 sm:pr-2 md:pr-4">
                 <img src="{{ asset('asset/logo merah.png') }}" alt="Chi-Pok Logo"
-                    class="header-logo w-auto max-h-none h-[72px] sm:h-[82px] md:h-[96px] lg:h-[112px] object-contain object-left z-10 transition-all duration-300 drop-shadow-sm">
+                    class="header-logo w-auto max-h-none h-[64px] sm:h-[72px] md:h-[80px] lg:h-[88px] object-contain object-left z-10 transition-all duration-300 drop-shadow-sm">
             </a>
 
             <!-- Link Navigasi (Tengah) - Tersembunyi di mobile (hidden md:flex) -->
@@ -310,13 +310,13 @@
              mt-[64px] dst = margin top sebesar tinggi header
              ======================================================== -->
         <section id="home"
-            class="hero relative w-full overflow-hidden mt-[64px] sm:mt-[72px] md:mt-[80px] lg:mt-[88px]">
+            class="hero relative w-full overflow-hidden scroll-mt-[64px] sm:scroll-mt-[72px] md:scroll-mt-[80px] lg:scroll-mt-[88px] mt-[64px] sm:mt-[72px] md:mt-[80px] lg:mt-[88px]">
 
             <!-- Container Slider -->
             <div id="hero-slider" class="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] xl:h-[700px]">
 
                 <!-- Slide Default 1: Gambar promosi utama -->
-                <div class="hero-slide absolute inset-0 w-full h-100 transition-opacity duration-700 ease-in-out"
+                <div class="hero-slide absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out"
                     style="opacity:1;">
                     <img src="{{ asset('asset/ledakan kelezatan.png') }}" alt="Ledakan Kelezatan"
                         class="w-full h-full object-cover block">
@@ -360,8 +360,9 @@
              4. Tombol navigasi carousel
              5. Layout toggle (Grid/List) & link ke halaman menu penuh
              ======================================================== -->
-        <section id="menu" class="menu py-20 bg-bg-light bg-menu-pattern bg-cover bg-center">
-            <div class="container mx-auto px-4 min-h-[70vh]">
+        <section id="menu"
+            class="menu relative overflow-hidden scroll-mt-[64px] sm:scroll-mt-[72px] md:scroll-mt-[80px] lg:scroll-mt-[88px] py-20 bg-bg-light bg-menu-pattern bg-cover bg-center">
+            <div class="container relative mx-auto px-4 min-h-[70vh]">
                 <h2
                     class="section-title font-heading text-5xl md:text-[3.5rem] text-primary-red text-center mb-4 uppercase pt-12">
                     MENU</h2>
@@ -369,7 +370,7 @@
 
                 <!-- Tab Filter Kategori (Semua / Makanan / Minuman) -->
                 <!-- data-category = value kategori yang akan difilter oleh JavaScript -->
-                <div class="flex justify-center gap-3 mb-10" id="category-tabs">
+                <div class="flex flex-wrap justify-center gap-3 mb-10" id="category-tabs">
                     <button data-category="semua"
                         class="category-tab active-tab px-6 py-2.5 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-300 shadow-md bg-primary-red text-white hover:shadow-lg hover:scale-105">
                         <i class="fas fa-utensils mr-1"></i> Semua
@@ -385,16 +386,16 @@
                 </div>
 
                 <!-- Wrapper Carousel (Container untuk grid produk + tombol navigasi) -->
-                <div class="relative">
+                <div class="relative mx-auto max-w-full px-4 sm:px-8">
                     <!-- Tombol Prev Carousel (←) -->
                     <button id="carousel-prev"
-                        class="hidden absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-30 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 text-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-110 items-center justify-center">
+                        class="hidden absolute left-0 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 text-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-110 items-center justify-center">
                         <i class="fas fa-chevron-left"></i>
                     </button>
 
                     <!-- Grid Menu - Tempat card produk ditampilkan oleh JavaScript -->
-                    <div class="overflow-hidden">
-                        <div class="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 transition-transform duration-500 ease-in-out"
+                    <div class="min-w-0 overflow-hidden">
+                        <div class="menu-grid grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 transition-transform duration-500 ease-in-out"
                             id="menu-grid">
                             {{-- Produk akan di-render oleh JavaScript (app.js) --}}
                         </div>
@@ -402,7 +403,7 @@
 
                     <!-- Tombol Next Carousel (→) -->
                     <button id="carousel-next"
-                        class="hidden absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-30 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 text-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-110 items-center justify-center">
+                        class="hidden absolute right-0 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 text-primary-red hover:bg-primary-red hover:text-white transition-all duration-300 hover:scale-110 items-center justify-center">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
@@ -428,7 +429,8 @@
              Berisi link media sosial, alamat outlet, jam buka,
              dan peta Google Maps embed
              ======================================================== -->
-        <section id="contact" class="contact bg-[#B30000] py-20 text-white relative ">
+        <section id="contact"
+            class="contact relative overflow-hidden scroll-mt-[64px] sm:scroll-mt-[72px] md:scroll-mt-[80px] lg:scroll-mt-[88px] bg-[#B30000] py-20 text-white">
             @php
                 $contactOutlets = collect($outletsData ?? [])->values();
                 $primaryOutlet = $contactOutlets->first();
@@ -451,17 +453,18 @@
                     ? 'https://www.google.com/maps?q=' . rawurlencode($primaryOutletQuery) . '&output=embed'
                     : 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126932.6288647893!2d106.75628659550778!3d-6.186933566160163!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e945e34b9d%3A0x5371bf0fdad786a2!2sJakarta%2C%20Special%20Capital%20Region%20of%20Jakarta%2C%20Indonesia!5e0!3m2!1sen!2sus!4v1707505296053!5m2!1sen!2sus';
             @endphp
-            <div class="container mx-auto px-4 contact-content relative min-h-[70vh]">
+            <div class="container mx-auto px-4 contact-content relative z-10 min-h-[70vh]">
                 <div
-                    class="contact-header absolute top-0 right-0 hidden lg:block opacity-20 hover:opacity-100 transition-opacity duration-300">
+                    class="contact-header pointer-events-none absolute top-0 right-0 hidden lg:block opacity-100">
                     <div class="footer-logo">
                         <img src="{{ asset('asset/logo putih.png') }}" alt="Chi-Pok Logo White"
-                            class="h-[200px] brightness-0 invert mt-[-50px]">
+                            class="h-[200px] mt-[-50px]">
                     </div>
                 </div>
 
-                <div class="contact-grid flex flex-col lg:flex-row justify-between gap-12 pt-10">
-                    <div class="contact-left flex-1 min-w-[300px]">
+                <div
+                    class="contact-grid grid grid-cols-1 gap-12 pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)] lg:items-start">
+                    <div class="contact-left min-w-0">
                         @php
                             $contactWaNumber = preg_replace('/\D+/', '', $settings['admin_whatsapp_number'] ?? '');
                         @endphp
@@ -558,16 +561,16 @@
                         </p>
                     </div>
 
-                    <div class="contact-right flex-1 min-w-[300px] space-y-6">
-                        <h2 class="section-title  text-white font-heading text-4xl mb-6 uppercase"style='margin-top:30px;'>CONTACT</h2>
+                    <div class="contact-right min-w-0 space-y-6">
+                        <h2 class="section-title text-white font-heading text-4xl mb-6 mt-8 uppercase">CONTACT</h2>
                         <div
-                            class="map-container  rounded-[20px] overflow-visible h-[300px] bg-gray-200 shadow-lg relative group "style="margin-top: 60px;">
+                            class="map-container relative group mt-14 h-[300px] overflow-hidden rounded-[20px] bg-gray-200 shadow-lg">
                             <iframe id="contact-map-frame" src="{{ $primaryMapEmbedUrl }}" width="100%"
                                 height="100%" style="border:0;" allowfullscreen="" loading="lazy"
                                 referrerpolicy="no-referrer-when-downgrade"
                                 class="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500"></iframe>
                             <a id="contact-map-link" href="{{ $primaryMapsLink }}" target="_blank" rel="noopener"
-                                class="btn btn-white absolute bottom-4 right-2 bg-white text-[#B30000] px-6 py-2 rounded-full font-bold shadow-md hover:bg-gray-100 transition-colors z-10 text-sm">BUKA
+                                class="btn btn-white absolute bottom-4 right-4 max-w-[calc(100%-2rem)] bg-white text-[#B30000] px-6 py-2 rounded-full font-bold shadow-md hover:bg-gray-100 transition-colors z-10 text-sm text-center">BUKA
                                 DI MAPS</a>
                         </div>
 
@@ -634,9 +637,8 @@
                     </div>
                 </div>
             </div>
-            </div>
-            </div>
-            </div>
+        </section>
+    </main>
 
             <!-- Admin Panel Modal -->
             <div id="adminModal" class="fixed inset-0 z-[2003] hidden overflow-y-auto" aria-labelledby="modal-title"
@@ -760,7 +762,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
 
             <!-- Admin Floating Action Button (FAB) -->
